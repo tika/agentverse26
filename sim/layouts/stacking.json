@@ -1,8 +1,23 @@
 {
-  "status": "Simulation arrangement for a visual concept; not certified storage engineering.",
+  "status": "Simulation arrangement for a visual concept (Levi reference photo, prompt v1.2.1); not certified storage engineering.",
+  "layout": "dense_v2",
   "enabled": true,
-  "tiers": {"LLW": 3, "ILW": 2},
-  "pallet": {"size_m": 0.9, "deck_m": 0.04, "runner_m": 0.104, "height_m": 0.144},
+  "pallet": {"size_m": 1.2, "deck_m": 0.04, "runner_m": 0.104, "height_m": 0.144, "material": "dark_plastic"},
+  "drum_gap_m": 0.02,
+  "zones": [
+    {"category": "LLW", "per_pallet": 4, "pallet_x": [3.1, 4.35, 5.6, 6.85, 8.1]},
+    {"category": "ILW", "per_pallet": 1, "pallet_x": [11.9, 13.15, 14.4, 15.65, 16.9]}
+  ],
+  "rows": [
+    {"name": "south_wall", "y": 0.75, "aisle": 1, "side": "R", "tiers": {"LLW": 2, "ILW": 2}, "skip_x_containing": [6.0, 15.0]},
+    {"name": "A-L", "y": 3.40, "aisle": 1, "side": "L", "tiers": {"LLW": 3, "ILW": 2}},
+    {"name": "B-R", "y": 4.62, "aisle": 2, "side": "R", "tiers": {"LLW": 3, "ILW": 2}},
+    {"name": "B-L", "y": 7.38, "aisle": 2, "side": "L", "tiers": {"LLW": 3, "ILW": 2}},
+    {"name": "C-R", "y": 8.60, "aisle": 3, "side": "R", "tiers": {"LLW": 3, "ILW": 2}},
+    {"name": "north_wall", "y": 11.25, "aisle": 3, "side": "L", "tiers": {"LLW": 2, "ILW": 2}, "skip_x_containing": [6.0, 15.0]}
+  ],
   "lanes_by_aisle": {"1": "A", "2": "B", "3": "C"},
-  "first_upper_id": 29
+  "aisle_clear_min_m": 1.4,
+  "paint_shades": ["safety_yellow", "warm_yellow", "faded_yellow"],
+  "first_new_id": 29
 }

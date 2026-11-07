@@ -81,3 +81,30 @@ def plate_texture(entry):
         x+=width+int(rng.integers(1,5))
     image.save(path)
     return {'diffuseColor':path}
+
+
+def _srgb(linear):
+    return tuple(int(round(255*(12.92*c if c <= .0031308 else 1.055*c**(1/2.4)-.055))) for c in linear)
+
+
+def stencil_texture(entry, paint_linear):
+    """Black spray-stencil package ID on the drum's own paint colour (no real organisation text)."""
+    safe = entry['paint_color']
+    path = ASSETS/f'stencil_{entry["id"]}_{safe}_v1.png'
+    if path.exists(): return {'diffuseColor':path}
+    ASSETS.mkdir(parents=True,exist_ok=True)
+    background = _srgb(paint_linear)
+    image = Image.new('RGB',(1024,384),background)
+    label = text_image(entry['id'],300,(28,26,22,255))
+    label.thumbnail((900,330))
+    rng = np.random.default_rng(entry['appearance_seed'])
+    # Stencil look: vertical bridges through the letters, slight speckle at the edges.
+    arr = np.asarray(label).copy()
+    for x in range(0,arr.shape[1],int(rng.integers(55,75))):
+        arr[:,x:x+6,3] = 0
+    label = Image.fromarray(arr)
+    image.paste(label,((1024-label.width)//2,(384-label.height)//2),label)
+    speck = np.asarray(image).astype(np.int16)
+    speck += rng.integers(-6,7,speck.shape[:2])[...,None]
+    Image.fromarray(np.clip(speck,0,255).astype(np.uint8)).save(path)
+    return {'diffuseColor':path}

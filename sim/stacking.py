@@ -1,124 +1,180 @@
-"""Stage-2 stacked inventory: pallets, tiers, immutable IDs and location codes.
+"""Dense stacked inventory (prompt v1.2.1, Levi's reference photo).
 
 Pure functions (no Isaac imports) so tests, the studio and the runtime map can
-reuse them. The floor plan stays in sim/layouts/stacking.json.
+reuse them. The floor plan lives in sim/layouts/stacking.json.
 
-Rules (prompt v1.2, ADDRESSING):
-- D01-D28 keep their IDs and original x/y; they become tier T1 of their stack.
-- Upper drums get deterministic IDs from D29 upward, in (base id, tier) order.
-- Lane A/B/C = aisle 1/2/3 the stack faces (increasing y). Side L/R as seen
-  looking along +x from that aisle: L means the stack is on the +y side.
-- Column numbers increase with x within each lane+side; tiers count up from 1.
-- display_id (the printed plate text) is the location code, e.g. A-L-01-T2.
+Rules:
+- Rows of 1.2 m pallets run along x on both sides of each robot aisle (y = 2, 6, 10),
+  plus one row against each long wall. LLW pallets carry 2x2 drums, ILW pallets one.
+- Every tier sits on its own pallet resting on the drum lids below.
+- Lane A/B/C = aisle 1/2/3 that the row faces. Side L/R as seen looking along +x:
+  L means the row lies on the +y side of its aisle. Columns are numbered by drum x
+  within lane+side; tiers count up from 1. Second-row (back) drums get suffix -D2.
+- display_id (plate text) is the location code. Only aisle-facing drums carry a
+  plate/stencil; back drums are physically hidden (identity stays unknown).
+- D01-D28 keep their immutable IDs on the nearest tier-1 aisle-facing drum of the
+  same category; original x/y are kept as legacy_x/legacy_y. New drums: D29 upward.
 - A moved drum keeps its ID and gets a new location (not handled here).
 """
 import copy
 import json
+import math
 from pathlib import Path
+
+import numpy as np
 
 SIM = Path(__file__).resolve().parent
 CONFIG = SIM / 'layouts' / 'stacking.json'
-AISLES = SIM / 'aisles.json'
+AISLE_Y = {1: 2.0, 2: 6.0, 3: 10.0}
 
 
 def load_config(path=CONFIG):
     return json.loads(Path(path).read_text())
 
 
-def aisle_centres(path=AISLES):
-    return {a['id']: a['center_y'] for a in json.loads(Path(path).read_text())['aisles']}
+def location_code(lane, side, column, tier, depth=1):
+    return f'{lane}-{side}-{column:02d}-T{tier}' + ('' if depth == 1 else f'-D{depth}')
 
 
-def location_code(lane, side, column, tier):
-    return f'{lane}-{side}-{column:02d}-T{tier}'
-
-
-def stack_inventory(entries, config=None, centres=None):
-    """Return a new inventory with pallets/tiers applied. Input entries are not modified."""
-    config = config or load_config()
-    centres = centres or aisle_centres()
-    pallet_h = config['pallet']['height_m']
+def _slots(config):
+    """Every drum slot: dict with geometry/location but no ID yet."""
+    from drums import CATEGORIES
     lanes = {int(k): v for k, v in config['lanes_by_aisle'].items()}
-    base = sorted((copy.deepcopy(e) for e in entries), key=lambda e: e['id'])
+    half = config['pallet']['size_m'] / 2
+    gap = config['drum_gap_m']
+    pallet_no = {}
+    slots = []
+    for row in config['rows']:
+        lane, side = lanes[row['aisle']], row['side']
+        face = -1 if side == 'L' else 1  # +1: front faces +y
+        for zone in config['zones']:
+            cat = zone['category']
+            radius, height, _ = CATEGORIES[cat]
+            for px in zone['pallet_x']:
+                if any(px - half <= v <= px + half for v in row.get('skip_x_containing', [])):
+                    continue
+                key = (lane, side)
+                pallet_no[key] = pallet_no.get(key, 0) + 1
+                stack_id = f'{lane}-{side}-P{pallet_no[key]:02d}'
+                if zone['per_pallet'] == 4:
+                    off = radius + gap / 2
+                    cells = [(px + dx, row['y'] + face * off, 1) for dx in (-off, off)] + \
+                            [(px + dx, row['y'] - face * off, 2) for dx in (-off, off)]
+                else:
+                    cells = [(px, row['y'], 1)]
+                for tier in range(1, row['tiers'][cat] + 1):
+                    base_z = tier * config['pallet']['height_m'] + (tier - 1) * height
+                    for x, y, depth in cells:
+                        slots.append({'category': cat, 'x': round(x, 4), 'y': round(y, 4), 'depth': depth,
+                                      'tier': tier, 'tier_count': row['tiers'][cat], 'lane': lane, 'side': side,
+                                      'aisle': row['aisle'], 'face_sign': face, 'stack_id': stack_id,
+                                      'pallet_xy': [px, row['y']], 'base_z': round(base_z, 4), 'height': height})
+    # Column numbers: by drum x within lane+side (front and back drums share a column).
+    for key in {(s['lane'], s['side']) for s in slots}:
+        xs = sorted({s['x'] for s in slots if (s['lane'], s['side']) == key})
+        for s in slots:
+            if (s['lane'], s['side']) == key:
+                s['column'] = xs.index(s['x']) + 1
+    for s in slots:
+        s['code'] = location_code(s['lane'], s['side'], s['column'], s['tier'], s['depth'])
+    return sorted(slots, key=lambda s: (s['lane'], s['side'], s['column'], s['tier'], s['depth']))
+
+
+def stack_inventory(entries, config=None, seed=None):
+    """Build the full dense inventory. `entries` are the original 28 (for ID mapping)."""
+    from drums import nominal_entry
+    config = config or load_config()
+    originals = sorted((copy.deepcopy(e) for e in entries), key=lambda e: e['id'])
     if not config.get('enabled', True):
-        return base
-
-    # Column numbering per lane+side, increasing x.
-    groups = {}
-    for e in base:
-        lane = lanes[e['facing_aisle']]
-        side = 'L' if e['y'] > centres[e['facing_aisle']] else 'R'
-        groups.setdefault((lane, side), []).append(e)
-    for (lane, side), members in groups.items():
-        for column, e in enumerate(sorted(members, key=lambda m: m['x']), start=1):
-            e['_lane'], e['_side'], e['_column'] = lane, side, column
-
-    out, next_id = [], config['first_upper_id']
-    uppers = []
-    for e in base:
-        tier_count = config['tiers'][e['category']]
-        stack_id = f"{e['_lane']}-{e['_side']}-{e['_column']:02d}"
-        for tier in range(1, tier_count + 1):
-            d = copy.deepcopy(e) if tier == 1 else _upper_from(e, next_id, tier)
-            if tier > 1:
-                next_id += 1
-            base_z = tier * pallet_h + (tier - 1) * e['height']
-            code = location_code(e['_lane'], e['_side'], e['_column'], tier)
-            for k in ('_lane', '_side', '_column'):
-                d.pop(k, None)
-            d.update({
-                'legacy_id': e['id'] if tier == 1 else None,
-                'legacy_display_id': e.get('display_id') if tier == 1 else None,
-                'display_id': code, 'stack_id': stack_id, 'base_z': round(base_z, 4),
-                'location': {'lane': e['_lane'], 'side': e['_side'], 'column': e['_column'],
-                             'tier': tier, 'tier_count': tier_count, 'stack_id': stack_id,
-                             'base_z_m': round(base_z, 4), 'location_code': code},
-            })
-            (out if tier == 1 else uppers).append(d)
-    return out + uppers
-
-
-def _upper_from(base_entry, number, tier):
-    d = copy.deepcopy(base_entry)
-    name = f'D{number:02d}'
-    d['id'] = name
-    d['prim_path'] = '/World/Drums/' + name
-    # Deterministic, distinct appearance and yaw for each upper drum.
-    d['appearance_seed'] = (base_entry['appearance_seed'] * 31 + tier * 7919) % (2 ** 31)
-    d['yaw'] = (base_entry['yaw'] + 2.399963 * tier) % 6.283185307179586
-    for k, v in (('state', 'clean'), ('faults', []), ('corrosion_severity', 0), ('defects', []),
-                 ('obstructed', False), ('internal_corrosion', False)):
-        d[k] = copy.deepcopy(v)
-    if d.get('paint_color') is not None:
-        from drums import PAINT_NAMES
-        d['paint_color'] = PAINT_NAMES[d['appearance_seed'] % 3]
-    return d
+        return originals
+    seed = originals[0].get('scene_seed', 42) if seed is None else seed
+    slots = _slots(config)
+    # Map D01-D28 to the nearest free tier-1, aisle-facing slot of the same category.
+    taken = {}
+    for e in originals:
+        free = [i for i, s in enumerate(slots) if i not in taken.values() and s['tier'] == 1
+                and s['depth'] == 1 and s['category'] == e['category']]
+        best = min(free, key=lambda i: (math.hypot(slots[i]['x'] - e['x'], slots[i]['y'] - e['y']), i))
+        taken[e['id']] = best
+    by_slot = {i: e for e, i in ((next(o for o in originals if o['id'] == k), v) for k, v in taken.items())}
+    rng = np.random.default_rng(seed)
+    shades = config['paint_shades']
+    next_id = config['first_new_id']
+    out = []
+    for i, s in enumerate(slots):
+        original = by_slot.get(i)
+        if original:
+            name = original['id']
+        else:
+            name = f'D{next_id:02d}'
+            next_id += 1
+        appearance = int(rng.integers(2 ** 31))
+        yaw = float(rng.uniform(0, 2 * math.pi))
+        base = {'id': name, 'category': s['category'], 'zone': 'A' if s['x'] < 10 else 'B',
+                'row': f"{s['lane']}-{s['side']}", 'display_id': s['code'], 'x': s['x'], 'y': s['y'],
+                'yaw': yaw, 'facing_aisle': s['aisle'], 'prim_path': '/World/Drums/' + name,
+                'scene_seed': seed, 'appearance_seed': appearance}
+        d = nominal_entry(base, s['category'])
+        d['paint_color'] = shades[appearance % len(shades)]
+        d.update({
+            'legacy_id': original['id'] if original else None,
+            'legacy_display_id': original.get('display_id') if original else None,
+            'legacy_x': original['x'] if original else None,
+            'legacy_y': original['y'] if original else None,
+            'face_sign': s['face_sign'], 'visible_face': s['depth'] == 1,
+            'stack_id': s['stack_id'], 'pallet_xy': s['pallet_xy'], 'base_z': s['base_z'],
+            'location': {'lane': s['lane'], 'side': s['side'], 'column': s['column'], 'tier': s['tier'],
+                         'tier_count': s['tier_count'], 'depth': s['depth'], 'stack_id': s['stack_id'],
+                         'base_z_m': s['base_z'], 'location_code': s['code']},
+        })
+        out.append(d)
+    return sorted(out, key=lambda e: (len(e['id']), e['id']))
 
 
 def pallets(entries, config=None):
-    """One pallet under every drum: (stack_id, tier, centre_xyz, size_xyz)."""
+    """One pallet per (stack, tier): (stack_id, tier, centre_xyz_of_pallet_bottom, pallet_spec)."""
     config = config or load_config()
     p = config['pallet']
-    out = []
+    seen = {}
     for e in entries:
-        z0 = e['base_z'] - p['height_m']
-        out.append((e['stack_id'], e['location']['tier'], (e['x'], e['y'], z0), p))
-    return out
+        key = (e['stack_id'], e['location']['tier'])
+        if key not in seen:
+            px, py = e.get('pallet_xy', (e['x'], e['y']))
+            seen[key] = (e['stack_id'], e['location']['tier'], (px, py, e['base_z'] - p['height_m']), p)
+    return sorted(seen.values(), key=lambda v: (v[0], v[1]))
 
 
-def clearance_errors(entries, config=None, centres=None, aisle_half_width=1.0):
-    """Pallet footprints must stay out of aisle rectangles and must not overlap each other."""
+def clearance_errors(entries, config=None):
+    """Aisles stay >= aisle_clear_min_m wide; pallets never overlap; drums stay on their pallet;
+    cross-aisles (x < 2.0, 9.2-10.8, x > 18.0) stay free."""
     config = config or load_config()
-    centres = centres or aisle_centres()
     half = config['pallet']['size_m'] / 2
     errors = []
-    t1 = [e for e in entries if e['location']['tier'] == 1]
-    for e in t1:
-        for aid, cy in centres.items():
-            if abs(e['y'] - cy) < half + aisle_half_width - 1e-9:
-                errors.append(f"{e['id']} pallet enters aisle {aid}")
+    t1 = [p for p in pallets(entries, config) if p[1] == 1]
+    for aisle, cy in AISLE_Y.items():
+        below = max((p[2][1] + half for p in t1 if p[2][1] < cy), default=0.0)
+        above = min((p[2][1] - half for p in t1 if p[2][1] > cy), default=12.0)
+        if above - below < config['aisle_clear_min_m'] - 1e-9:
+            errors.append(f'aisle {aisle} clear width {above - below:.2f} m')
     for i, a in enumerate(t1):
+        ax, ay = a[2][:2]
+        if ax - half < 2.0 or (ax + half > 9.2 and ax - half < 10.8) or ax + half > 18.0:
+            errors.append(f'pallet {a[0]} enters a cross-aisle')
         for b in t1[i + 1:]:
-            if abs(a['x'] - b['x']) < 2 * half - 1e-9 and abs(a['y'] - b['y']) < 2 * half - 1e-9:
-                errors.append(f"pallets {a['id']} and {b['id']} overlap")
+            bx, by = b[2][:2]
+            if abs(ax - bx) < 2 * half - 1e-9 and abs(ay - by) < 2 * half - 1e-9:
+                errors.append(f'pallets {a[0]} and {b[0]} overlap')
+    for e in entries:
+        px, py = e['pallet_xy']
+        if abs(e['x'] - px) + e['radius'] > half + 1e-9 or abs(e['y'] - py) + e['radius'] > half + 1e-9:
+            errors.append(f"{e['id']} overhangs its pallet")
     return errors
+
+
+def column_tiers(entries, lane, side, column):
+    """All tiers of one aisle-facing drum column, bottom first (for review/plate tours)."""
+    out = [e for e in entries if e['location']['lane'] == lane and e['location']['side'] == side
+           and e['location']['column'] == column and e['location']['depth'] == 1]
+    if not out:
+        raise KeyError(f'no aisle-facing column {lane}-{side}-{column:02d}')
+    return sorted(out, key=lambda e: e['location']['tier'])

@@ -8,61 +8,107 @@ from pathlib import Path
 SIM = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SIM))
 import stacking  # noqa: E402
+from drums import YELLOWS  # noqa: E402
 from sensors import SensorWorld, intersects_drum, load_config  # noqa: E402
 
 INVENTORY = json.loads((SIM / 'drums.json').read_text())
 
 
-class Stacking(unittest.TestCase):
-    def setUp(self):
-        self.out = stacking.stack_inventory(INVENTORY)
-        self.by_id = {e['id']: e for e in self.out}
+class DenseLayout(unittest.TestCase):
+    """Prompt v1.2.1 / Levi reference photo: all-yellow, densely stacked drums."""
 
-    def test_counts_and_ids(self):
-        self.assertEqual(Counter(e['location']['tier'] for e in self.out), {1: 28, 2: 28, 3: 16})
-        self.assertEqual(sorted(self.by_id)[:2], ['D01', 'D02'])
-        self.assertEqual({e['id'] for e in self.out if e['location']['tier'] > 1},
-                         {f'D{n:02d}' for n in range(29, 73)})
+    @classmethod
+    def setUpClass(cls):
+        cls.out = stacking.stack_inventory(INVENTORY)
+        cls.by_id = {e['id']: e for e in cls.out}
+
+    def test_counts(self):
+        self.assertEqual(len(self.out), 360)
+        self.assertEqual(Counter((e['category'], e['location']['tier']) for e in self.out),
+                         {('LLW', 1): 112, ('LLW', 2): 112, ('LLW', 3): 80, ('ILW', 1): 28, ('ILW', 2): 28})
+        self.assertEqual(len(stacking.pallets(self.out)), 132)
+
+    def test_ids_and_codes_unique_and_deterministic(self):
+        self.assertEqual(len(self.by_id), len(self.out))
         self.assertEqual(len({e['display_id'] for e in self.out}), len(self.out))
-
-    def test_originals_keep_id_and_xy(self):
-        for e in INVENTORY:
-            s = self.by_id[e['id']]
-            self.assertEqual((s['x'], s['y'], s['legacy_id'], s['location']['tier']), (e['x'], e['y'], e['id'], 1))
-
-    def test_deterministic(self):
         again = stacking.stack_inventory(INVENTORY)
         self.assertEqual(json.dumps(self.out, sort_keys=True), json.dumps(again, sort_keys=True))
 
+    def test_originals_keep_ids_near_their_old_place(self):
+        for e in INVENTORY:
+            s = self.by_id[e['id']]
+            self.assertEqual((s['category'], s['legacy_id'], s['location']['tier'], s['location']['depth']),
+                             (e['category'], e['id'], 1, 1))
+            self.assertEqual((s['legacy_x'], s['legacy_y']), (e['x'], e['y']))
+            self.assertLess(math.hypot(s['x'] - e['x'], s['y'] - e['y']), 0.6)
+        self.assertEqual({e['id'] for e in self.out if e['legacy_id'] is None},
+                         {f'D{n:02d}' for n in range(29, 361)})
+
+    def test_all_yellow(self):  # F11
+        self.assertTrue(all(e['paint_color'] in YELLOWS for e in self.out))
+        self.assertEqual(set(Counter(e['paint_color'] for e in self.out)), set(YELLOWS))
+
+    def test_dense_packing(self):  # F12
+        llw = [e for e in self.out if e['category'] == 'LLW']
+        for stack in {e['stack_id'] for e in llw}:
+            t1 = [e for e in llw if e['stack_id'] == stack and e['location']['tier'] == 1]
+            self.assertEqual(len(t1), 4)
+            xs = sorted({e['x'] for e in t1})
+            self.assertLessEqual(xs[1] - xs[0] - 2 * t1[0]['radius'], 0.021)  # drums touch (2 cm gap)
+        cfg = stacking.load_config()
+        for zone in cfg['zones']:
+            gaps = [b - a - cfg['pallet']['size_m'] for a, b in zip(zone['pallet_x'], zone['pallet_x'][1:])]
+            self.assertTrue(all(0 <= g <= 0.1 for g in gaps), gaps)
+
     def test_location_codes(self):
-        # D01 (row A, y 3.45) faces aisle 1 (y 2) from +y: lane A, left, first column.
-        self.assertEqual(self.by_id['D01']['display_id'], 'A-L-01-T1')
-        self.assertEqual(self.by_id['D05']['display_id'], 'B-R-01-T1')
-        self.assertEqual(self.by_id['D28']['display_id'], 'C-R-07-T1')
-        self.assertEqual(self.by_id['D29']['display_id'], 'A-L-01-T2')
         for e in self.out:
             loc = e['location']
-            self.assertEqual(loc['location_code'], f"{loc['lane']}-{loc['side']}-{loc['column']:02d}-T{loc['tier']}")
-            self.assertEqual(loc['tier_count'], 3 if e['category'] == 'LLW' else 2)
+            code = f"{loc['lane']}-{loc['side']}-{loc['column']:02d}-T{loc['tier']}" + ('' if loc['depth'] == 1 else '-D2')
+            self.assertEqual((e['display_id'], loc['location_code']), (code, code))
+            self.assertEqual(loc['tier_count'] >= loc['tier'], True)
+            self.assertEqual(e['visible_face'], loc['depth'] == 1)
+        # Side L lies on the +y side of its aisle and faces -y.
+        for e in self.out:
+            aisle_y = stacking.AISLE_Y[e['facing_aisle']]
+            self.assertEqual(e['location']['side'] == 'L', e['y'] > aisle_y)
+            self.assertEqual(e['face_sign'], -1 if e['location']['side'] == 'L' else 1)
 
-    def test_tiers_rest_on_pallets_without_overlap(self):
+    def test_tiers_rest_on_pallets(self):
         p = stacking.load_config()['pallet']['height_m']
-        for stack in {e['stack_id'] for e in self.out}:
-            tiers = sorted((e for e in self.out if e['stack_id'] == stack), key=lambda e: e['location']['tier'])
+        for (stack, x, y), group in self._columns().items():
+            tiers = sorted(group, key=lambda e: e['location']['tier'])
             self.assertAlmostEqual(tiers[0]['base_z'], p)
             for lower, upper in zip(tiers, tiers[1:]):
                 self.assertAlmostEqual(upper['base_z'], lower['base_z'] + lower['height'] + p, places=4)
-        self.assertLess(max(e['base_z'] + e['height'] for e in self.out), 5.0)  # below crane rail 5.15 m
+        self.assertLess(max(e['base_z'] + e['height'] for e in self.out), 5.0)  # under crane rail 5.15 m
 
-    def test_aisle_clearance(self):
+    def _columns(self):
+        cols = {}
+        for e in self.out:
+            cols.setdefault((e['stack_id'], e['x'], e['y']), []).append(e)
+        return cols
+
+    def test_clearance(self):  # F16
         self.assertEqual(stacking.clearance_errors(self.out), [])
+        import aisles
+        import tempfile
+        data = aisles.write_aisles(Path(tempfile.mkdtemp()) / 'a.json')
+        for a in data['aisles']:
+            self.assertGreaterEqual(a['rect'][3] - a['rect'][1], 1.4)
+            for e in self.out:  # no drum footprint inside an aisle band
+                self.assertFalse(a['rect'][1] < e['y'] + math.copysign(e['radius'], a['center_y'] - e['y']) < a['rect'][3]
+                                 and abs(e['y'] - a['center_y']) < 1.5, e['id'])
+
+    def test_wall_rows_avoid_gamma_monitors(self):
+        for e in self.out:
+            if e['location']['stack_id'] and (e['y'] < 1.5 or e['y'] > 10.5):
+                self.assertFalse(abs(e['pallet_xy'][0] - 6.0) < 0.6 or abs(e['pallet_xy'][0] - 15.0) < 0.6)
 
     def test_upper_drums_are_clean(self):
         for e in self.out:
-            if e['location']['tier'] > 1:
-                self.assertEqual((e['faults'], e['defects'], e['state']), ([], [], 'clean'))
+            self.assertEqual((e['faults'], e['defects'], e['state']), ([], [], 'clean'))
 
-    def test_disabled_config_is_identity(self):
+    def test_disabled_config_returns_originals(self):
         cfg = dict(stacking.load_config(), enabled=False)
         self.assertEqual(len(stacking.stack_inventory(INVENTORY, cfg)), 28)
 
@@ -70,16 +116,16 @@ class Stacking(unittest.TestCase):
 class StackedSensors(unittest.TestCase):
     def test_shielding_respects_base_height(self):
         drum = {'x': 0.0, 'y': 0.0, 'radius': 0.3, 'height': 0.9, 'base_z': 1.0}
-        self.assertFalse(intersects_drum((-2, 0, 0.5), (2, 0, 0.5), drum))   # passes under it
+        self.assertFalse(intersects_drum((-2, 0, 0.5), (2, 0, 0.5), drum))
         self.assertTrue(intersects_drum((-2, 0, 1.4), (2, 0, 1.4), drum))
 
     def test_upper_source_is_higher(self):
         out = stacking.stack_inventory(INVENTORY)
+        top = next(e for e in out if e['location']['tier'] == 3)
         cfg = load_config()
         cfg['radiation']['noise_fraction'] = 0.0
-        world = SensorWorld(out, cfg)
-        top = next(e for e in out if e['id'] == 'D30')  # A-L-01-T3
-        src = next(s for s, _ in world._sources((0, 0, 0)) if math.isclose(s[0], top['x']) and s[2] > 2)
+        world = SensorWorld([top], cfg)
+        src = next(s for s, _ in world._sources((0, 0, 0)))
         self.assertAlmostEqual(src[2], top['base_z'] + top['height'] / 2)
 
 
