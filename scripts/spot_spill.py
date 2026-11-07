@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--fast", action="store_true", help="Use RTX Minimal and skip the default viewport")
 parser.add_argument("--radiation", action="store_true", help="Walk the full hall with a gamma hotspot")
 args = parser.parse_args()
-config = {"headless": True, "extra_args": [
+config = {"headless": True, "fast_shutdown": True, "extra_args": [
     "--enable", "isaacsim.robot.policy.examples",
     "--enable", "isaacsim.sensors.camera",
 ]}
@@ -207,8 +207,8 @@ def run():
                 color = {"green": "#5fe2af", "amber": "#ffc55e", "red": "#ff6767"}
                 draw.rectangle((0, 320, 959, 343), fill="#111822")
                 draw.text((10, 324), f"SIM GAMMA  {radiation['dose_rate_uSv_h']:5.1f} uSv/h  |  "
-                          f"{radiation['status'].upper()}  |  heat {radiation['temperature_c']:.1f} C  |  "
-                          f"RH {radiation['relative_humidity_pct']:.0f}%", font=font,
+                          f"accumulated proxy {1000 * radiation['mission_dose_mSv']:.4f} uSv  |  "
+                          f"centre depth {depth_text}  |  {radiation['status'].upper()}", font=font,
                           fill=color[radiation["status"]])
                 draw.rectangle((640, 34, 947, 94), fill="#111822")
                 stop_rate = scenario["thresholds"]["hot_spot"]
@@ -286,6 +286,8 @@ def run():
                         valid = core[np.isfinite(core) & (core > 0)]
                         if valid.size:
                             nearest = float(np.percentile(valid, 10))
+                            if args.radiation and index in (0, 40, 80):
+                                np.save(output / f"depth-{index:05d}.npy", depth)
                     if args.radiation:
                         radiation = sensor.sample(sensor_position, t)
                         rate = radiation["dose_rate_uSv_h"]
@@ -294,7 +296,7 @@ def run():
                                                else "amber" if rate > limits["controlled_zone"] else "green")
                         trail.append(rate)
                         log.write(json.dumps({"event": "dose_sample", "position_m": sensor_position.tolist(),
-                                              **radiation}) + "\n")
+                                              "frame": index, "central_depth_m": nearest, **radiation}) + "\n")
                         if not retreating:
                             if rate < 0.7 * limits["hot_spot"]:
                                 last_clear = tuple(map(float, position[:2]))
