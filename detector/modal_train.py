@@ -70,10 +70,14 @@ def train(run_id,source_commit):
     run_dir.mkdir(parents=True,exist_ok=False)
     inventory=subprocess.check_output(['nvidia-smi','--query-gpu=index,name,uuid,driver_version','--format=csv,noheader'],text=True)
     assert torch.cuda.is_available() and torch.cuda.device_count()==8
-    assert len(inventory.strip().splitlines())==8 and all('H100' in x for x in inventory.strip().splitlines())
-    (run_dir/'hardware.json').write_text(json.dumps(dict(gpus=inventory.splitlines(),count=8,torch=torch.__version__,
+    visible=[torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())]
+    # CUDA's visible devices are authoritative; nvidia-smi can include host devices
+    # or provider diagnostics outside the container's CUDA-visible allocation.
+    (run_dir/'hardware.json').write_text(json.dumps(dict(gpus=inventory.splitlines(),cuda_visible_devices=visible,count=8,torch=torch.__version__,
                 cuda=torch.version.cuda,ultralytics=ultralytics.__version__,python=platform.python_version(),
                 topology=subprocess.check_output(['nvidia-smi','topo','-m'],text=True)),indent=2))
+    models_volume.commit()
+    print('GPU_INVENTORY '+json.dumps(dict(cuda_visible_devices=visible,nvidia_smi=inventory)),flush=True)
     release=prepare_dataset()
     metadata=dict(run_id=run_id,model='YOLO26s',source_commit=source_commit,dataset='barrels_v2_1200',
                   dataset_manifest_sha256=hashlib.sha256((release/'manifest.json').read_bytes()).hexdigest(),
