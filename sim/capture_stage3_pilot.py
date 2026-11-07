@@ -29,7 +29,7 @@ if __name__ == '__main__':
     app = SimulationApp({'headless': True, 'fast_shutdown': True,
                          'extra_args': ['--enable', 'isaacsim.sensors.camera']})
     import omni.usd
-    from pxr import Gf
+    from pxr import Gf, UsdLux, UsdGeom
     from isaacsim.core.api import World
     from isaacsim.sensors.camera import Camera
     from build_hall import build_scene
@@ -81,7 +81,14 @@ if __name__ == '__main__':
     cam.prim.GetAttribute('horizontalAperture').Set(36.0)
     cam.prim.GetAttribute('verticalAperture').Set(36.0*RES[1]/RES[0])
     cam.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(.05, 40.0))
-    # Use the verified Stage-2 building lights only. No capture-only fill light.
+    # A low-power, neutral inspection lamp supplements high-bay light only for
+    # defect close-ups, like a robot-mounted inspection illuminator.
+    fill = UsdLux.RectLight.Define(stage, '/World/Stage3InspectionLight')
+    fill.CreateWidthAttr(.35); fill.CreateHeightAttr(.25)
+    fill.CreateIntensityAttr(0.0)
+    fill.CreateEnableColorTemperatureAttr(False)
+    fill.CreateColorAttr(Gf.Vec3f(1.0, 1.0, 1.0))
+    fill_xf = UsdGeom.Xformable(fill).AddTransformOp()
     world.reset(); cam.initialize(); cam.add_distance_to_image_plane_to_frame()
 
     def aim(eye, target, focal):
@@ -89,6 +96,9 @@ if __name__ == '__main__':
         q = matrix.GetInverse().ExtractRotationQuat()
         cam.set_world_pose(position=np.asarray(eye), orientation=np.asarray([q.GetReal(),*q.GetImaginary()]), camera_axes='usd')
         cam.prim.GetAttribute('focalLength').Set(float(focal))
+        lamp_eye = (eye[0]+.65, eye[1]-.35, eye[2]+.25)
+        lamp_matrix = Gf.Matrix4d().SetLookAt(Gf.Vec3d(*lamp_eye), Gf.Vec3d(*target), Gf.Vec3d(0,0,1))
+        fill_xf.Set(lamp_matrix.GetInverse())
 
     def rgb_now():
         pixels = cam.get_rgba()
@@ -104,6 +114,8 @@ if __name__ == '__main__':
     frames=[]
     for i,(eye,target,focal,label) in enumerate(plans):
         aim(eye,target,focal); fixed_exposure()
+        fill.GetIntensityAttr().Set(2400.0 if label in ('corroded_no_dose_change',
+                                  'deformation_only', 'measured_bulge') else 0.0)
         # Match the verified Stage-2 tour path: two render flushes per paused
         # camera pose, then capture exactly that pose.
         world.render(); world.render()
@@ -131,7 +143,8 @@ if __name__ == '__main__':
     (OUT/'sensor_traces.json').write_text(json.dumps(traces,indent=2)+'\n')
     report={'renderer':'RayTracedLighting (RTX)','resolution':list(RES),'warmup_renders':warm,
             'scene_metrics':metrics,'frame_count':len(frames),'frames':frames,
-            'camera_fill_light':{'enabled':False,'reason':'use scene lighting without capture-only exposure aid'},
+            'camera_fill_light':{'enabled_for_defect_closeups':True,'intensity':2400.0,
+                                 'reason':'neutral low-power camera-mounted inspection illuminator'},
             'note':'scenario truth is excluded from sensor_traces; no leak/source conclusion is inferred from a visual defect'}
     (OUT/'manifest.json').write_text(json.dumps(report,indent=2)+'\n')
     print('STAGE3_PILOT_OK',len(frames),'frames',flush=True)

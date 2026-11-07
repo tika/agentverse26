@@ -53,13 +53,13 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
                     # active orange areas and two narrow downward runoffs.
                     specs = [
                         {**specs[0], 'subtype':'stage4', 'size':[width,height], 'mesh_seed':seed0+1},
-                        {**specs[0], 'subtype':'stage3', 'z':z_center+.018,
+                        {**specs[0], 'subtype':'stage3', 'z':z_center+.018, 'radial_offset_m':.004,
                          'size':[width*.76,height*.72], 'mesh_seed':seed0+2},
-                        {**specs[0], 'subtype':'stage2', 'z':z_center+.025,
+                        {**specs[0], 'subtype':'stage2', 'z':z_center+.025, 'radial_offset_m':.008,
                          'size':[width*.34,height*.48], 'mesh_seed':seed0+3},
-                        {**specs[0], 'subtype':'runoff', 'z':z_center+.065,
+                        {**specs[0], 'subtype':'runoff', 'z':z_center+.065, 'radial_offset_m':.010,
                          'size':[.035,height*.70], 'angle':face-.16, 'mesh_seed':seed0+4},
-                        {**specs[0], 'subtype':'runoff', 'z':z_center+.055,
+                        {**specs[0], 'subtype':'runoff', 'z':z_center+.055, 'radial_offset_m':.012,
                          'size':[.024,height*.52], 'angle':face+.21, 'mesh_seed':seed0+5},
                     ]
                 built = build_corrosion(stage, entry, int(scenario['seed']) + idx*991,
@@ -156,7 +156,6 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
             source = wet.get('location_m', [entry['x'], entry['y']-entry['radius']-.45, .002])
             from geometry import mesh
             from materials import material
-            from fault_textures import release_maps
             import numpy as np
             from defect_geometry import floor_mesh
             external_water = wet.get('fluid_kind') == 'external_water'
@@ -164,8 +163,8 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
                 paint = material(stage, 'ScenarioWet_'+scenario['scenario_id'],
                                  (.31,.34,.32), .42)
             else:
-                bank = release_maps(entry['category'], True, entry['scene_seed'])
-                paint = material(stage, 'ScenarioWet_'+scenario['scenario_id'], (1,1,1), .08, textures=bank)
+                paint = material(stage, 'ScenarioWet_'+scenario['scenario_id'],
+                                 (.28,.21,.15), .56)
             center = (float(source[0]), float(source[1]))
             wet_mesh = mesh(stage, f"/World/Defects/{entry['id']}/Wet_{scenario['scenario_id']}",
                             *floor_mesh(np.random.default_rng(int(scenario['seed'])), center, .42, .68, z=.003), paint)
