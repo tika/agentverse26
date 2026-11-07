@@ -13,7 +13,6 @@ DOSE_AMBER, DOSE_BACKOFF = CONFIG['thresholds']['controlled_zone'], CONFIG['thre
 SPEED_NEAR_DRUMS = CONFIG['robot']['max_speed_near_drums_mps']
 H2_DETECTED_PPM = 10.0                  # Reporting floor above sensor noise; the docs set no H2 alarm level.
 FOLLOWUP_TIMEOUT_S = 8.0
-DETECT_EVERY_FRAMES = 6                 # 2 Hz at 12 fps; the detector API is not called every frame.
 
 if 'ptz' not in state:
     ptz = Camera('/World/SpotCamPTZ', resolution=(640, 480))
@@ -62,8 +61,6 @@ class Agent:
         self.data = {}
         job = scene.get('job_drums') or [d['id'] for d in inventory if d['row'] in STANDOFF and d['category'] == 'ILW']
         self.memory = InspectionMemory(job)
-        self.detector = detector_available()
-        self.detections = []
 
     def event(self, t, text):
         self.events.append((t, text))
@@ -103,15 +100,15 @@ class InspectionMemory:
             if th and th['delta_c'] >= HEAT_RISE_C:
                 bad.append(f"surface {th['surface_c']:.0f} C, {th['delta_c']:+.0f} C vs air")
             vis = c.get('visual')
-            if vis:
+            if vis and 'rust_pct' in vis:
                 rust = CONFIG['thresholds']['rust_pct']
                 if vis['rust_pct'] > rust['failing']:
                     bad.append(f"rust {vis['rust_pct']:.0f}%")
                 elif vis['rust_pct'] >= rust['tolerable']:
                     attention.append(f"rust {vis['rust_pct']:.0f}%")
-            if vis and vis.get('bulge'):
-                (bad if th and th['delta_c'] >= HEAT_RISE_C else attention).append(
-                    'bulge' + (' with heat: suspected pressurisation' if th and th['delta_c'] >= HEAT_RISE_C else ''))
+            elif vis:
+                if vis.get('rust_observed'):attention.append('YOLO visible rust; coverage not measured')
+                if vis.get('bulge_observed'):attention.append('YOLO visible bulge; needs corroboration')
             ident = c.get('id')
             if ident:
                 if ident['result'] == 'mismatch':
@@ -124,6 +121,7 @@ class InspectionMemory:
             if any(f.get('drum') == drum_id and f.get('confidence') == 'low' for f in a.findings.values()):
                 attention.append('unconfirmed finding')
             done = all(k in c for k in CHECKS)
+            entry['complete'] = done
             entry['reasons'] = bad or attention
             entry['missing'] = [k for k in CHECKS if k not in c]
             entry['status'] = ('bad' if bad else 'attention' if attention else 'good' if done
@@ -150,53 +148,23 @@ def observe_for_memory(a, t, perception, reading, est):
             if previous is None or distance < previous['range_m']:  # Keep the closest view.
                 a.memory.record(drum_id, 'thermal', t, surface_c=round(surface, 1), apparent_c=round(apparent, 1),
                                 delta_c=round(surface - reading['temperature_c'], 1), range_m=round(distance, 1))
-        if a.detector:
-            continue  # Visual check comes from the detector (observe_detections).
-        if distance < 3.5 and px >= 1500:
+        if not perception.get('yolo') and distance < 3.5 and px >= 1500:
             rust = a.data.get('rust_pct', {}).get(drum_id, 0.0)
             previous = a.memory.drums[drum_id]['checks'].get('visual')
             if previous is None or rust > previous['rust_pct']:
                 a.memory.record(drum_id, 'visual', t, rust_pct=round(rust, 1), range_m=round(distance, 1),
                                 detector='segmentation placeholder')
-
-
-def observe_detections(a, t, per_drum, est):
-    """YOLO26s results -> findings and the memory's visual check (close, clear drum box)."""
-    for drum_id, entry in per_drum.items():
-        d = DRUMS[drum_id]
-        name = d['display_id']
-        distance = math.dist(est[:2], (d['x'], d['y']))
-        for kind in ('corrosion', 'bulge'):
-            if entry[kind]:
-                best = max(entry[kind], key=lambda e: e['confidence'])
-                confidence = 'high' if any(e['band'] == 'confirm' for e in entry[kind]) else 'low'
-                fid = f'{kind}_{drum_id}'
-                extra = {'rust_pct_box_proxy': round(entry['rust_pct'] or 0, 1)} if kind == 'corrosion' else {}
-                fresh = a.add_finding(t, fid, kind='visible_corrosion' if kind == 'corrosion' else 'bulge', drum=drum_id,
-                                      detector='YOLO26s', detector_confidence=round(best['confidence'], 2),
-                                      confidence=confidence, range_m=round(distance, 1), **extra)
-                if fresh:
-                    a.event(t, f"YOLO: {kind} on {name} ({best['confidence']:.2f}, {confidence})!")
-                elif confidence == 'high':
-                    a.findings[fid]['confidence'] = 'high'
-        if drum_id in a.memory.drums and entry['drum_area'] >= 4000 and distance < 3.5:
-            previous = a.memory.drums[drum_id]['checks'].get('visual')
-            rust, bulge = entry['rust_pct'] or 0.0, bool(entry['bulge'])
-            if previous is None or rust > previous['rust_pct'] or (bulge and not previous.get('bulge')):
-                a.memory.record(drum_id, 'visual', t, rust_pct=round(rust, 1), bulge=bulge, range_m=round(distance, 1),
-                                detector='YOLO26s', drum_confidence=round(entry['drum_conf'], 2))
-
-
-def draw_detections(canvas, detections):
-    """Detector boxes on the first-person panel (the robot's own perception output)."""
-    draw = ImageDraw.Draw(canvas)
-    colors = {'drum': '#7cc4ff', 'corrosion': '#ff9f5e', 'bulge': '#ff6767'}
-    for det in detections:
-        x0, y0, x1, y1 = det['bbox_xyxy']
-        color = colors.get(det['class_name'], 'white')
-        width = 3 if det.get('decision_band') == 'confirm' else 1
-        draw.rectangle((1280 + x0, y0, 1280 + x1, y1), outline=color, width=width)
-        draw.text((1282 + x0, max(0, y0 - 15)), f"{det['class_name']} {det['confidence']:.2f}", font=FONT[14], fill=color)
+    vision=perception.get('yolo')
+    if vision and vision['fresh'] and vision['status']=='ok':
+        for observation in vision['associations']:
+            drum_id=observation['drum_id']
+            if drum_id not in a.memory.drums or observation['range_m']>4:continue
+            previous=a.memory.drums[drum_id]['checks'].get('visual',{})
+            a.memory.record(drum_id,'visual',t,
+                rust_observed='corrosion' in observation['faults'] or previous.get('rust_observed',False),
+                bulge_observed='bulge' in observation['faults'] or previous.get('bulge_observed',False),
+                views=previous.get('views',0)+1,coverage_measured=False,
+                range_m=round(observation['range_m'],2),detector='trained YOLO26s RGB API',model_run=vision['run_id'])
 
 
 def project_camera(camera, points):
@@ -246,7 +214,8 @@ def draw_memory_overlay(canvas, a, p):
     # Job progress in the bird's-eye corner.
     draw = ImageDraw.Draw(canvas)
     counts = {k: sum(e['status'] == k for e in a.memory.drums.values()) for k in ('good', 'attention', 'bad', 'inspecting', 'none')}
-    text = (f"JOB {counts['good'] + counts['attention'] + counts['bad']}/{len(a.memory.drums)} inspected   "
+    complete=sum(e.get('complete',False) for e in a.memory.drums.values())
+    text = (f"JOB {complete}/{len(a.memory.drums)} checks complete   "
             f"good {counts['good']}  attention {counts['attention']}  bad {counts['bad']}")
     draw.rectangle((1284, 690, 1916, 716), fill='#0d131b')
     draw.text((1292, 694), text, font=FONT[16], fill='white')
@@ -262,7 +231,7 @@ def offered_actions(a, p_est, reading):
     actions = [{'id': 'continue_patrol', 'description': 'Resume the ordered centre-aisle patrol'}]
     drums = sorted({f['drum'] for f in a.findings.values() if f.get('drum')})
     # The job: drums still missing checks can be inspected too (nearest two ahead along the round).
-    todo = [d for d, e in a.memory.drums.items() if e['status'] in ('none', 'inspecting') and d not in drums]
+    todo = [d for d, e in a.memory.drums.items() if not e.get('complete',False) and d not in drums]
     todo.sort(key=lambda d: math.dist(p_est[:2], standoff_for(DRUMS[d])))
     drums += todo[:2]
     for drum_id in drums:
@@ -573,6 +542,11 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         a.gas = lagged.update(reading, frame_dt)
         reading = {**reading, **a.gas}
         perception = perceive(a.scene)
+        if state.get('yolo_vision'):
+            perception['yolo']=state['yolo_vision'].observe(frames['first'],onboard.get_depth(),p,yaw,a.nav.fused,t)
+            # Segmentation remains inside the synthetic thermal sensor backend.
+            # It supplies no visual corrosion evidence to the planner.
+            perception['corrosion_px']={}
         mark = lap('perception', mark)
         audio = robot_audio((p[0], p[1], 0.6), t, frame_dt, a.scene.get('acoustic', []), a.nav.touchdowns)
         a.hiss = hiss_detector(audio)
@@ -612,10 +586,26 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
             peak = a.data.setdefault('peak_dose', {})
             peak[nearest['id']] = max(peak.get(nearest['id'], 0.0), reading['dose_rate_uSv_h'])
         a.data.setdefault('env', []).append((reading['temperature_c'], reading['relative_humidity_pct']))
-        for drum_id, px in ({} if a.detector else perception['corrosion_px']).items():   # Stand-in when no detector.
+        for drum_id, px in ({} if perception.get('yolo') else perception['corrosion_px']).items():   # Stand-in without YOLO.
             if px > 150 and a.add_finding(t, f'corrosion_{drum_id}', kind='visible_corrosion', drum=drum_id,
                                           detector='simulator segmentation placeholder (no trained detector yet)'):
                 a.event(t, f"Corrosion on {DRUMS[drum_id]['display_id']}!")
+        vision=perception.get('yolo')
+        if vision and vision['fresh']:
+            for observation in vision['associations']:
+                drum_id=observation['drum_id']
+                record=a.data.setdefault('vision_records',{}).setdefault(drum_id,{'observations':0,'conditions':[]})
+                record['observations']+=1
+                record['conditions']=sorted(set(record['conditions'])|set(observation['faults']))
+                for fault in observation['faults']:
+                    kind='visible_corrosion' if fault=='corrosion' else 'visible_bulge'
+                    first=a.add_finding(t,f'{fault}_{drum_id}',kind=kind,drum=drum_id,
+                        detector='trained YOLO26s RGB API',model_run=vision['run_id'],
+                        association=observation['association'],range_m=round(observation['range_m'],2),
+                        confidence='high' if record['observations']>=2 else 'low',
+                        observations=record['observations'])
+                    if first:a.event(t,f"YOLO {fault} at map {DRUMS[drum_id]['display_id']}; get a closer view")
+            a.data['yolo_stats']={k:vision[k] for k in ('status','calls','failures','wall_seconds','age_s')}
         a.hiss_frames = a.hiss_frames + 1 if a.hiss['hiss_score'] > 0.5 else 0
         # Gas and microphone are omnidirectional: they give evidence near the robot, not which drum.
         if a.hiss_frames == 6 and a.add_finding(t, 'acoustic_hiss', kind='sustained_hiss', score=round(a.hiss['hiss_score'], 2),
@@ -641,16 +631,10 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                 a.swab_text = f"a {result['alpha_bq_cm2']:.2f}  b/g {result['beta_gamma_bq_cm2']:.1f} Bq/cm2"
                 a.event(t, f"Swab {DRUMS[drum_id]['display_id']}: alpha {result['alpha_bq_cm2']:.2f} Bq/cm2" + ('!' if positive else ''))
                 a.swab_contact = None
-        if a.detector and index % DETECT_EVERY_FRAMES == 0:
-            result = detect_frame(frames['first'])
-            if result.get('error'):
-                a.event(t, f"Detector error: {result['error'][:60]}")
-            a.detections = result.get('detections', [])
-            observe_detections(a, t, associate_detections(a.detections, onboard.get_depth(), (p, yaw), est), est)
         observe_for_memory(a, t, perception, reading, est)
         a.memory.update_status(a)
         mark = lap('sensing_findings', mark)
-        if a.status != 'RETREAT':
+        if a.use_cosmos and a.status != 'RETREAT':
             read_plates(a, t, p, yaw)
         mark = lap('plate_reads', mark)
         # Finish a follow-up before considering another. The hard dose stop can interrupt it.
@@ -706,10 +690,19 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
 def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
     """Reuse the scenario layout, then replace the nav and decision panels with real-sensor values."""
     a.nav.landmarks = round(a.nav.icp_inliers * 100)
+    vision=perception.get('yolo')
+    if vision:
+        frames=dict(frames)
+        view=Image.fromarray(frames['first']);vd=ImageDraw.Draw(view)
+        for item in vision['detections']:
+            color={'drum':'#35d7ff','corrosion':'#ff9829','bulge':'#ed67f5'}[item['class_name']]
+            vd.rectangle(item['bbox_xyxy'],outline=color,width=2)
+        for item in vision['associations']:
+            x,y,_,_=item['box']
+            vd.text((x,max(25,y)),f"map {item['display_id']} {'/'.join(item['faults']) or 'drum'}",font=FONT[14],fill='#ffffff',stroke_width=1,stroke_fill='black')
+        frames['first']=np.asarray(view)
     canvas = compose(a, frames, perception, reading, a.nav.errors(p, yaw), p, yaw, roll, pitch, t)
     draw_memory_overlay(canvas, a, p)
-    if a.detector:
-        draw_detections(canvas, a.detections)
     draw = ImageDraw.Draw(canvas)
     y0 = 728
     draw.rectangle((0, y0, 480, y0 + 200), fill='#111822')
@@ -737,9 +730,11 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
         draw.text((1460, y0 + 196 + 24 * i), f'{et:4.1f}s  {text}'[:54], font=FONT[16],
                   fill='#ff9f9f' if '!' in text else 'white')
     draw.rectangle((0, H - 28, W, H), fill='#111822')
-    draw.text((16, H - 26), 'Onboard: RTX LiDAR, physics IMU, joint encoders, RGB-D, PTZ, synthetic LWIR/H2/mic/swab. '
-              'Decisions: Cosmos Reason 2 over safety-checked actions. Corrosion/bulge: '
-              + ('YOLO26s detector API.' if a.detector else 'segmentation stand-in (detector API not configured).'),
+    if vision:
+        draw.text((16,974),f"YOLO26s {vision['status']} | {len(vision['associations'])} mapped drums | {len(vision['detections'])} boxes",font=FONT[16],fill='#35d7ff')
+        draw.text((16,1000),f"API {vision['wall_seconds']*1000:.0f} ms | age {vision['age_s']:.2f}s | calls {vision['calls']} | errors {vision['failures']}",font=FONT[16],fill='white')
+    draw.text((16, H - 26), 'RGB: trained YOLO26s + depth/map association. Navigation: LiDAR/IMU/encoders. '
+              'LWIR/H2/mic/swab are simulated sensors. Cosmos chooses safety-checked actions; fallback is labelled.',
               font=FONT[14], fill='#6f8396')
     return canvas
 
@@ -768,6 +763,7 @@ def build_report(a):
         drums.append({'drum': d['display_id'], 'category': d['category'],
                       'plate_read': a.ids_read.get(drum_id, 'not attempted'), 'record': a.scene['records'].get(drum_id),
                       'grade': entry['status'], 'checks_done': sorted(entry['checks']), 'missing': entry.get('missing', []),
+                      'complete': entry.get('complete',False),
                       'evidence': entry['checks'], 'actions': actions[entry['status']], 'notes': entry['reasons']})
     report = {'title': a.title, 'drums': drums, 'round_status': a.status,
               'patrol_stops_completed': a.patrol_index, 'patrol_stops_total': len(a.patrol),
@@ -775,7 +771,7 @@ def build_report(a):
                               'max_h2_ppm': round(max(a.history['h2'] or [0])), 'max_gamma_uSv_h': round(max(a.history['gamma'] or [0]), 1)},
               'alerts': [DRUMS[d]['display_id'] for d in a.flagged],
               'decisions': [{k: d[k] for k in ('t', 'action_id', 'reason', 'source')} for d in a.decisions],
-              'not_inspected': [DRUMS[d]['display_id'] for d, e in a.memory.drums.items() if e['status'] in ('none', 'inspecting')]}
+              'not_inspected': [DRUMS[d]['display_id'] for d, e in a.memory.drums.items() if not e.get('complete',False)]}
     report['summary'] = factual_summary(report)
 
     return report
@@ -785,7 +781,7 @@ def factual_summary(r):
     """Built from the inspection memory only; the 2B model embellished when asked to write this."""
     job = [d for d in r['drums'] if d['grade'] != 'outside job']
     count = {k: [d['drum'] for d in job if d['grade'] == k] for k in ('good', 'attention', 'bad', 'inspecting', 'none')}
-    parts = [f"{len(job) - len(count['none']) - len(count['inspecting'])}/{len(job)} drums fully inspected: "
+    parts = [f"{sum(d.get('complete',False) for d in job)}/{len(job)} drums fully inspected: "
              f"{len(count['good'])} good, {len(count['attention'])} need attention, {len(count['bad'])} bad."]
     for d in job:
         if d['grade'] in ('bad', 'attention'):

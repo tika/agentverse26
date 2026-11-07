@@ -1,5 +1,13 @@
 # Agentverse26 — nuclear-store robot inspection
 
+## Deployed YOLO26s API
+
+The trained detector is live. Start with the **[model API usage guide](docs/model_api.md)**
+for the endpoint URL, teammate credentials, Python/curl examples, response format
+and actual test results. Classes: drum, corrosion patch and bulge. Default confidence: 0.25.
+See the [training and hosting handoff](docs/yolo26s_training_serving.md) to reproduce it.
+API credentials are issued privately by the endpoint owner and are not stored in Git.
+
 Build the Isaac Sim environment one step at a time, following **MVP v2**.
 The environment now includes the fixed **28-drum hall**, seeded corrosion,
 wet/dry releases, class + package labels, scalar sensors and Spot's body-mounted
@@ -16,6 +24,8 @@ local Isaac and Modal commands, editing, picture-ready settings and video captur
 - [Detector/camera API and training start gate](docs/training_handoff.md)
 - [Isolated rust/bulge appearance review and two-cue screening](docs/barrel_appearance_review.md)
 - [Technical barrel design handoff for the next developer](docs/barrel_design_handoff.md)
+- [Single-workspace 1,200-image dataset: standalone agent instructions](docs/dataset_generation_handoff.md)
+- [Completed 1,200-image dataset: paths, previews and verification](docs/barrels_v2_1200_release.md)
 
 Use Python 3.12+ locally. Review each step through exported screenshots/video,
 as selected by the user; this replaces the specification's interactive-viewer

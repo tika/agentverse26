@@ -29,12 +29,14 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
                                    add_python='3.13', setup_dockerfile_commands=['USER root'])
          .entrypoint([])
          .pip_install('imageio[ffmpeg]')
-         .env({'ACCEPT_EULA': 'Y', 'PRIVACY_CONSENT': 'N', 'NVIDIA_DRIVER_CAPABILITIES': 'all'})
+         .env({'ACCEPT_EULA': 'Y', 'PRIVACY_CONSENT': 'N', 'NVIDIA_DRIVER_CAPABILITIES': 'all',
+               'HOT_SPAWN_X':os.environ.get('HOT_SPAWN_X','10'), 'HOT_SPAWN_Y':os.environ.get('HOT_SPAWN_Y','6')})
          .add_local_dir(ROOT / 'sim', '/workspace/sim', copy=True,
                         ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc', '*.usda']))
 app = modal.App('agentverse-hot-hall')
 requests = modal.Queue.from_name('agentverse-hot-requests', create_if_missing=True)
 results = modal.Dict.from_name('agentverse-hot-results', create_if_missing=True)
+services = modal.Dict.from_name('agentverse-hot-services', create_if_missing=True)
 
 
 def _encode(folder):
@@ -51,20 +53,30 @@ def _encode(folder):
         frames.rmdir()
 
 
-@app.function(image=image, gpu=['L40S', 'L4', 'A10G'], cpu=8, memory=32768, timeout=4 * 60 * 60,
+@app.function(image=image, gpu=['RTX-PRO-6000', 'L40S', 'L4'], cpu=8, memory=32768, timeout=4 * 60 * 60,
               secrets=[modal.Secret.from_name('cosmos-vllm', required_keys=['VLLM_API_KEY'])]
-              # Optional YOLO26s detector access: `HOT_DETECTOR=1 hot up` once the drum-detector secret exists.
-              + ([modal.Secret.from_name('drum-detector', required_keys=['DETECTOR_API_URL', 'DETECTOR_API_KEY',
-                                                                         'DETECTOR_API_SECRET'])]
+              # YOLO26s detector credentials (docs/model_api.md): `HOT_DETECTOR=1 hot up` once drum-inference exists.
+              + ([modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL', 'DETECTOR_API_KEY',
+                                                                          'DETECTOR_API_SECRET'])]
                  if os.environ.get('HOT_DETECTOR') else []))
 def serve():
     hot = Path('/tmp/hot')
     log = open('/tmp/hot.log', 'w')
-    # Isaac calls Cosmos (vLLM, tools/cosmos_vllm.py) over HTTPS with the shared API key.
+    # A teammate's external Cosmos service can be configured without restarting
+    # Isaac. Credentials stay in a private worker file, outside recorded outputs.
+    def refresh_services():
+        config=services.get('cosmos') or {}
+        hot.mkdir(parents=True,exist_ok=True)
+        path=hot/'services.json'
+        fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+        with os.fdopen(fd,'w') as output:json.dump(config,output)
+    refresh_services()
+    # Default Cosmos endpoint: our vLLM deployment (tools/cosmos_vllm.py); `cosmos-config` can override it.
     cosmos_url = modal.Function.from_name('agentverse-cosmos-vllm', 'serve').get_web_url()
     process = subprocess.Popen(['/isaac-sim/python.sh', '/workspace/sim/hot_server.py', '--allow-root'],
                                cwd='/workspace/sim', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                               env={**os.environ, 'COSMOS_URL': cosmos_url})
+                               env={**os.environ, 'COSMOS_URL': cosmos_url,
+                                    'COSMOS_CONFIG_FILE': str(hot / 'services.json')})
 
     def pump():
         for line in process.stdout:
@@ -84,6 +96,7 @@ def serve():
         if request is None:
             continue
         rid = request['id']
+        refresh_services()
         (hot / 'req').mkdir(parents=True, exist_ok=True)
         staged = hot / 'req' / f'{rid}.tmp'
         staged.write_text(request['source'])
@@ -158,6 +171,27 @@ def down():
     print('Stopped', call_id)
 
 
+def configure_cosmos(path):
+    """Load a private JSON or dotenv file; never print credentials."""
+    import shlex
+    text=Path(path).read_text()
+    if text.lstrip().startswith('{'):
+        config=json.loads(text)
+    else:
+        config={}
+        for line in text.splitlines():
+            if not line.strip() or line.lstrip().startswith('#'):continue
+            key,value=line.removeprefix('export ').split('=',1)
+            parts=shlex.split(value)
+            config[key.strip()]=parts[0] if parts else ''
+    allowed=('COSMOS_URL','VLLM_API_KEY','COSMOS_MODEL')
+    config={key:str(value) for key,value in config.items() if key in allowed}
+    if not config.get('COSMOS_URL','').startswith('https://'):
+        raise ValueError('COSMOS_URL must be an HTTPS base URL')
+    services['cosmos']=config
+    print('Configured external Cosmos endpoint; credentials not displayed')
+
+
 if __name__ == '__main__':
     command = sys.argv[1] if len(sys.argv) > 1 else ''
     if command == 'up':
@@ -166,5 +200,7 @@ if __name__ == '__main__':
         run(*sys.argv[2:])
     elif command == 'down':
         down()
+    elif command == 'cosmos-config' and len(sys.argv)==3:
+        configure_cosmos(sys.argv[2])
     else:
         raise SystemExit(__doc__)

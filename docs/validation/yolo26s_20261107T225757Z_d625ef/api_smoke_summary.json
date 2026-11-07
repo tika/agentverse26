@@ -1,0 +1,17 @@
+{
+  "url": "https://paramsachdeva07--agentverse-drum-detector-api-drumdetector-web.us-east.modal.run",
+  "run_id": "yolo26s_20261107T225757Z_d625ef",
+  "unauthenticated_status": 401,
+  "cold_health_seconds": 5.799657249939628,
+  "warm_http_seconds": 0.5532927500316873,
+  "missing_file_status": 422,
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "detections": 21,
+  "barrels": 3,
+  "applied_thresholds": {
+    "drum": 0.25,
+    "corrosion": 0.25,
+    "bulge": 0.25
+  },
+  "best_sha256": "63dc5dfd9933aff58bc0cfc5a759de4b78ef9f25b6c7b74f3f818bceb72e6f04"
+}

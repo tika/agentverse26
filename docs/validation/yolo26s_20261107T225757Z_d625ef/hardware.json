@@ -1,0 +1,17 @@
+{
+  "gpus": [
+    "0, NVIDIA RTX PRO 6000 Blackwell Server Edition, GPU-755c7296-906a-6f0d-aefe-bd7d4f454def, 610.57.04"
+  ],
+  "cuda_visible_devices": [
+    "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+  ],
+  "count": 1,
+  "torch": "2.9.1+cu128",
+  "cuda": "12.8",
+  "ultralytics": "8.4.207",
+  "python": "3.12.16",
+  "nvidia_smi_stderr": "",
+  "topology": "\t\u001b[4mGPU0\tCPU Affinity\tNUMA Affinity\tGPU NUMA ID\u001b[0m\nGPU0\t X \t\t\t\tN/A\n\nLegend:\n\n  X    = Self\n  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)\n  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node\n  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)\n  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)\n  PIX  = Connection traversing at most a single PCIe bridge\n  NV#  = Connection traversing a bonded set of # NVLinks\n",
+  "topology_returncode": 0,
+  "topology_stderr": ""
+}

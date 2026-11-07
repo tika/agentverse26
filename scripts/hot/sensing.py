@@ -313,12 +313,20 @@ def cosmos_chat(content, system=None, max_tokens=512, timeout_s=180):
     import os as _os
     import urllib.request as _url
     url, key = _os.environ.get('COSMOS_URL'), _os.environ.get('VLLM_API_KEY')
-    if not url or not key:
-        raise RuntimeError('COSMOS_URL / VLLM_API_KEY not set on this worker')
+    model=_os.environ.get('COSMOS_MODEL','cosmos')
+    config_file=_os.environ.get('COSMOS_CONFIG_FILE')
+    if config_file and Path(config_file).exists():
+        config=json.loads(Path(config_file).read_text())
+        url=config.get('COSMOS_URL',url);key=config.get('VLLM_API_KEY',key)
+        model=config.get('COSMOS_MODEL',model)
+    if not url:
+        raise RuntimeError('External Cosmos endpoint has not been configured')
     messages = ([{'role': 'system', 'content': system}] if system else []) + [{'role': 'user', 'content': content}]
-    body = json.dumps({'model': 'cosmos', 'messages': messages, 'max_tokens': max_tokens, 'temperature': 0.0}).encode()
+    body = json.dumps({'model': model, 'messages': messages, 'max_tokens': max_tokens, 'temperature': 0.0}).encode()
+    headers={'Content-Type':'application/json'}
+    if key:headers['Authorization']=f'Bearer {key}'
     request = _url.Request(url.rstrip('/') + '/v1/chat/completions', data=body, method='POST',
-                           headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key}'})
+                           headers=headers)
     with _url.urlopen(request, timeout=timeout_s) as response:
         return json.loads(response.read())['choices'][0]['message']['content']
 
@@ -363,44 +371,6 @@ def cosmos_call(method, rgb, snapshot=None):
     result['latency_s'] = _time.perf_counter() - started
     return result
 
-
-def detector_available():
-    import os as _os
-    return all(_os.environ.get(k) for k in ('DETECTOR_API_URL', 'DETECTOR_API_KEY', 'DETECTOR_API_SECRET'))
-
-
-def detect_frame(rgb, band='suspect', timeout_s=180):
-    """YOLO26s drum/corrosion/bulge detector (detector-training branch API). Returns the API JSON or {'error'}."""
-    import io as _io
-    import os as _os
-    import time as _time
-    import urllib.request as _url
-    import uuid as _uuid
-    from PIL import Image as _Image
-    buffer = _io.BytesIO()
-    _Image.fromarray(rgb).save(buffer, format='JPEG', quality=92)
-    boundary = _uuid.uuid4().hex
-    body = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="frame.jpg"\r\n'
-            f'Content-Type: image/jpeg\r\n\r\n').encode() + buffer.getvalue() + f'\r\n--{boundary}--\r\n'.encode()
-    request = _url.Request(_os.environ['DETECTOR_API_URL'].rstrip('/') + '/predict?band=' + band, data=body, method='POST',
-                           headers={'Modal-Key': _os.environ['DETECTOR_API_KEY'],
-                                    'Modal-Secret': _os.environ['DETECTOR_API_SECRET'],
-                                    'Content-Type': 'multipart/form-data; boundary=' + boundary})
-    started = _time.perf_counter()
-    try:
-        with _url.urlopen(request, timeout=timeout_s) as response:
-            result = json.loads(response.read())
-    except Exception as error:
-        return {'error': repr(error)[-300:], 'detections': []}
-    result['wall_s'] = _time.perf_counter() - started
-    return result
-
-
-def associate_detections(detections, depth, body_truth, estimate):
-    """Place each box on the map via depth at its centre and the estimated pose; match faults to drums spatially."""
-    per_drum = {}
-    if depth is None:
-        return per_drum
     h, w = depth.shape
     for det in detections:
         x0, y0, x1, y1 = det['bbox_xyxy']
