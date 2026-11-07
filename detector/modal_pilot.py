@@ -118,6 +118,16 @@ def main():
                   for s in range(args.seed_start,args.seed_start+args.seeds)])
     jobs=plan['jobs'];target_images=plan['images'];workers=args.workers or plan['workers']
     if not 1<=workers<=16:raise SystemExit('Use 1–16 workers')
+    if args.publish:
+        try:
+            existing=json.loads(b''.join(volume.read_file('/releases/'+args.publish+'/manifest.json')))
+        except modal.exception.NotFoundError:existing=None
+        if existing is not None:
+            if existing['images']!=target_images or existing['generation']['plan_sha256']!=digest(plan):
+                raise SystemExit('Release name already exists with a different plan; choose a new version')
+            print('RELEASE_ALREADY_EXISTS '+json.dumps(dict(release=args.publish,images=existing['images'],
+                  volume='detector-data',workspace=args.workspace)),flush=True)
+            return
     started=time.perf_counter()
     if args.resume:
         output=args.resume.resolve();run_id=output.name

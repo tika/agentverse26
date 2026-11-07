@@ -2,14 +2,14 @@
 
 ## Objective and current authorization
 
-**The user has now authorized the full 1,200-image run on up to 10 RTX PRO 6000
-workers in `paramsachdeva07`. Training is not authorized by this dataset task.**
-The earlier one-image benchmark is complete; do not repeat it or launch duplicate
-generation jobs. First check the active run and release as described below.
+**The 1,200-image run is complete and published in `paramsachdeva07`.** See
+[the release report](barrels_v2_1200_release.md) for exact paths and verification.
+Training is not authorized by this dataset task. Do not repeat the benchmark or
+launch duplicate generation jobs; first inspect the existing release below.
 No second account or cross-account workflow is involved.
 
-Current full run: **`20261107T214634Z_a02466`**, Modal app
-`ap-xSX6rwOfHnoPsLMAWG5XLg`. Check this run before launching another:
+Completed full run: **`20261107T214634Z_a02466`**, Modal app
+`ap-xSX6rwOfHnoPsLMAWG5XLg`. Inspect it with:
 `python detector/status.py 20261107T214634Z_a02466`.
 It preflights seed 1002, the crowded case used to verify cropped-box drawing and
 camera-clearance fixes. The previous persistent-instance attempt is preserved as
@@ -239,10 +239,9 @@ force-overwrite or delete an existing release to make a check pass.
 ## Paste this into a new agent
 
 > Work in agentverse26 on detector-training. Read docs/dataset_generation_handoff.md
-> completely. Current authorization is the single-workspace 1,200-image dataset
-> on up to 10 RTX PRO 6000 workers in paramsachdeva07. First check whether the run
-> or release already exists; monitor/resume instead of launching duplicates.
-> Validate all images and publish to detector-data:/releases/barrels_v2_1200.
-> Training is a separate task. Preserve team changes and captures. Do not change
+> completely. The single-workspace 1,200-image dataset has completed in paramsachdeva07.
+> Inspect detector-data:/releases/barrels_v2_1200 and its validation report rather
+> than launching duplicate generation. Training is a separate task requiring the
+> user's instruction. Preserve team changes and captures. Do not change
 > the barrel design or stop other people's apps. The one-image GPU comparison is
 > complete and should not be repeated for this run.

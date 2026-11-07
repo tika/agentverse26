@@ -3,9 +3,9 @@
 For the prepared **single-workspace 1,200-image / 10 RTX PRO 6000** run, start with
 [the complete agent handoff](../docs/dataset_generation_handoff.md). It includes
 the frozen plan, generation, GPU comparison, validation, recovery and publication
-to the owner's Modal Volume. **The full 1,200-image run is now authorized;
-training remains separate.** Check for an active run/release before starting
-another. The following commands describe the earlier smaller pilot.
+to the owner's Modal Volume. **The full 1,200-image release is complete and
+verified; training remains separate.** See [the release report](../docs/barrels_v2_1200_release.md).
+Check the existing release before starting another. The following commands describe the earlier smaller pilot.
 
 The default isolated pilot renders 40 images: eight independent Modal L40S containers,
 five 640×640 views each. This is asset/annotation validation, not a trained model
