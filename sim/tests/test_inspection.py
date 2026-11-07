@@ -54,6 +54,36 @@ class InspectionChecks(unittest.TestCase):
         self.assertEqual(w.poll_swab(11)['status'],'idle')
         self.assertNotIn('D01', json.dumps(result))
 
+    def test_synthetic_payloads_keep_measurements_separate(self):
+        import numpy as np
+        from inspection_payloads import dew_point_c, microphone_window, thermal_image
+
+        self.assertAlmostEqual(dew_point_c(20, 50), 9.3, places=1)
+        self.assertIsNone(dew_point_c(20, 0))
+        config = {**self.c, 'gas_vents': [{'position_m': [1, 0, 1], 'hydrogen_ppm': 90}]}
+        world = SensorWorld([self.drum], config)
+        near = world.sample((1, 0, 1), 0)
+        far = world.sample((2, 0, 1), 1)
+        self.assertEqual(near['hydrogen_ppm'], 90)
+        self.assertEqual(far['hydrogen_ppm'], 45)
+        self.assertEqual(near['methane_ppm'], 0)
+        self.assertNotIn('hydrogen_ppm', SensorWorld([self.drum], self.c).sample((1, 0, 1), 0))
+
+        pixels = thermal_image(np.array([[0, 1, 2]]), {1: 26, 3: 90}, 18)
+        np.testing.assert_array_equal(pixels, [[18, 26, 18]])
+        events = [{'kind': 'impulse', 'position_m': [0, 0, 0], 'time_s': 1, 'amplitude': 0.3}]
+        before = microphone_window((0, 0, 0), 0, events)
+        after = microphone_window((0, 0, 0), 1, events)
+        self.assertLess(np.abs(before).max(), 0.02)
+        self.assertGreater(np.abs(after).max(), 0.25)
+
+        world.set_surface_chemistry('D01', ph=3.8, conductivity_us_cm=120, chloride_mg_m2=5)
+        world.start_swab((.3, 0, 0), 0, robot_stopped=True)
+        world.set_surface_chemistry('D01', ph=7)
+        sample = world.poll_swab(10)
+        self.assertEqual(sample['ph'], 3.8)
+        self.assertEqual(sample['alpha_bq_cm2'], 0)
+
     def test_condition_boundaries_and_missing_measurements(self):
         for field, first, second in (('rust_pct',1,10),('bulge_pct',2,5)):
             self.assertEqual(classify_condition({field:first})['zone'],'Tolerable')

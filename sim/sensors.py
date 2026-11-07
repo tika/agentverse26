@@ -9,6 +9,8 @@ import math
 from pathlib import Path
 import random
 
+from inspection_payloads import dew_point_c, gas_at_pose
+
 CONFIG = Path(__file__).with_name('inspection_config.json')
 
 
@@ -61,6 +63,7 @@ class SensorWorld:
         self._dose_mSv = 0.0
         self._previous_rate = None
         self._pending_swab = None
+        self._surface_chemistry = {}
 
     def _sources(self, position):
         cfg = self.config['radiation']
@@ -93,7 +96,9 @@ class SensorWorld:
         humidity = min(100.0, max(0.0, self._env_rng.gauss(values['relative_humidity_pct'], env['humidity_noise_std_pct'])))
         return {'time_s': time_s, 'dose_rate_uSv_h': rate, 'dose_timestamp_s': time_s,
                 'mission_dose_mSv': self._dose_mSv, 'zone': zone,
-                'temperature_c': temperature, 'relative_humidity_pct': humidity}
+                'temperature_c': temperature, 'relative_humidity_pct': humidity,
+                'dew_point_c': dew_point_c(temperature, humidity),
+                **(gas_at_pose(position, self.config['gas_vents']) if 'gas_vents' in self.config else {})}
 
     def gamma_bins(self, position, yaw_rad=0.0):
         """Stretch sensor: relative bearing/intensity in 16 blurred azimuth bins."""
@@ -128,7 +133,8 @@ class SensorWorld:
         if distance > reach:
             raise ValueError('No drum-base swab patch in reach')
         self._pending_swab = {'ready_at': time_s+self.config['robot']['swab_duration_s'],
-                              'contact': list(floor_contact_xyz), 'id': drum['id']}
+                              'contact': list(floor_contact_xyz), 'id': drum['id'],
+                              'chemistry': self._surface_chemistry.get(drum['id'], {})}
         return {'status': 'sampling', 'ready_at_s': self._pending_swab['ready_at']}
 
     def poll_swab(self, time_s):
@@ -142,13 +148,30 @@ class SensorWorld:
         values = {key: max(0.0, self._swab_rng.gauss(value, value*fraction))
                   for key, value in self._contamination[pending['id']].items()}
         return {'status': 'complete', 'time_s': time_s, 'contact_xyz': pending['contact'],
-                'alpha_bq_cm2': values['alpha'], 'beta_gamma_bq_cm2': values['beta_gamma']}
+                'alpha_bq_cm2': values['alpha'], 'beta_gamma_bq_cm2': values['beta_gamma'],
+                **pending['chemistry']}
 
     def inject_leak(self, drum_id, alpha_bq_cm2=0.8, beta_gamma_bq_cm2=8.0):
         """Simulator event hook only. Visible puddles are built in the later fault step."""
         drum = next(d for d in self._drums if d['id'] == drum_id)
         drum['source_strength'] = self.config['events']['leak_strength_at_1m']
         self._contamination[drum_id] = {'alpha': alpha_bq_cm2, 'beta_gamma': beta_gamma_bq_cm2}
+
+    def set_surface_chemistry(self, drum_id, *, ph=None, conductivity_us_cm=None, chloride_mg_m2=None):
+        """Author optional sample results independently of radiation and visible moisture."""
+        if drum_id not in self._contamination:
+            raise ValueError("Unknown drum ID")
+        if ph is not None and (not math.isfinite(ph) or not 0 <= ph <= 14):
+            raise ValueError("Fixture pH must be between 0 and 14")
+        if any(value is not None and (not math.isfinite(value) or value < 0)
+               for value in (conductivity_us_cm, chloride_mg_m2)):
+            raise ValueError("Conductivity and chloride must be finite and nonnegative")
+        self._surface_chemistry[drum_id] = {
+            key: value for key, value in {
+                "ph": ph, "conductivity_us_cm": conductivity_us_cm,
+                "chloride_mg_m2": chloride_mg_m2,
+            }.items() if value is not None
+        }
 
     def inject_water_ingress(self, zone):
         self._zones[zone]['relative_humidity_pct'] = min(100.0, self._zones[zone]['relative_humidity_pct']+
