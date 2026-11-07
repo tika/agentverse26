@@ -250,6 +250,21 @@ def run():
             raise RuntimeError("Camera warm-up failed")
 
         timing["camera_warmup_s"] = perf_counter() - warm_started
+        if args.radiation:
+            world.pause()
+            alignment = []
+            for height in (2., 4., 2., 4.):
+                aim(front, (1.25, 6., height), (1.251, 6., 0.))
+                for _ in range(4):
+                    app.update()
+                    world.render()
+                depth_check = front.get_depth()
+                patch = depth_check[130:140,235:245]
+                measured = float(np.median(patch[np.isfinite(patch) & (patch > 0)]))
+                alignment.append({"expected_floor_depth_m": height, "measured_m": measured})
+            (root / "camera_alignment.json").write_text(json.dumps(alignment, indent=2))
+            assert all(abs(row["expected_floor_depth_m"] - row["measured_m"]) < .12 for row in alignment), alignment
+            world.play()
         print(f"[spot-timing] {timing}", flush=True)
         scores = {}
         for mode in (("radiation",) if args.radiation else ("dry", "spill")):
