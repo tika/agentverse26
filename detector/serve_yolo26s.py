@@ -56,6 +56,7 @@ class DrumDetector:
         from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
         from PIL import Image, ImageOps, UnidentifiedImageError
         from starlette.concurrency import run_in_threadpool
+        from barrel_audit import assign_conditions
 
         api = FastAPI(title='Agentverse drum detector', version=RUN_ID,
                       description='YOLO26s RGB boxes. Radiation, temperature, gas inference and robot planning are separate inputs/layers.')
@@ -64,7 +65,8 @@ class DrumDetector:
         def health():
             return dict(status='ready', model='YOLO26s', run_id=RUN_ID, best_sha256=self.sha,
                         classes=self.model.names, thresholds=self.thresholds,
-                        auth='Modal proxy token', gpu=self.gpu)
+                        auth='Modal proxy token', gpu=self.gpu,
+                        default_operating_mode='fixed', default_confidence=.25)
 
         def predict_image(raw, band, confidence, frame_timestamp):
             try:
@@ -78,7 +80,9 @@ class DrumDetector:
             except (UnidentifiedImageError, OSError, Image.DecompressionBombError):
                 raise HTTPException(400, 'Invalid or damaged image')
             started = time.perf_counter()
-            floor = confidence if confidence is not None else min(v[band] for v in self.thresholds.values())
+            cutoffs = [confidence if confidence is not None else .25 if band == 'fixed' else self.thresholds[name][band]
+                       for name in ('drum','corrosion','bulge')]
+            floor = min(cutoffs)
             with self.lock:
                 result = self.model.predict(frame, imgsz=640, conf=floor, iou=.7, max_det=300,
                                             device=0, verbose=False)[0]
@@ -86,21 +90,29 @@ class DrumDetector:
             detections = []
             for xyxy, score, class_id in zip(boxes.xyxy.tolist(), boxes.conf.tolist(), boxes.cls.tolist()):
                 name = self.model.names[int(class_id)]
-                cutoff = confidence if confidence is not None else self.thresholds[name][band]
+                cutoff = cutoffs[int(class_id)]
                 if score < cutoff:
                     continue
                 detections.append(dict(class_id=int(class_id), class_name=name, confidence=round(score, 6),
                                        bbox_xyxy=[round(v, 2) for v in xyxy],
                                        decision_band='confirm' if score >= self.thresholds[name]['confirm'] else 'suspect'))
+            # Same 2D condition association used by the barrel-level audit.
+            objects = [dict(class_id=d['class_id'], confidence=d['confidence'], box=d['bbox_xyxy']) for d in detections]
+            drums = [d for d in objects if d['class_id'] == 0]
+            conditions = assign_conditions(drums, [d for d in objects if d['class_id'] in (1,2)], cutoffs)
+            barrels = [dict(frame_id=f'drum_{i}', bbox_xyxy=d['box'], confidence=d['confidence'],
+                            corrosion_observed=condition['corrosion'], bulge_observed=condition['bulge'])
+                       for i,(d,condition) in enumerate(zip(drums,conditions))]
             return dict(model='YOLO26s', run_id=RUN_ID, best_sha256=self.sha,
                         received_at=datetime.now(timezone.utc).isoformat(), frame_timestamp=frame_timestamp,
-                        image=dict(width=frame.width, height=frame.height), detections=detections,
+                        image=dict(width=frame.width, height=frame.height), detections=detections, barrels=barrels,
                         latency_ms=round((time.perf_counter()-started)*1000, 2), model_speed_ms=result.speed,
-                        operating_mode=band, confidence_override=confidence)
+                        operating_mode=band, confidence_override=confidence,
+                        applied_thresholds=dict(zip(('drum','corrosion','bulge'),cutoffs)))
 
         @api.post('/predict')
         async def predict(file: UploadFile = File(...),
-                          band: str = Query('suspect', pattern='^(suspect|confirm)$'),
+                          band: str = Query('fixed', pattern='^(fixed|suspect|confirm)$'),
                           confidence: float | None = Query(None, ge=.001, le=1),
                           frame_timestamp: str | None = Form(None)):
             raw = await file.read(8*1024*1024+1)

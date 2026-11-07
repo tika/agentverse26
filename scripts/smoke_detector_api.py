@@ -33,7 +33,12 @@ def main():
         token = Workspace.from_context().proxy_tokens.create(name='agentverse-drum-detector-client')
         key, secret = token.token_id, token.token_secret
         # RBAC workspaces need an explicit environment association.
-        Workspace.from_context().proxy_tokens.allow(key, 'main')
+        import modal
+        try:
+            Workspace.from_context().proxy_tokens.allow(key, 'main')
+        except modal.exception.InvalidError as error:
+            if 'not environment-scoped' not in str(error):
+                raise
     values = dict(DETECTOR_API_URL=args.url, DETECTOR_API_KEY=key, DETECTOR_API_SECRET=secret)
     fd = os.open(credentials, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, 'w') as output:
@@ -59,6 +64,8 @@ def main():
     report['warm_http_seconds'] = time.perf_counter()-started
     assert result['run_id'] == args.run_id and result['best_sha256'] == health['best_sha256']
     assert result['detections'] and all(r['class_name'] in ['drum', 'corrosion', 'bulge'] for r in result['detections'])
+    assert result['operating_mode'] == 'fixed' and result['applied_thresholds'] == dict(drum=.25,corrosion=.25,bulge=.25)
+    assert len(result['barrels']) == sum(r['class_id'] == 0 for r in result['detections'])
     report['prediction'] = result
     # Explicit override checks a separate request path without fitting to test data.
     malformed = urllib.request.Request(args.url+'/predict', data=b'not-an-image',
@@ -75,6 +82,7 @@ def main():
     print(json.dumps(dict(status='passed', url=args.url, run_id=args.run_id,
                           unauthorized_status=report['unauthenticated_status'],
                           detections=len(result['detections']), warm_http_seconds=report['warm_http_seconds'],
+                          barrels=len(result['barrels']), gpu=health['gpu'],
                           model_speed_ms=result['model_speed_ms'], report=str(destination),
                           credentials_file=str(credentials)), indent=2))
 
