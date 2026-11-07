@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 SIM = Path(__file__).resolve().parent
 HOT = Path('/tmp/hot')
-SPAWN = (3.0, 6.0)
+SPAWN = (10.0, 6.0)  # West edge of the ILW rows, centre aisle.
 VIEW = (640, 360)
 
 
