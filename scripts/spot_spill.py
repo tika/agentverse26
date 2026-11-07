@@ -100,7 +100,7 @@ def run():
             for column, x in enumerate((11.4, 12.5, 13.6, 14.7)):
                 drum = UsdGeom.Cylinder.Define(stage, f"/World/Drum_{row}_{column}")
                 drum.CreateHeightAttr(0.88)
-                drum.CreateRadiusAttr(0.29)
+                drum.CreateRadiusAttr(0.299)
                 drum.CreateDisplayColorAttr([(0.64, 0.35, 0.08)])
                 drum.AddTranslateOp().Set(Gf.Vec3d(x, y, 0.44))
                 UsdPhysics.CollisionAPI.Apply(drum.GetPrim())

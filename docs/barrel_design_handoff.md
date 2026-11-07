@@ -137,13 +137,13 @@ yaw = 0. The floor's upper surface is slightly below Z = 0.
 
 | Property | Value / implementation |
 | --- | --- |
-| Nominal outer diameter | 0.580 m, including chimes |
+| Nominal outer diameter | 0.598 m (23.5 in, 55 US gal / 208 L drum), including chimes and hoops |
 | Nominal overall height | 0.880 m |
-| Cylindrical shell radius | 0.278 m; the proud chimes reach 0.290 m |
+| Cylindrical shell radius | 0.287 m (574 mm shell); the proud chimes reach 0.299 m |
 | Rolling hoops | Around one-third and two-thirds of height; radius/shape in `drum_profile('LLW')` |
 | Body | Revolved profile, 64 angular segments, smooth face-varying normals |
 | Body UV | U = angle / 2π; V = height / 0.88 |
-| Nominal lid | Radius 0.269 m; upper surface at Z = 0.865 m, recessed 15 mm below the top |
+| Nominal lid | Radius 0.278 m; upper surface at Z = 0.865 m, recessed 15 mm below the top |
 | Hardware | Separate large/small bung meshes, retained from `create_drum()` |
 
 The profile contains deliberate non-monotonic sections around chimes and the
@@ -160,19 +160,19 @@ r_new(z) = r_nominal(z) × [1 + 0.08 × sin²(πz / 0.88)]
 ```
 
 The 8% value is the peak **local scale factor**, not an 8% change to the nominal
-maximum diameter. Current maximum radius is approximately 0.3055625 m:
+maximum diameter. Current maximum radius is approximately 0.3151114 m:
 
 ```text
-nominal maximum diameter = 0.5800000 m
-bulged maximum diameter ≈ 0.6111251 m
-maximum-diameter increase ≈ 5.37%
+nominal maximum diameter = 0.5980000 m
+bulged maximum diameter ≈ 0.6302227 m
+maximum-diameter increase ≈ 5.39%
 ```
 
 `dome_lid(rise=0.070)` creates a separate lid with 14 radial bands and 96 angular
 segments:
 
 ```text
-z_lid(r) = 0.865 + 0.070 × [1 − (r / 0.269)²]^1.5
+z_lid(r) = 0.865 + 0.070 × [1 − (r / 0.278)²]^1.5
 ```
 
 The dome centre is Z = **0.935 m**: 70 mm above the nominal recessed lid and
@@ -285,7 +285,7 @@ Edit the named Python parameters/variant list, then rebuild.
 | Camera | `views` in `render_barrel_preview.py` | Adjust the fixture validator if framing changes; inspect all geometry |
 | Paint colour/count/layout | Variant assembly | The current yellow-region validator will need a suitable replacement |
 
-The v2 corrosion and dome functions hardcode LLW dimensions (0.88 m / 0.269 m).
+The v2 corrosion and dome functions hardcode LLW dimensions (0.88 m / 0.278 m).
 They are **not generic ILW builders**. Parameterise dimensions and develop a
 separate stainless corrosion appearance before applying them to 500 L ILW drums.
 

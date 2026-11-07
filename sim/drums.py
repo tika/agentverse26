@@ -7,7 +7,7 @@ from profiles import drum_profile, make_drum_mesh, radius_at
 
 INVENTORY=Path(__file__).with_name('drums.json')
 PAINT_NAMES=('faded_yellow','mid_grey','dark_blue')
-CATEGORIES={'LLW':(.29,.88,1),'ILW':(.40,1.20,20)}
+CATEGORIES={'LLW':(.299,.88,1),'ILW':(.40,1.20,20)}
 ROWS=(('A',3.45,1,-1),('B',4.55,2,1),('C',7.45,2,-1),('D',8.55,3,1))
 
 
@@ -101,7 +101,7 @@ def create_drum(stage,entry,materials):
     UsdPhysics.CollisionAPI.Apply(body.GetPrim())
     height=entry['height']
     if entry['category']=='LLW':
-        cylinder(stage,path+'/Lid',(0,0,height-.017),.269,.004,materials[paint+'_lid'],segments=64)
+        cylinder(stage,path+'/Lid',(0,0,height-.017),.278,.004,materials[paint+'_lid'],segments=64)
         cylinder(stage,path+'/BungLarge',(.13,.04,height-.009),.0254,.012,materials['cap'],segments=24)
         cylinder(stage,path+'/BungSmall',(-.13,-.04,height-.010),.009525,.01,materials['cap'],segments=20)
     else:

@@ -11,7 +11,7 @@
     "prim_path": "/World/Drums/D01",
     "scene_seed": 42,
     "appearance_seed": 1405681632,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -19,7 +19,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -40,7 +40,7 @@
     "prim_path": "/World/Drums/D02",
     "scene_seed": 42,
     "appearance_seed": 942484272,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -48,7 +48,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -69,7 +69,7 @@
     "prim_path": "/World/Drums/D03",
     "scene_seed": 42,
     "appearance_seed": 432652533,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "corrosion",
@@ -110,7 +110,7 @@
       }
     ],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -131,7 +131,7 @@
     "prim_path": "/World/Drums/D04",
     "scene_seed": 42,
     "appearance_seed": 202244314,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "corrosion",
@@ -202,7 +202,7 @@
       }
     ],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -223,7 +223,7 @@
     "prim_path": "/World/Drums/D05",
     "scene_seed": 42,
     "appearance_seed": 1540770720,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -231,7 +231,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -252,7 +252,7 @@
     "prim_path": "/World/Drums/D06",
     "scene_seed": 42,
     "appearance_seed": 1688060241,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "residue",
@@ -290,7 +290,7 @@
       }
     ],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -311,7 +311,7 @@
     "prim_path": "/World/Drums/D07",
     "scene_seed": 42,
     "appearance_seed": 1074497556,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -319,7 +319,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -340,7 +340,7 @@
     "prim_path": "/World/Drums/D08",
     "scene_seed": 42,
     "appearance_seed": 796282693,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -348,7 +348,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -369,7 +369,7 @@
     "prim_path": "/World/Drums/D09",
     "scene_seed": 42,
     "appearance_seed": 864178267,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -377,7 +377,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -398,7 +398,7 @@
     "prim_path": "/World/Drums/D10",
     "scene_seed": 42,
     "appearance_seed": 1766867110,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "corrosion+leak",
@@ -479,7 +479,7 @@
       }
     ],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -500,7 +500,7 @@
     "prim_path": "/World/Drums/D11",
     "scene_seed": 42,
     "appearance_seed": 197860369,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -508,7 +508,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -529,7 +529,7 @@
     "prim_path": "/World/Drums/D12",
     "scene_seed": 42,
     "appearance_seed": 1190961761,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "corrosion",
@@ -615,7 +615,7 @@
       }
     ],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -636,7 +636,7 @@
     "prim_path": "/World/Drums/D13",
     "scene_seed": 42,
     "appearance_seed": 594336918,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -644,7 +644,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -665,7 +665,7 @@
     "prim_path": "/World/Drums/D14",
     "scene_seed": 42,
     "appearance_seed": 1356488968,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -673,7 +673,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -694,7 +694,7 @@
     "prim_path": "/World/Drums/D15",
     "scene_seed": 42,
     "appearance_seed": 145857092,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -702,7 +702,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
@@ -723,7 +723,7 @@
     "prim_path": "/World/Drums/D16",
     "scene_seed": 42,
     "appearance_seed": 2084558134,
-    "radius": 0.29,
+    "radius": 0.299,
     "height": 0.88,
     "source_strength": 1,
     "state": "clean",
@@ -731,7 +731,7 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.29,
+      "max_radius": 0.299,
       "lid_rise": 0.0,
       "dents": []
     },
