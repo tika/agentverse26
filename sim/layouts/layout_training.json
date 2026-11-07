@@ -1,0 +1,74 @@
+{
+  "seed": 42,
+  "description": "Fixed 28-drum Step 3/4 training handoff; all unlisted drums clean",
+  "robot_start": [
+    1.0,
+    6.0,
+    0.0
+  ],
+  "drums": {
+    "D03": {
+      "faults": [
+        "corrosion"
+      ],
+      "severity": 1,
+      "seed": 11
+    },
+    "D04": {
+      "faults": [
+        "corrosion"
+      ],
+      "severity": 2,
+      "seed": 0
+    },
+    "D06": {
+      "faults": [
+        "residue"
+      ],
+      "severity": 2
+    },
+    "D10": {
+      "faults": [
+        "corrosion",
+        "leak"
+      ],
+      "severity": 3,
+      "seed": 36
+    },
+    "D12": {
+      "faults": [
+        "corrosion"
+      ],
+      "severity": 3,
+      "seed": 0
+    },
+    "D17": {
+      "faults": [
+        "corrosion"
+      ],
+      "severity": 1,
+      "seed": 0
+    },
+    "D18": {
+      "faults": [
+        "corrosion"
+      ],
+      "severity": 3,
+      "seed": 17
+    },
+    "D20": {
+      "faults": [
+        "leak"
+      ],
+      "severity": 2
+    },
+    "D25": {
+      "faults": [
+        "corrosion",
+        "residue"
+      ],
+      "severity": 2,
+      "seed": 13
+    }
+  }
+}

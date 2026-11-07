@@ -130,3 +130,41 @@ def set_drum_category(drum_id,category):
     entries[index]=entry
     write_inventory(entries)
     return entry
+
+
+def set_drum_faults(drum_id,faults,seed=42,severity=2):
+    """Replace this drum's Step 3/4 fault meshes; unsupported later faults fail explicitly."""
+    from isaacsim.core.experimental.utils.stage import get_current_stage
+    from defects import build_corrosion, build_release
+    supported={'corrosion','leak','residue'}
+    if set(faults)-supported:
+        raise NotImplementedError('Currently supported: corrosion, leak, residue')
+    if severity not in (1,2,3): raise ValueError('Severity must be 1, 2 or 3')
+    entries=json.loads(INVENTORY.read_text())
+    entry=next((e for e in entries if e['id']==drum_id),None)
+    if entry is None: raise KeyError(drum_id)
+    stage=get_current_stage()
+    path='/World/Defects/'+drum_id
+    if stage.GetPrimAtPath(path): stage.RemovePrim(path)
+    entry['faults']=sorted(set(faults))
+    entry['state']='+'.join(entry['faults']) or 'clean'
+    entry['corrosion_severity']=severity if 'corrosion' in faults else 0
+    entry['defects']=[]
+    if 'corrosion' in faults: entry['defects']+=build_corrosion(stage,entry,seed,severity)
+    for index,fault in enumerate(('leak','residue')):
+        if fault in faults: entry['defects']+=build_release(stage,entry,fault,seed+1009*(index+1))
+    write_inventory(entries)
+    # Dataset labels are always restored after a state change.
+    from labels import label_drum
+    label_drum(stage,entry)
+    return entry
+
+
+def set_drum_state(drum_id,state,seed=42,severity=2):
+    """Teammate compatibility helper: clean/rusted/rust/spill or composable fault list."""
+    aliases={'rust':'corrosion','rusted':'corrosion','spill':'leak','ok':'clean'}
+    if isinstance(state,str):
+        state=aliases.get(state,state)
+        faults=[] if state=='clean' else [aliases.get(s,s) for s in state.split('+')]
+    else: faults=list(state)
+    return set_drum_faults(drum_id,faults,seed,severity)

@@ -40,7 +40,8 @@ def material(stage, name, color, roughness=0.6, metallic=0.0, textures=None,
         value_type = Sdf.ValueTypeNames.Color3f if channel == 'diffuseColor' else Sdf.ValueTypeNames.Normal3f
         if channel in ('roughness','opacity'):
             value_type = Sdf.ValueTypeNames.Float
-        output = 'a' if channel == 'opacity' else 'r' if channel == 'roughness' else 'rgb'
+        # Generated opacity maps are single-channel PNGs: alpha would always be 1.
+        output = 'r' if channel in ('opacity','roughness') else 'rgb'
         surface.CreateInput(channel, value_type).ConnectToSource(sampler.ConnectableAPI(), output)
     if 'opacity' in textures:
         surface.CreateInput('opacityThreshold',Sdf.ValueTypeNames.Float).Set(.2)

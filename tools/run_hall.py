@@ -15,10 +15,12 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
 app = modal.App('agentverse-hall-render')
 JOBS={'hall':('capture_hall.py','step1','hall.usda','HALL_CAPTURE_OK'),
       'drums':('capture_drums.py','step2','scene_drums.usda','DRUM_CAPTURE_OK'),
-      'sensors':('capture_sensors.py','sensors','scene_sensors.usda','SENSOR_CAPTURE_OK')}
+      'sensors':('capture_sensors.py','sensors','scene_sensors.usda','SENSOR_CAPTURE_OK'),
+      'training':('test_render.py','test_render','scene_training.usda','TRAINING_CAPTURE_OK'),
+      'robot':('capture_robot.py','robot','scene_robot.usda','ROBOT_CAPTURE_OK')}
 
 
-@app.function(image=image,gpu=['L4','L40S','A10G'],cpu=4,memory=16384,
+@app.function(image=image,gpu=['L40S','L4','A10G'],cpu=6,memory=24576,
               timeout=600,max_containers=1,single_use_containers=True)
 def render(job='hall'):
     script,step,scene,_=JOBS[job]
@@ -33,7 +35,7 @@ def render(job='hall'):
     output = io.BytesIO()
     with tarfile.open(fileobj=output,mode='w:gz') as archive:
         paths=['sim/out/'+step,'sim/assets/generated','sim/aisles.json','sim/'+scene]
-        if job in ('drums','sensors'): paths.append('sim/drums.json')
+        if job in ('drums','sensors','training','robot'): paths.append('sim/drums.json')
         for name in paths:
             path = root/name
             if path.exists(): archive.add(path,arcname=name)
