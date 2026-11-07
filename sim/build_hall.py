@@ -1,6 +1,7 @@
 """Re-runnable 20 x 12 x 6 m storage hall and the fixed clean-drum layout."""
 from pathlib import Path
 import time
+import math
 
 SIM = Path(__file__).resolve().parent
 
@@ -32,11 +33,21 @@ def build_scene(seed=42, include_drums=True):
     for folder in ('Materials','Details','Lights','Markings'):
         UsdGeom.Scope.Define(stage,'/World/Hall/'+folder)
     bank = generate_textures(seed)
+    # One 1 m square tile, ten vertical corrugations with 6 mm peak amplitude.
+    import numpy as np
+    from PIL import Image
+    normal_path = SIM / 'assets/generated/cladding_1m_normal.png'
+    u = np.arange(512) / 512
+    slope = .006 * 2 * np.pi * 10 * np.cos(2 * np.pi * 10 * u)
+    normals = np.stack((-slope, np.zeros_like(slope), np.ones_like(slope)), axis=-1)
+    normals /= np.linalg.norm(normals, axis=-1, keepdims=True)
+    pixels = np.broadcast_to((normals * .5 + .5)[None, :, :], (512,512,3))
+    Image.fromarray(np.uint8(pixels * 255)).save(normal_path)
     mats = {
         'floor':material(stage,'Floor',(.38,.38,.38),.72),
-        'side':material(stage,'SideWall',(.65,.65,.65),.8),
-        'end':material(stage,'EndWall',(.65,.65,.65),.8),
-        'ceiling':material(stage,'Ceiling',(.65,.65,.65),.85),
+        'side':material(stage,'SideWall',(.40,.44,.47),.55,.25, textures={'normal':normal_path},uv_scale=(20,6)),
+        'end':material(stage,'EndWall',(.40,.44,.47),.55,.25,textures={'normal':normal_path},uv_scale=(12,6)),
+        'ceiling':material(stage,'Ceiling',(.78,.78,.78),.85,emission=(.08,.08,.08)),
         'steel':material(stage,'Steel',(.23,.27,.28),.43,.65),
         'duct':material(stage,'Duct',(.38,.42,.42),.55,.45),
         'yellow':material(stage,'CraneYellow',(.72,.48,.035),.48,.25),
@@ -52,19 +63,32 @@ def build_scene(seed=42, include_drums=True):
         mats[name] = material(stage,name,(1,1,1),.65,textures=bank[name])
     root = '/World/Hall/'
     box(stage,root+'Floor',(10,6,-.15),(20,12,.3),mats['floor'],collision=True)
-    # Geometry markings are in metres. Architecture uses solid materials, no tiled imagery.
-    for y in (1.3,2.7,5.3,6.7,9.3,10.7):
-        box(stage,root+f'Markings/Line{int(y*10)}',(10,y,.002),(18,.075,.004),mats['yellow'])
-    joint = material(stage,'ConcreteJoint',(.26,.26,.26),.85)
-    for x in (5,10,15):
-        box(stage,root+f'Markings/Joint{x}',(x,6,.001),(0.008,12,.002),joint)
     for name,center,size,kind in (
         ('WallSouth',(10,-.25,3),(20,.5,6),'side'),
         ('WallNorth',(10,12.25,3),(20,.5,6),'side'),
         ('WallFront',(-.25,6,3),(.5,13,6),'end'),
         ('WallBack',(20.25,6,3),(.5,13,6),'end')):
         box(stage,root+name,center,size,mats[kind],collision=True)
-    box(stage,root+'Ceiling',(10,6,6.15),(21,13,.3),mats['ceiling'])
+    # Two pitched roof planes meet at z=6 m, with eaves at z=5.2 m.
+    for side,y in ((-1,3),(1,9)):
+        box(stage,root+f'Roof{side+1}',(10,y,5.6),(20.5,6.05,.12),mats['ceiling'],
+            rotation=(side * -math.degrees(math.atan2(.8,6)),0,0))
+    skylight = material(stage,'Skylight',(.74,.77,.79),.45,emission=(3.,3.,3.))
+    for x in (4,10,16):
+        box(stage,root+f'Skylight{x}',(x,4.4,5.69),(1.6,2.2,.025),skylight,
+            rotation=(math.degrees(math.atan2(.8,6)),0,0))
+    def beam(name,a,b,width=.09):
+        vector=Gf.Vec3d(*b)-Gf.Vec3d(*a)
+        centre=(Gf.Vec3d(*a)+Gf.Vec3d(*b))*.5
+        part=box(stage,root+'Details/'+name,tuple(centre),(width,width,vector.GetLength()),mats['steel'])
+        UsdGeom.Xformable(part).AddOrientOp().Set(Gf.Quatf(Gf.Rotation(Gf.Vec3d(0,0,1),vector).GetQuat()))
+    for x in (2,6,10,14,18):
+        beam(f'Truss{x}Bottom',(x,.2,5.1),(x,11.8,5.1),.12)
+        beam(f'Truss{x}Left',(x,.2,5.15),(x,6,5.9),.12)
+        beam(f'Truss{x}Right',(x,6,5.9),(x,11.8,5.15),.12)
+        for j,y in enumerate((2,4,6,8,10)):
+            top=5.9-abs(y-6)*.75/5.8
+            beam(f'Truss{x}Web{j}',(x,y-1,5.1),(x,y,top))
     details = root+'Details/'
     def detail(name,center,size,kind,**kwargs):
         return box(stage,details+name,center,size,mats[kind],**kwargs)
@@ -100,27 +124,29 @@ def build_scene(seed=42, include_drums=True):
     for row,y in enumerate((4,8),1):
         for number,x in enumerate((3.8,7.8,12.3,16.3),1):
             name = f'Row{row}_L{number:02d}'
-            box(stage,root+'Lights/'+name+'_Housing',(x,y,5.56),(1.6,.65,.14),mats['fixture'])
+            cylinder(stage,root+'Lights/'+name+'_Stem',(x,y,5.2),.018,.55,mats['steel'])
+            cylinder(stage,root+'Lights/'+name+'_Housing',(x,y,4.91),.25,.12,mats['steel'])
+            cylinder(stage,root+'Lights/'+name+'_Diffuser',(x,y,4.84),.22,.02,mats['fixture'])
             light = UsdLux.RectLight.Define(stage,root+'Lights/'+name)
             light.CreateWidthAttr(1.4)
             light.CreateHeightAttr(.45)
             # Stage-2 F4: neutral white (no colour-temperature tint; the RTX tonemapper is not
             # white-balanced to 4500 K, which produced the rejected warm cast). 11000 overexposed the floor (~225/255); 6500 targets ~110-130.
-            light.CreateIntensityAttr(6500 * (.4 if (row,number)==(2,4) else 1))
+            light.CreateIntensityAttr(10000 * (.4 if (row,number)==(2,4) else 1))
             light.CreateEnableColorTemperatureAttr(False)
             light.CreateColorAttr(Gf.Vec3f(1.0, 1.0, 1.0))
-            UsdGeom.Xformable(light).AddTranslateOp().Set(Gf.Vec3d(x,y,5.48))
+            UsdGeom.Xformable(light).AddTranslateOp().Set(Gf.Vec3d(x,y,4.81))
     ambient = UsdLux.DomeLight.Define(stage,root+'Lights/Ambient')
-    ambient.CreateIntensityAttr(100)
+    ambient.CreateIntensityAttr(180)
     ambient.CreateColorAttr(Gf.Vec3f(1.0, 1.0, 1.0))
     UsdLux.ShadowAPI.Apply(ambient.GetPrim()).CreateShadowEnableAttr(False)
     write_aisles()
-    drum_count = 0
     if include_drums:
         from drums import build_drums
-        drum_count = len(build_drums(seed))
+        build_drums(seed)
     return {'seed':seed,'build_seconds':round(time.perf_counter()-started,3),
-            'drum_count':drum_count,
+            'drum_count':len(stage.GetPrimAtPath('/World/Drums').GetChildren()) if include_drums else 0,
+            'cladding_tile_m':[1,1], 'corrugation_pitch_m':.1,
             'hall_interior':[20,12,6],'extra_detail_meshes':32,'failed_fixture':'Row2_L04',
             'camera_exposure':{'iso':400,'f_number':2.8,'shutter_reciprocal_seconds':60}}
 

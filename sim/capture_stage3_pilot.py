@@ -81,11 +81,11 @@ if __name__ == '__main__':
     cam.prim.GetAttribute('horizontalAperture').Set(36.0)
     cam.prim.GetAttribute('verticalAperture').Set(36.0*RES[1]/RES[0])
     cam.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(.05, 40.0))
-    # Neutral camera-mounted rectangular inspection lamp. It is only enabled for
-    # close-up review shots; it is a declared capture light, not a scene sensor.
+    # Use the verified Stage-2 building lights only. Do not use a camera fill that
+    # would make close-up views brighter than the scene actually is.
     fill = UsdLux.RectLight.Define(stage, '/World/Stage3InspectionLight')
     fill.CreateWidthAttr(.32); fill.CreateHeightAttr(.24)
-    fill.CreateIntensityAttr(9500.0)
+    fill.CreateIntensityAttr(0.0)
     fill.CreateEnableColorTemperatureAttr(False)
     fill.CreateColorAttr(Gf.Vec3f(1.0,1.0,1.0))
     fill_xf = UsdGeom.Xformable(fill).AddTransformOp()
@@ -97,7 +97,7 @@ if __name__ == '__main__':
         cam.set_world_pose(position=np.asarray(eye), orientation=np.asarray([q.GetReal(),*q.GetImaginary()]), camera_axes='usd')
         cam.prim.GetAttribute('focalLength').Set(float(focal))
         fill_xf.Set(matrix.GetInverse())
-        fill.GetIntensityAttr().Set(9500.0 if np.linalg.norm(np.asarray(eye)-np.asarray(target)) < 4.0 else 0.0)
+        fill.GetIntensityAttr().Set(0.0)
 
     def rgb_now():
         pixels = cam.get_rgba()
@@ -139,8 +139,7 @@ if __name__ == '__main__':
     (OUT/'sensor_traces.json').write_text(json.dumps(traces,indent=2)+'\n')
     report={'renderer':'RayTracedLighting (RTX)','resolution':list(RES),'warmup_renders':warm,
             'scene_metrics':metrics,'frame_count':len(frames),'frames':frames,
-            'camera_fill_light':{'type':'neutral rectangular inspection lamp on review camera',
-                                 'intensity_closeup':9500.0,'enabled_for_overview':False},
+            'camera_fill_light':{'enabled':False,'reason':'use scene lighting without capture-only exposure aid'},
             'note':'scenario truth is excluded from sensor_traces; no leak/source conclusion is inferred from a visual defect'}
     (OUT/'manifest.json').write_text(json.dumps(report,indent=2)+'\n')
     print('STAGE3_PILOT_OK',len(frames),'frames',flush=True)
