@@ -13,4 +13,5 @@ image=(modal.Image.debian_slim(python_version='3.12')
              'TORCH_NCCL_ENABLE_MONITORING':'1','TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC':'180'}))
 if modal.is_local():
     image=image.add_local_dir(ROOT/'detector','/workspace/detector',copy=True,
-                              ignore=['__pycache__/**','**/*.pyc'])
+                              ignore=['__pycache__/**','**/*.pyc', 'serve_yolo26s.py',
+                                      'api_client.py', 'training_status.py'])
