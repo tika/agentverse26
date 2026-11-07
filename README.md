@@ -6,6 +6,7 @@ Steps 0–2 are verified: Isaac Sim 6.2 rendered the cube, textured
 adds actual RGB/metric-depth frames, simulated dose/swab/environment readings
 and configurable inspection criteria and safety rules.
 
+- [Team quickstart and copy-paste agent prompt](docs/team_quickstart.md)
 - [Run commands, installed APIs and validation](sim/README.md)
 - [Environment build specification](docs/environment_mvp.md)
 - [Sensors, inspection criteria, safety rules and limitations](docs/sensors_and_criteria.md)
