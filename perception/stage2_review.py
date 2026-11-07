@@ -59,6 +59,7 @@ def main():
     ap.add_argument("run", type=Path)
     ap.add_argument("out", type=Path)
     ap.add_argument("--sim", type=Path, required=True)
+    ap.add_argument("--inventory", type=Path, help="exact rendered inventory.json from the run (preferred)")
     ap.add_argument("--pose-lag", type=int, default=1,
                     help="image i shows camera pose i-lag (measured: frames 0/1 identical, 1 for tour 28bc52f)")
     args = ap.parse_args()
@@ -67,7 +68,11 @@ def main():
 
     manifest = json.loads((args.run / "manifest.json").read_text())
     check = json.loads((args.run / "inventory_check.json").read_text())
-    stacked = stacking.stack_inventory(json.loads((args.sim / "drums.json").read_text()))
+    if args.inventory:
+        stacked = json.loads(args.inventory.read_text())
+        stacked = stacked["drums"] if isinstance(stacked, dict) else stacked
+    else:
+        stacked = stacking.stack_inventory(json.loads((args.sim / "drums.json").read_text()))
     rmap = am.runtime_view(stacked)
     assert am.map_errors(rmap) == [], am.map_errors(rmap)
     by_id = {d["id"]: d for d in rmap["drums"]}
