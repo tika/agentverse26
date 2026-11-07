@@ -11,15 +11,15 @@ HEAT_RISE_C = CONFIG['pressure_screen']['temperature_above_ambient_c']
 DOSE_AMBER, DOSE_BACKOFF = CONFIG['thresholds']['controlled_zone'], CONFIG['thresholds']['hot_spot']
 SPEED_NEAR_DRUMS = CONFIG['robot']['max_speed_near_drums_mps']
 H2_DETECTED_PPM = 10.0                  # Reporting floor above sensor noise; the docs set no H2 alarm level.
-DECIDE_EVERY_S = 3.0
+FOLLOWUP_TIMEOUT_S = 8.0
 
 if 'ptz' not in state:
     ptz = Camera('/World/SpotCamPTZ', resolution=(640, 480))
     ptz.initialize()
-    ptz.prim.GetAttribute('focalLength').Set(48.0)
     ptz.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(0.05, 40))
     state['ptz'] = ptz
 PTZ = state['ptz']
+PTZ.prim.GetAttribute('focalLength').Set(70.0)  # Zoom for plate text.
 
 
 def plate_world(drum):
@@ -31,7 +31,9 @@ def aim_from_estimate(camera, p_true, yaw_true, estimate, target_world, mount=(0
     """Physical camera sits on the real body; it points using the robot's *estimated* pose."""
     c, s = math.cos(yaw_true), math.sin(yaw_true)
     eye = p_true + [c * mount[0] - s * mount[1], s * mount[0] + c * mount[1], mount[2]]
-    rel = target_world[:2] - estimate[:2]
+    ce_, se_ = math.cos(estimate[2]), math.sin(estimate[2])
+    eye_est = estimate[:2] + [ce_ * mount[0] - se_ * mount[1], se_ * mount[0] + ce_ * mount[1]]
+    rel = target_world[:2] - eye_est  # From the camera's own (estimated) position, not the body centre.
     ce, se = math.cos(-estimate[2]), math.sin(-estimate[2])
     body_dir = np.array([ce * rel[0] - se * rel[1], se * rel[0] + ce * rel[1]])
     world_dir = np.array([c * body_dir[0] - s * body_dir[1], s * body_dir[0] + c * body_dir[1]])
@@ -43,6 +45,8 @@ class Agent:
         self.number, self.title, self.scene = number, title, scene
         self.patrol = [np.array(w, float) for w in patrol]
         self.route = list(self.patrol)
+        self.patrol_index = 0
+        self.followed_up = set()
         self.status, self.message = 'PATROL', 'Inspection round started'
         self.findings, self.decisions, self.events = {}, [], []
         self.flagged, self.ids_read, self.plates_tried = [], {}, set()
@@ -75,23 +79,32 @@ def standoff_for(drum):
 def offered_actions(a, p_est, reading):
     """Safety layer: only physically sensible, safe actions are offered to Cosmos."""
     gamma_ok = reading['dose_rate_uSv_h'] <= DOSE_BACKOFF
-    actions = [{'id': 'continue_patrol', 'description': 'Resume the centre-aisle patrol route'},
-               {'id': 'hold', 'description': 'Stop here and keep monitoring'}]
+    actions = [{'id': 'continue_patrol', 'description': 'Resume the ordered centre-aisle patrol'}]
     drums = sorted({f['drum'] for f in a.findings.values() if f.get('drum')})
     for drum_id in drums:
         drum = DRUMS[drum_id]
         name = drum['display_id']
+        evidence = [f for f in a.findings.values() if f.get('drum') == drum_id]
+        nearby = abs(p_est[0] - drum['x']) <= 1.5
+        fresh_target = nearby and drum_id not in a.followed_up and drum_id not in a.flagged
         at_standoff = drum['row'] in STANDOFF and np.linalg.norm(p_est[:2] - standoff_for(drum)) < 0.35
         swabbed = f'swab_{drum_id}' in a.findings
-        if drum['row'] in STANDOFF and not at_standoff and gamma_ok:
-            actions.append({'id': f'inspect_{name}', 'description': f'Walk to the 1 m standoff in front of {name} and face it'})
-        low = any(f.get('drum') == drum_id and f.get('confidence') == 'low' for f in a.findings.values())
-        if low and gamma_ok and a.data.get('better_view', {}).get(drum_id, 0) < 2:
+        if drum['row'] in STANDOFF and not at_standoff and gamma_ok and fresh_target and any(f['kind'] != 'plate_unclear' for f in evidence):
+            actions.append({'id': f'inspect_{name}', 'description': f'Walk to the 1 m standoff in front of {name}, face it, '
+                            f'and measure it up close (thermal, gas, microphone, plate)'})
+        low = any(f.get('confidence') == 'low' and f['kind'] != 'plate_unclear' for f in evidence)
+        if low and gamma_ok and fresh_target and drum['row'] in STANDOFF:
             actions.append({'id': f'better_view_{name}', 'description':
                             f'Unsure about {name}: move to a closer or second viewing angle and re-measure (plate, thermal)'})
-        if at_standoff and not swabbed:
+        if gamma_ok and at_standoff and not swabbed and drum_id not in a.flagged and any(f['kind'] == 'visible_corrosion' for f in evidence):
             actions.append({'id': f'swab_{name}', 'description': f'Stop and take a smear swab of the floor at the base of {name} (4 s)'})
-        if drum_id not in a.flagged:
+        # Alerts need corroboration (two-cue principle, as in pressure_screen.py): confirmed heat plus gas or hiss
+        # near the drum, a failed swab, or dose above the back-off level.
+        hot = a.findings.get(f'thermal_{drum_id}', {}).get('confidence') == 'high'
+        near = np.linalg.norm(p_est[:2] - [drum['x'], drum['y']]) < 3.0
+        venting = near and ('gas_h2' in a.findings or 'acoustic_hiss' in a.findings)
+        swab_failed = a.findings.get(f'swab_{drum_id}', {}).get('positive', False)
+        if drum_id not in a.flagged and ((hot and venting) or swab_failed or not gamma_ok):
             actions.append({'id': f'retreat_alert_{name}', 'description': f'Raise an alert for {name} and back off along the aisle'})
     return actions
 
@@ -105,7 +118,7 @@ def rules_choice(a, actions):
             kinds.setdefault(DRUMS[f['drum']]['display_id'], set()).add(f['kind'])
     venting = {f['kind'] for f in a.findings.values()} & {'hydrogen', 'sustained_hiss'}
     for name, found in kinds.items():
-        if 'thermal_hotspot' in found and venting and f'retreat_alert_{name}' in ids and a.hold:
+        if 'thermal_hotspot' in found and venting and f'retreat_alert_{name}' in ids:
             return {'action_id': f'retreat_alert_{name}', 'reason': 'Rules: heat plus gas or hiss at standoff'}
     for name in kinds:
         if f'swab_{name}' in ids:
@@ -118,8 +131,6 @@ def rules_choice(a, actions):
     for name in kinds:
         if f'inspect_{name}' in ids and not any(f'swab_{d}' in a.findings for d, e in DRUMS.items() if e['display_id'] == name):
             return {'action_id': f'inspect_{name}', 'reason': 'Rules: inspect new finding'}
-    if a.action['id'].startswith('retreat_alert_') or a.status == 'ALERT':
-        return {'action_id': 'hold', 'reason': 'Rules: hold after alert'}
     return {'action_id': 'continue_patrol', 'reason': 'Rules: nothing to inspect'}
 
 
@@ -130,7 +141,8 @@ def snapshot_for(a, t, p_est, reading):
             f['drum'] = DRUMS[f['drum']]['display_id']
     return {'time_s': round(t, 1),
             'robot': {'estimated_position_m': [round(v, 2) for v in p_est[:2]], 'current_action': a.action['id'],
-                      'stationary': a.hold},
+                      'stationary': a.hold, 'patrol_stops_completed': a.patrol_index,
+                      'patrol_stops_total': len(a.patrol)},
             'readings': {'gamma_uSv_h': round(reading['dose_rate_uSv_h'], 1),
                          'hydrogen_ppm': round(a.gas.get('hydrogen_ppm', 0.0), 1),
                          'air_temp_c': round(reading['temperature_c'], 1),
@@ -149,16 +161,18 @@ def apply_action(a, choice, t, p_est):
             drum = d
     if action_id == 'continue_patrol':
         a.status, a.hold, a.face, a.look, a.speed = 'PATROL', False, None, None, SPEED_NEAR_DRUMS
-        a.route = [w for w in a.patrol if w[0] > p_est[0] + 0.3] or a.patrol[-1:]
+        a.route = a.patrol[a.patrol_index:]
+        if not a.route:
+            a.status = 'ROUND COMPLETE'
     elif action_id == 'hold':
         a.status, a.hold = ('ALERT' if a.flagged else 'HOLD'), True
     elif action_id.startswith('inspect_') and drum['row'] in STANDOFF:
+        a.followed_up.add(drum['id'])
         a.status, a.hold, a.speed = 'INVESTIGATE', False, SPEED_NEAR_DRUMS
         a.route = [standoff_for(drum)]
         a.face = a.look = np.array([drum['x'], drum['y']])
     elif action_id.startswith('better_view_'):
-        tries = a.data.setdefault('better_view', {})
-        tries[drum['id']] = tries.get(drum['id'], 0) + 1
+        a.followed_up.add(drum['id'])
         target = standoff_for(drum)
         if np.linalg.norm(p_est[:2] - target) < 0.35:  # Already here: second angle along the aisle.
             target = target + [0.8 if p_est[0] <= drum['x'] else -0.8, 0.0]
@@ -192,8 +206,13 @@ def decide(a, t, frame_rgb, p_est, reading):
     a.actions = offered_actions(a, p_est, reading)
     snapshot = snapshot_for(a, t, p_est, reading)
     started = _time.perf_counter()
+    if len(a.actions) == 1:
+        apply_action(a, {'action_id': 'continue_patrol'}, t, p_est)
+        a.last_decision_t, a.pending_decision = t, False
+        a.message = 'Continuing ordered round'
+        return
     answer = cosmos_call('decide', frame_rgb, snapshot) if a.use_cosmos else {}
-    if not answer.get('valid'):
+    if not answer.get('valid') or answer.get('action_id') not in {action['id'] for action in a.actions}:
         choice = rules_choice(a, a.actions)
         source = 'rules (Cosmos ' + ('off' if not a.use_cosmos else answer.get('reason', answer.get('error', '?'))[:40]) + ')'
     else:
@@ -216,7 +235,9 @@ def read_plate_for(a, drum, t, p, yaw):
     aim_from_estimate(PTZ, p, yaw, a.nav.fused, plate_world(drum))
     for _ in range(3):
         world.render()
-    answer = cosmos_call('read_plate', _rgb(PTZ))
+    crop = _rgb(PTZ)
+    Image.fromarray(crop).save(OUT / f"ptz_{drum['display_id']}_{t:04.1f}.jpg", quality=85)
+    answer = cosmos_call('read_plate', crop)
     readability = answer.get('readability', 'unreadable')
     expected = a.scene['records'].get(drum['id'])  # What the inventory says is at this map position.
     plate_text = f"{answer['drum_id']} {answer['category']}" if readability == 'readable' else None
@@ -231,12 +252,19 @@ def read_plate_for(a, drum, t, p, yaw):
     if unclear in a.findings:
         a.findings.pop(unclear)
         a.event(t, f"Plate {plate_text} read on second view")
+    mismatch = f"record_{drum['id']}"
     if plate_text != expected:
-        a.add_finding(t, f"record_{drum['id']}", kind='inventory_mismatch', drum=drum['id'],
-                      plate_read=plate_text, record=expected, confidence='high')
-        a.event(t, f"Plate reads {plate_text}, record says {expected}!")
+        previous = a.findings.get(mismatch, {}).get('plate_read')
+        confirmed = previous == plate_text  # Two agreeing reads before an inventory mismatch is believed.
+        a.add_finding(t, mismatch, kind='inventory_mismatch', drum=drum['id'], plate_read=plate_text,
+                      record=expected, confidence='high' if confirmed else 'low')
+        a.event(t, f"Plate reads {plate_text}, record says {expected}" + ('! (confirmed)' if confirmed else ' (unconfirmed)'))
     else:
-        a.event(t, f"Plate {plate_text} matches record")
+        if mismatch in a.findings:
+            a.findings.pop(mismatch)
+            a.event(t, f"Earlier misread cleared: plate {plate_text} matches record")
+        else:
+            a.event(t, f"Plate {plate_text} matches record")
 
 
 def read_plates(a, t, p, yaw):
@@ -247,9 +275,48 @@ def read_plates(a, t, p, yaw):
         rel = plate_world(drum)[:2] - a.nav.fused[:2]
         dist = float(np.linalg.norm(rel))
         ahead = math.cos(a.nav.fused[2]) * rel[0] + math.sin(a.nav.fused[2]) * rel[1]
-        if 1.0 < dist < 3.2 and ahead > 0.3:
+        along = abs(a.nav.fused[0] - drum['x'])  # Plates face the aisle; read when roughly square to one.
+        if dist < 2.5 and along < 1.0:
             read_plate_for(a, drum, t, p, yaw)
             return
+
+
+def drive(a, est):
+    """Lane-following controller: walk forward along the aisle centreline, turn in place when the heading
+    error is large, and only turn to face a drum after arriving."""
+    if a.route and np.linalg.norm(est[:2] - a.route[0]) < 0.2:
+        a.route.pop(0)
+        if a.status == 'PATROL':
+            a.patrol_index += 1
+            if not a.route:
+                a.status = 'ROUND COMPLETE'
+    x, y, yaw = est
+    if a.route:
+        goal = a.route[0]
+        in_aisle = abs(goal[1] - AISLE_Y) < 0.5 and abs(y - AISLE_Y) < 0.6
+        if in_aisle and abs(goal[0] - x) > 0.6:
+            # Pure pursuit on the centreline: look 0.8 m ahead along the aisle towards the goal.
+            ahead = x + math.copysign(min(0.8, abs(goal[0] - x)), goal[0] - x)
+            track = np.array([ahead, AISLE_Y + 0.6 * (goal[1] - AISLE_Y) * (1 - min(1, abs(goal[0] - x) / 2))])
+        else:
+            track = goal
+        heading = math.atan2(track[1] - y, track[0] - x)
+        error = wrap(heading - yaw)
+        distance = float(np.linalg.norm(goal - est[:2]))
+        if distance < 0.5:  # Final approach: small steps without turning around.
+            c, s = math.cos(yaw), math.sin(yaw)
+            dx, dy = goal - est[:2]
+            vx, vy = 0.8 * (c * dx + s * dy), 0.8 * (-s * dx + c * dy)
+            wz = 1.2 * wrap((math.atan2(a.face[1] - y, a.face[0] - x) if a.face is not None else yaw) - yaw)
+        else:
+            vx = a.speed * max(0.0, math.cos(error)) if abs(error) < 0.6 else 0.0
+            vy = 0.0
+            wz = 1.4 * error
+        return np.array([vx, vy, float(np.clip(wz, -0.8, 0.8))], dtype=np.float32)
+    if a.face is not None:
+        return np.array([0.0, 0.0, float(np.clip(1.2 * wrap(math.atan2(a.face[1] - y, a.face[0] - x) - yaw), -0.8, 0.8))],
+                        dtype=np.float32)
+    return np.zeros(3, dtype=np.float32)
 
 
 def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_seconds=3.0):
@@ -275,22 +342,34 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
     frame_dt = stride * dt
     cam_yaw = yaw
     log = []
+    timing = {}
+    clock = _time.perf_counter
+
+    def lap(stage, since):
+        timing[stage] = timing.get(stage, 0.0) + clock() - since
+        return clock()
+
     for index in range(int(duration * FPS)):
+        mark = clock()
         t = index * frame_dt
         p, yaw, roll, pitch = full_pose()
         a.trail.append(tuple(p[:2]))
         a.scene['look'] = a.look
-        place_cameras(p, cam_yaw, a.scene)
+        place_cameras(p, cam_yaw, a.scene, onboard_yaw=yaw)
         cam_yaw += 0.25 * wrap(yaw - cam_yaw)
         world.render()
         world.render()
+        mark = lap('render', mark)
         a.nav.lidar_update(frame_dt)
+        mark = lap('lidar_icp', mark)
         frames = {'third': _rgb(THIRD), 'first': _rgb(onboard), 'bird': _rgb(BIRD)}
+        mark = lap('camera_readback', mark)
         reading = a.sensor.sample(np.array([p[0], p[1], 0.6]), t)   # Physical sensor at the real robot.
         a.scene['ambient_c'] = reading['temperature_c']
         a.gas = lagged.update(reading, frame_dt)
         reading = {**reading, **a.gas}
         perception = perceive(a.scene)
+        mark = lap('perception', mark)
         audio = robot_audio((p[0], p[1], 0.6), t, frame_dt, a.scene.get('acoustic', []), a.nav.touchdowns)
         a.hiss = hiss_detector(audio)
         a.mic_db = a.hiss['level_dbfs']
@@ -306,11 +385,14 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                 confidence = 'high' if f['pixels'] >= 400 and f['range_m'] <= 4.0 else 'low'
                 fid = f"thermal_{f['drum_id']}"
                 previous = a.findings.get(fid, {}).get('confidence')
-                if a.add_finding(t, fid, kind='thermal_hotspot', drum=f['drum_id'], surface_temp_c=round(f['temp_c'], 1),
+                material = DRUMS[f['drum_id']]['category']
+                surface = correct_emissivity(f['temp_c'], EMISSIVITY[material], reading['temperature_c'])
+                if a.add_finding(t, fid, kind='thermal_hotspot', drum=f['drum_id'], surface_temp_c=round(surface, 1),
+                                 apparent_temp_c=round(f['temp_c'], 1), emissivity=EMISSIVITY[material],
                                  air_temp_c=round(reading['temperature_c'], 1), range_m=round(f['range_m'], 1),
                                  confidence=confidence):
-                    a.event(t, f"Thermal hotspot {DRUMS[f['drum_id']]['display_id']} {f['temp_c']:.0f} C"
-                               f" ({confidence} conf, {f['range_m']:.0f} m)!")
+                    a.event(t, f"Thermal hotspot {DRUMS[f['drum_id']]['display_id']} {surface:.0f} C"
+                               f" (apparent {f['temp_c']:.0f} C, e={EMISSIVITY[material]}; {confidence} conf)!")
                 elif previous == 'low' and confidence == 'high':
                     a.findings[fid]['confidence'] = 'high'
                     a.pending_decision = True
@@ -328,16 +410,17 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         a.data.setdefault('env', []).append((reading['temperature_c'], reading['relative_humidity_pct']))
         for drum_id, px in perception['corrosion_px'].items():   # Stand-in until YOLO.
             if px > 150 and a.add_finding(t, f'corrosion_{drum_id}', kind='visible_corrosion', drum=drum_id,
-                                          detector='segmentation stand-in for YOLO'):
+                                          detector='simulator segmentation placeholder (no trained detector yet)'):
                 a.event(t, f"Corrosion on {DRUMS[drum_id]['display_id']}!")
         a.hiss_frames = a.hiss_frames + 1 if a.hiss['hiss_score'] > 0.5 else 0
-        if a.hiss_frames == 6 and a.add_finding(t, 'acoustic_hiss', kind='sustained_hiss', drum=nearest['id'] if a.nearest[1] < 2.5 else None,
-                                                score=round(a.hiss['hiss_score'], 2)):
+        # Gas and microphone are omnidirectional: they give evidence near the robot, not which drum.
+        if a.hiss_frames == 6 and a.add_finding(t, 'acoustic_hiss', kind='sustained_hiss', score=round(a.hiss['hiss_score'], 2),
+                                                robot_position_m=[round(v, 1) for v in est[:2]]):
             a.event(t, 'Sustained hiss on microphone!')
         if 'gas_h2' in a.findings:
             a.findings['gas_h2']['ppm'] = round(a.gas.get('hydrogen_ppm', 0))
         if a.gas.get('hydrogen_ppm', 0) > H2_DETECTED_PPM and a.add_finding(t, 'gas_h2', kind='hydrogen', ppm=round(a.gas['hydrogen_ppm']),
-                                                                           drum=nearest['id'] if a.nearest[1] < 2.5 else None):
+                                                                           robot_position_m=[round(v, 1) for v in est[:2]]):
             a.event(t, f"H2 {a.gas['hydrogen_ppm']:.0f} ppm!")
         if a.swab_contact is not None:
             result = a.sensor.poll_swab(t)
@@ -351,36 +434,45 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                 a.swab_text = f"a {result['alpha_bq_cm2']:.2f}  b/g {result['beta_gamma_bq_cm2']:.1f} Bq/cm2"
                 a.event(t, f"Swab {DRUMS[drum_id]['display_id']}: alpha {result['alpha_bq_cm2']:.2f} Bq/cm2" + ('!' if positive else ''))
                 a.swab_contact = None
-        if a.status == 'PATROL':
+        mark = lap('sensing_findings', mark)
+        if a.status != 'RETREAT':
             read_plates(a, t, p, yaw)
-        # Decisions: on new findings, completed actions, or periodically while findings are open.
-        arrived = a.action['id'].startswith(('inspect_', 'retreat_alert_', 'better_view_')) and not a.route and not a.hold
-        if arrived and a.data.get('reread'):
-            read_plate_for(a, DRUMS[a.data.pop('reread')], t, p, yaw)
-        if arrived and a.action['id'].startswith('retreat_alert_'):
+        mark = lap('plate_reads', mark)
+        # Finish a follow-up before considering another. The hard dose stop can interrupt it.
+        arrived = a.status in ('INVESTIGATE', 'RETREAT') and not a.route
+        facing_target = a.face is None or abs(wrap(math.atan2(a.face[1] - est[1], a.face[0] - est[0]) - est[2])) < 0.25
+        if reading['dose_rate_uSv_h'] > DOSE_BACKOFF and a.status not in ('RETREAT', 'ALERT', 'DOSE STOP'):
+            a.status, a.hold = 'DOSE STOP', True
+            a.event(t, 'Dose limit exceeded. Motion stopped and operator review required!')
+        elif arrived and a.status == 'RETREAT':
             a.status, a.hold = 'ALERT', True
-        if a.pending_decision or arrived or (a.findings and t - a.last_decision_t >= DECIDE_EVERY_S and a.swab_contact is None):
+        elif a.status == 'INVESTIGATE':
+            if arrived and facing_target:
+                if drum_id := a.data.pop('reread', None):
+                    read_plate_for(a, DRUMS[drum_id], t, p, yaw)
+                decide(a, t, frames['first'], est, reading)
+            elif t - a.action['since'] >= FOLLOWUP_TIMEOUT_S:
+                a.data.pop('reread', None)
+                a.event(t, 'Follow-up timed out. Resuming round with finding unresolved.')
+                apply_action(a, {'action_id': 'continue_patrol'}, t, est)
+        elif a.status == 'SAMPLING' and a.swab_contact is None:
             decide(a, t, frames['first'], est, reading)
+        elif a.status == 'PATROL' and (a.pending_decision or (a.findings and t - a.last_decision_t >= 3.0)):
+            decide(a, t, frames['first'], est, reading)
+        mark = lap('cosmos_decide', mark)
         compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t).save(frames_dir / f'{index:05d}.jpg', quality=90)
-        log.append({'t': round(t, 3), 'truth': p.tolist(), 'estimate': est.tolist(), 'status': a.status,
+        mark = lap('compose_write', mark)
+        log.append({'t': round(t, 3), 'truth': p.tolist(), 'estimate': est.tolist(), 'status': a.status, 'patrol_stops_completed': a.patrol_index,
                     'action': a.action['id'], 'h2': a.gas.get('hydrogen_ppm', 0.0), 'hiss': a.hiss['hiss_score']})
-        command = zero
-        if not a.hold:
-            if a.route and np.linalg.norm(est[:2] - a.route[0]) < 0.22:
-                a.route.pop(0)
-            vx = vy = 0.0
-            if a.route:
-                delta = a.route[0] - est[:2]
-                velocity = delta * min(1.4, a.speed / max(np.linalg.norm(delta), 0.01))
-                c, s = math.cos(est[2]), math.sin(est[2])
-                vx, vy = c * velocity[0] + s * velocity[1], -s * velocity[0] + c * velocity[1]
-            face = a.face if a.face is not None else (est[:2] + [1.0, 0.0])
-            wz = float(np.clip(1.6 * wrap(math.atan2(face[1] - est[1], face[0] - est[0]) - est[2]), -0.9, 0.9))
-            command = np.array([vx, vy, wz], dtype=np.float32)
+        command = drive(a, est) if not a.hold else zero
         for k in range(stride):
             spot.step(dt, command)
             world.step(render=False)
             a.nav.physics_update(dt, t + (k + 1) * dt)
+        mark = lap('physics_odometry', mark)
+        if index % 24 == 0:
+            print(f'[hot] frame {index} t={t:.1f}s ' + ' '.join(f'{k}={v:.0f}s' for k, v in timing.items()), flush=True)
+    (OUT / name / 'timing.json').write_text(json.dumps({k: round(v, 1) for k, v in timing.items()}, indent=2))
     report = build_report(a)
     (OUT / name / 'report.json').write_text(json.dumps(report, indent=2, default=float))
     (OUT / name / 'report.md').write_text(report_markdown(report))
@@ -412,6 +504,8 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
     for i, line in enumerate(lines):
         draw.text((16, y0 + 40 + 26 * i), line, font=FONT[18], fill='white')
     draw.rectangle((1460, y0 + 84, W, H - 30), fill='#111822')
+    draw.text((1460, y0 + 60), f'ROUND  {a.patrol_index}/{len(a.patrol)} aisle stops  |  {a.status}',
+              font=FONT[16], fill='white')
     if a.cosmos:
         c = a.cosmos
         draw.text((1460, y0 + 86), f"{c['source']} decision @ {c['t']:.1f}s", font=FONT[14], fill='#7cc4ff')
@@ -457,32 +551,47 @@ def build_report(a):
             notes.append(f"surface {thermal['surface_temp_c']:.0f} C, +{delta:.0f} C vs air (thermal anomaly)")
             if grade['zone'] in ('Ideal', 'Unknown', 'Tolerable'):
                 grade['zone'] = 'Failing' if drum_id in a.flagged else 'Tolerable'
+        if 'rust_pct' in measured:
+            notes.append(f"visible rust {measured['rust_pct']:.0f}% of view (segmentation placeholder)")
         if f'record_{drum_id}' in a.findings:
-            notes.append(f"plate {a.findings[f'record_{drum_id}']['plate_read']} vs record {a.findings[f'record_{drum_id}']['record']}")
+            m = a.findings[f'record_{drum_id}']
+            notes.append(f"plate {m['plate_read']} vs record {m['record']}" + ('' if m['confidence'] == 'high' else ' (unconfirmed)'))
         if drum_id in a.flagged:
             notes.append('ALERT raised')
         drums.append({'drum': d['display_id'], 'category': d['category'], 'plate_read': plate,
                       'record': a.scene['records'].get(drum_id), 'grade': grade['zone'],
                       'actions': grade['actions'], 'missing': grade['missing'], 'measured': measured, 'notes': notes})
-    report = {'title': a.title, 'drums': drums,
+    report = {'title': a.title, 'drums': drums, 'round_status': a.status,
+              'patrol_stops_completed': a.patrol_index, 'patrol_stops_total': len(a.patrol),
               'environment': {'air_temp_c': round(float(np.median(temps)), 1), 'rh_pct': round(float(np.median(rhs))),
                               'max_h2_ppm': round(max(a.history['h2'] or [0])), 'max_gamma_uSv_h': round(max(a.history['gamma'] or [0]), 1)},
               'alerts': [DRUMS[d]['display_id'] for d in a.flagged],
               'decisions': [{k: d[k] for k in ('t', 'action_id', 'reason', 'source')} for d in a.decisions],
               'not_inspected': [d['display_id'] for d in inventory if d['row'] in STANDOFF and d['id'] not in seen
                                 and d['x'] >= a.patrol[0][0] - 6]}
-    summary = None
-    if a.use_cosmos:
-        try:
-            text = cosmos_chat([{'type': 'text', 'text': json.dumps(report, default=float)}], max_tokens=700,
-                               system='You are the inspection robot. Write the shift report summary for the store supervisor in '
-                                      'at most 4 plain sentences: overall status, any alerts with their evidence, inventory issues, '
-                                      'and what remains to be inspected. Use only the facts given. No preamble.')
-            summary = text.split('</think>')[-1].strip()
-        except Exception as error:
-            summary = f'(Cosmos summary unavailable: {error!r})'
-    report['summary'] = summary or 'Structured report only (Cosmos off).'
+    report['summary'] = factual_summary(report)
+
     return report
+
+
+def factual_summary(r):
+    """Built from measured facts only; the 2B model embellished when asked to write this."""
+    failing = [d for d in r['drums'] if d['grade'] == 'Failing']
+    parts = []
+    if failing:
+        parts.append('; '.join(f"{d['drum']} failing ({', '.join(d['notes']) or 'see table'})" for d in failing) + '.')
+    else:
+        parts.append('No failing drums found.')
+    mismatches = [d['drum'] for d in r['drums'] if any(n.startswith('plate ') for n in d['notes'])]
+    unclear = [d['drum'] for d in r['drums'] if d['plate_read'] is None]
+    parts.append(f"Inventory: {len([d for d in r['drums'] if d['plate_read'] and d['plate_read'] != 'not attempted'])} plates read"
+                 + (f", mismatch at {', '.join(mismatches)}" if mismatches else ', no mismatches')
+                 + (f", unreadable at {', '.join(unclear)}" if unclear else '') + '.')
+    e = r['environment']
+    parts.append(f"H2 peaked at {e['max_h2_ppm']} ppm and gamma at {e['max_gamma_uSv_h']} uSv/h; air {e['air_temp_c']} C, RH {e['rh_pct']}%.")
+    if r['not_inspected']:
+        parts.append(f"Not inspected{' after the alert' if r['alerts'] else ' this round'}: {', '.join(r['not_inspected'])}.")
+    return ' '.join(parts)
 
 
 def report_markdown(r):

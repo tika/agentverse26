@@ -283,12 +283,15 @@ print('[hot] real sensing loaded', flush=True)
 DECIDE_PROMPT = (
     'You are the decision layer of a Spot robot doing a routine inspection round of a nuclear waste drum store. '
     'The waste is solid. Failure modes are corrosion, breach releasing particulate (only a swab detects alpha), '
-    'heating from internal reactions, and gas generation. Criteria: dose above 7.5 uSv/h is amber and above 100 '
-    'uSv/h requires backing off; a swab above 0.4 Bq/cm2 alpha or 4 Bq/cm2 beta/gamma is failing containment; a drum '
+    'heating from internal reactions, and gas generation. A separate safety layer has ALREADY removed every unsafe '
+    'action: every action you are offered is safe to take, and you never need to hold for safety. Your job is to finish '
+    'the inspection: confirm each finding with a closer look or a measurement, raise an alert only when the evidence '
+    'is corroborated, and otherwise keep the round moving. Holding gathers no new evidence; choose it only while '
+    'waiting is the point (a sample in progress, or after an alert). Criteria: dose above 7.5 uSv/h is amber and above '
+    '100 uSv/h requires backing off; a swab above 0.4 Bq/cm2 alpha or 4 Bq/cm2 beta/gamma is failing containment; a drum '
     'surface 5 C or more above ambient is a thermal anomaly. Hydrogen and hiss have no alarm setpoint; weigh them as '
-    'evidence together with heat. You receive the onboard camera image, readings, findings and the actions the '
-    'safety layer allows. Choose exactly one offered action. Answer with only JSON: '
-    '{"action_id": <offered id>, "reason": <one short sentence citing the evidence>}.')
+    'evidence together with heat. Use only facts in the readings and findings. Choose exactly one offered action and '
+    'answer with only JSON: {"action_id": <offered id>, "reason": <one short sentence citing the evidence>}.')
 PLATE_PROMPT = ('Read the waste drum plate. It shows a category (LLW or ILW) and an ID of one uppercase letter '
                 'followed by two digits. Read only visible characters. If no plate is readable return nulls. '
                 'Answer with only JSON: {"drum_id": ..., "category": ...}.')

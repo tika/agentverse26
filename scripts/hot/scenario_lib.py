@@ -7,7 +7,7 @@ import omni.replicator.core as rep
 from PIL import Image, ImageDraw, ImageFont
 from pxr import Gf, UsdGeom
 from isaacsim.sensors.camera import Camera
-from inspection_payloads import microphone_window, thermal_image
+from inspection_payloads import microphone_window
 from sensors import SensorWorld, load_config
 
 W, H = 1920, 1080
@@ -73,43 +73,137 @@ def wrap(angle):
     return (angle + math.pi) % (2 * math.pi) - math.pi
 
 
+EMISSIVITY = {'ILW': 0.30, 'LLW': 0.90, 'floor': 0.95, 'wall': 0.92}  # Bare stainless vs painted steel/concrete.
+LWIR_RES = (160, 90)        # Microbolometer-class resolution, upscaled for display.
+NETD_C = 0.05               # Sensor noise (noise-equivalent temperature difference).
+
+
+def _apparent(true_c, emissivity, reflected_c):
+    """Radiometric mix: emitted part plus reflected surroundings (grey body, Stefan-Boltzmann)."""
+    t, r = np.asarray(true_c) + 273.15, np.asarray(reflected_c) + 273.15
+    return (emissivity * t ** 4 + (1 - emissivity) * r ** 4) ** 0.25 - 273.15
+
+
+def correct_emissivity(apparent_c, emissivity, reflected_c):
+    """What a thermographer does once the material is known: undo the reflected component."""
+    a, r = apparent_c + 273.15, reflected_c + 273.15
+    return float(max((a ** 4 - (1 - emissivity) * r ** 4) / emissivity, 1.0) ** 0.25 - 273.15)
+
+
+def _pixel_world(depth, camera):
+    """World xyz of each pixel from the camera's (physical) pose, intrinsics and depth."""
+    k = camera.get_intrinsics_matrix()
+    h, w = depth.shape
+    sx, sy = 640 / w, 360 / h
+    vs, us = np.mgrid[0:h, 0:w]
+    u, v = (us + 0.5) * sx, (vs + 0.5) * sy
+    position, quat = camera.get_world_pose(camera_axes='world')
+    qw, qx, qy, qz = quat
+    rot = np.array([[1 - 2 * (qy * qy + qz * qz), 2 * (qx * qy - qz * qw), 2 * (qx * qz + qy * qw)],
+                    [2 * (qx * qy + qz * qw), 1 - 2 * (qx * qx + qz * qz), 2 * (qy * qz - qx * qw)],
+                    [2 * (qx * qz - qy * qw), 2 * (qy * qz + qx * qw), 1 - 2 * (qx * qx + qy * qy)]])
+    local = np.stack([depth, -(u - k[0, 2]) * depth / k[0, 0], -(v - k[1, 2]) * depth / k[1, 1]], -1)
+    return local @ rot.T + position
+
+
 def perceive(scene):
-    """Ground-truth segmentation stands in for the detector; thermal is synthetic from the same mask."""
+    """Segmentation masks (stand-in detector) plus a physically shaped synthetic LWIR frame."""
     data = SEG.get_data()
-    ids = np.asarray(data['data'])
-    by_drum, corrosion, temps = {}, {}, {}
+    ids_full = np.asarray(data['data'])
+    labels = data['info']['idToLabels']
+    by_drum, corrosion, drum_keys = {}, {}, {}
     ambient = scene['ambient_c']
-    for key, label in data['info']['idToLabels'].items():
+    for key, label in labels.items():
         drum_id = label.get('drum_id', '').upper()
         if not drum_id:
             continue
-        count = int((ids == int(key)).sum())
+        count = int((ids_full == int(key)).sum())
         if label.get('class') == 'drum':
             by_drum[drum_id] = count
-            temps[int(key)] = ambient + scene['drum_offsets_c'].get(drum_id, 1.2 if DRUMS[drum_id]['category'] == 'ILW' else 0.3)
+            drum_keys[int(key)] = drum_id
         elif label.get('class') == 'corrosion':
             corrosion[drum_id] = corrosion.get(drum_id, 0) + count
-    thermal = thermal_image(ids, temps, ambient - 0.5)
-    thermal = thermal + rng.normal(0, 0.15, thermal.shape).astype(np.float32)
-    drum_temps = {d: float(np.median(thermal[np.isin(ids, [int(k) for k, l in data['info']['idToLabels'].items()
-                                                         if l.get('drum_id', '').upper() == d and l.get('class') == 'drum'])]))
-                  for d, n in by_drum.items() if n >= 60}
-    return {'drum_px': by_drum, 'corrosion_px': corrosion, 'thermal': thermal, 'drum_temps': drum_temps}
+    # Render at sensor resolution: nearest-neighbour ids and depth.
+    h, w = LWIR_RES[1], LWIR_RES[0]
+    rows = (np.arange(h) * ids_full.shape[0] / h).astype(int)
+    cols = (np.arange(w) * ids_full.shape[1] / w).astype(int)
+    ids = ids_full[np.ix_(rows, cols)]
+    depth_full = onboard.get_depth()
+    depth = np.nan_to_num(depth_full[np.ix_(rows, cols)], nan=20.0, posinf=20.0) if depth_full is not None else np.full((h, w), 20.0)
+    xyz = _pixel_world(np.clip(depth, 0.05, 40.0), onboard)
+    # Background: floor (warmed near hot drums) and walls (mild vertical stratification).
+    true = ambient - 0.6 + 0.35 * np.clip(xyz[..., 2], 0, 6)
+    emiss = np.where(xyz[..., 2] < 0.05, EMISSIVITY['floor'], EMISSIVITY['wall'])
+    for drum_id, offset in scene['drum_offsets_c'].items():
+        d = DRUMS[drum_id]
+        gap = np.hypot(xyz[..., 0] - d['x'], xyz[..., 1] - d['y']) - d['radius']
+        true = true + np.where(xyz[..., 2] < 0.05, 0.22 * offset * np.exp(-np.clip(gap, 0, None) / 0.35), 0.0)
+    # Drums: per-material emissivity, vertical gradient around the fill height, angular fall-off at the rim.
+    for key, drum_id in drum_keys.items():
+        mask = ids == key
+        if not mask.any():
+            continue
+        d = DRUMS[drum_id]
+        offset = scene['drum_offsets_c'].get(drum_id, 1.2 if d['category'] == 'ILW' else 0.3)
+        z = np.clip(xyz[..., 2] / d['height'], 0, 1)
+        profile = 0.55 + 0.45 * np.exp(-((z - 0.4) / 0.32) ** 2)       # Hottest near the waste mid-height.
+        rel = np.stack([xyz[..., 0] - d['x'], xyz[..., 1] - d['y']], -1)
+        normal = rel / np.maximum(np.linalg.norm(rel, axis=-1, keepdims=True), 1e-6)
+        to_cam = onboard.get_world_pose(camera_axes='world')[0][:2] - np.stack([xyz[..., 0], xyz[..., 1]], -1)
+        to_cam /= np.maximum(np.linalg.norm(to_cam, axis=-1, keepdims=True), 1e-6)
+        cos_view = np.clip((normal * to_cam).sum(-1), 0, 1)
+        eps = EMISSIVITY[d['category']] * (0.35 + 0.65 * cos_view ** 0.5)  # Emissivity drops at grazing angles.
+        true = np.where(mask, ambient + offset * profile, true)
+        emiss = np.where(mask, eps, emiss)
+    apparent = _apparent(true, emiss, ambient)
+    noise = rng.normal(0, NETD_C, apparent.shape) + rng.normal(0, NETD_C, (1, w))  # Pixel + column pattern noise.
+    small = (apparent + noise).astype(np.float32)
+    big = np.asarray(Image.fromarray(small, mode='F').resize((ids_full.shape[1], ids_full.shape[0]), Image.BICUBIC))
+    drum_temps = {}
+    for drum_id, n in by_drum.items():
+        keys = [k for k, dd in drum_keys.items() if dd == drum_id]
+        if n >= 60:
+            drum_temps[drum_id] = float(np.median(big[np.isin(ids_full, keys)]))
+    return {'drum_px': by_drum, 'corrosion_px': corrosion, 'thermal': big, 'thermal_small': small,
+            'drum_temps': drum_temps}
+
+
+IRONBOW = np.array([[0, 0, 10], [32, 0, 96], [110, 0, 140], [184, 30, 110], [230, 90, 40], [250, 170, 20],
+                    [255, 230, 110], [255, 255, 235]])
 
 
 def thermal_rgb(thermal, lo, hi):
     x = np.clip((thermal - lo) / max(hi - lo, 1e-3), 0, 1)
-    stops = np.array([0, .25, .5, .75, 1.0])
-    palette = np.array([[0, 0, 4], [87, 16, 110], [188, 55, 84], [249, 142, 9], [252, 255, 164]])
-    return np.stack([np.interp(x, stops, palette[:, c]) for c in range(3)], -1).astype(np.uint8)
+    stops = np.linspace(0, 1, len(IRONBOW))
+    return np.stack([np.interp(x, stops, IRONBOW[:, c]) for c in range(3)], -1).astype(np.uint8)
 
 
-def place_cameras(p, cam_yaw, scene):
+def thermal_inset(perception, size=(256, 144)):
+    """Camera-style display: ironbow, auto range, colour bar and a crosshair on the hottest spot."""
+    small = perception['thermal_small']
+    lo, hi = float(np.percentile(small, 1)), float(max(np.percentile(small, 99.8), np.percentile(small, 1) + 4))
+    image = Image.fromarray(thermal_rgb(small, lo, hi)).resize(size, Image.BILINEAR)
+    draw = ImageDraw.Draw(image)
+    j, i = np.unravel_index(np.argmax(small), small.shape)
+    cx, cy = (i + 0.5) * size[0] / small.shape[1], (j + 0.5) * size[1] / small.shape[0]
+    draw.line((cx - 7, cy, cx + 7, cy), fill='white', width=1)
+    draw.line((cx, cy - 7, cx, cy + 7), fill='white', width=1)
+    draw.text((min(cx + 6, size[0] - 52), max(cy - 16, 0)), f'{small.max():.1f}', font=FONT[14], fill='white')
+    bar = np.linspace(1, 0, size[1])[:, None].repeat(8, 1)
+    image.paste(Image.fromarray(thermal_rgb(lo + bar * (hi - lo), lo, hi)), (size[0] - 10, 0))
+    return image, lo, hi
+
+
+def place_cameras(p, cam_yaw, scene, onboard_yaw=None):
     heading = np.array([math.cos(cam_yaw), math.sin(cam_yaw), 0.0])
     _aim(THIRD, p - 2.9 * heading + [0, 0, 1.75], p + 1.6 * heading + [0, 0, 0.2])
+    if onboard_yaw is not None:
+        heading = np.array([math.cos(onboard_yaw), math.sin(onboard_yaw), 0.0])
     eye = p + 0.62 * heading + [0, 0, 0.30]  # Ahead of Spot's nose so close looks stay clear of the body.
     look = scene.get('look')
     target = np.array([*look, 0.5]) if look is not None else eye + heading + [0, 0, -0.32]
+    if onboard_yaw is not None and np.dot(target[:2] - eye[:2], heading[:2]) <= 0.1:
+        target = eye + heading + [0, 0, -0.32]
     _aim(onboard, eye, target)
     _aim(BIRD, (p[0], p[1], 5.5), (p[0], p[1], 0.0), up=(0, 1, 0))
     return eye
@@ -141,9 +235,7 @@ def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
     canvas = Image.new('RGB', (W, H), '#0d131b')
     canvas.paste(Image.fromarray(frames['third']), (0, 0))
     first = Image.fromarray(frames['first'])
-    hottest_c = max(perception['drum_temps'].values(), default=m.scene['ambient_c'])
-    lo, hi = m.scene['ambient_c'] - 4, max(m.scene['ambient_c'] + 6, hottest_c + 2)
-    inset = Image.fromarray(thermal_rgb(perception['thermal'], lo, hi)).resize((256, 144))
+    inset, lo, hi = thermal_inset(perception)
     first.paste(inset, (640 - 262, 360 - 150))
     canvas.paste(first, (1280, 0))
     bird = Image.fromarray(frames['bird'])
@@ -172,10 +264,10 @@ def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
                        (1290, 368, "BIRD'S EYE  |  LiDAR hits (cyan), route, trail, estimate (amber)")):
         draw.rectangle((x - 6, y - 4, x + 9 * len(text) + 4, y + 22), fill='#0d131bcc')
         draw.text((x, y), text, font=FONT[16], fill='white')
-    draw.text((1290 + 640 - 262, 360 - 172), f'THERMAL (synthetic LWIR)  {lo:.0f}-{hi:.0f} C', font=FONT[14], fill='white')
+    draw.text((1290 + 640 - 262, 360 - 172), f'LWIR 160x90 (synthetic)  {lo:.0f}-{hi:.0f} C', font=FONT[14], fill='white')
     # Title banner
     draw.rectangle((0, 668, 1280, 720), fill='#0d131bdd')
-    draw.text((14, 674), f'{m.number}/3  {m.title}', font=FONT[34], fill='white')
+    draw.text((14, 674), m.title, font=FONT[34], fill='white')
     draw.text((1120, 680), f't = {t:4.1f} s', font=FONT[28], fill='#9fb2c4')
     # Stats strip
     y0 = 728
