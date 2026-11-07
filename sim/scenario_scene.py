@@ -187,9 +187,9 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
         dark = material(stage, 'ScenarioObstructionTrim', (.055,.07,.075), .82)
         cx, cy, cz = map(float, center); sx, sy, sz = map(float, size)
         for side, side_name in ((-1, 'Left'), (1, 'Right')):
-            make_box(stage, f'{obstruction_path}/Handle_{side_name}',
+            make_box(stage, f'{obstruction_path}_Handle_{side_name}',
                      (cx+side*sx*.38,cy,cz+sz*.50+.03), (.035,sy*.52,.10), dark)
-            make_box(stage, f'{obstruction_path}/Rim_{side_name}',
+            make_box(stage, f'{obstruction_path}_Rim_{side_name}',
                      (cx+side*sx*.5,cy,cz+sz*.42), (.045,sy*1.02,.055), dark)
         result['obstructions'].append({'path':str(prim.GetPath()), 'route_id':obstruction['route_id'],
                                        'geometry_m':geom})

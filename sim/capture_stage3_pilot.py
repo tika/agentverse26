@@ -96,9 +96,7 @@ if __name__ == '__main__':
         q = matrix.GetInverse().ExtractRotationQuat()
         cam.set_world_pose(position=np.asarray(eye), orientation=np.asarray([q.GetReal(),*q.GetImaginary()]), camera_axes='usd')
         cam.prim.GetAttribute('focalLength').Set(float(focal))
-        lamp_eye = (eye[0]+.65, eye[1]-.35, eye[2]+.25)
-        lamp_matrix = Gf.Matrix4d().SetLookAt(Gf.Vec3d(*lamp_eye), Gf.Vec3d(*target), Gf.Vec3d(0,0,1))
-        fill_xf.Set(lamp_matrix.GetInverse())
+        fill_xf.Set(matrix.GetInverse())
 
     def rgb_now():
         pixels = cam.get_rgba()
@@ -114,7 +112,7 @@ if __name__ == '__main__':
     frames=[]
     for i,(eye,target,focal,label) in enumerate(plans):
         aim(eye,target,focal); fixed_exposure()
-        fill.GetIntensityAttr().Set(2400.0 if label in ('corroded_no_dose_change',
+        fill.GetIntensityAttr().Set(5000.0 if label in ('corroded_no_dose_change',
                                   'deformation_only', 'measured_bulge') else 0.0)
         # Match the verified Stage-2 tour path: two render flushes per paused
         # camera pose, then capture exactly that pose.
@@ -143,7 +141,7 @@ if __name__ == '__main__':
     (OUT/'sensor_traces.json').write_text(json.dumps(traces,indent=2)+'\n')
     report={'renderer':'RayTracedLighting (RTX)','resolution':list(RES),'warmup_renders':warm,
             'scene_metrics':metrics,'frame_count':len(frames),'frames':frames,
-            'camera_fill_light':{'enabled_for_defect_closeups':True,'intensity':2400.0,
+            'camera_fill_light':{'enabled_for_defect_closeups':True,'intensity':5000.0,
                                  'reason':'neutral low-power camera-mounted inspection illuminator'},
             'note':'scenario truth is excluded from sensor_traces; no leak/source conclusion is inferred from a visual defect'}
     (OUT/'manifest.json').write_text(json.dumps(report,indent=2)+'\n')
