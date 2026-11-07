@@ -68,14 +68,17 @@ def train(run_id,source_commit):
     import torch,ultralytics
     started=time.perf_counter();run_dir=Path('/models/runs')/run_id
     run_dir.mkdir(parents=True,exist_ok=False)
-    inventory=subprocess.check_output(['nvidia-smi','--query-gpu=index,name,uuid,driver_version','--format=csv,noheader'],text=True)
+    diagnostic=subprocess.run(['nvidia-smi','--query-gpu=index,name,uuid,driver_version','--format=csv,noheader'],text=True,capture_output=True)
+    inventory=diagnostic.stdout
     assert torch.cuda.is_available() and torch.cuda.device_count()==8
     visible=[torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())]
     # CUDA's visible devices are authoritative; nvidia-smi can include host devices
     # or provider diagnostics outside the container's CUDA-visible allocation.
+    topology=subprocess.run(['nvidia-smi','topo','-m'],text=True,capture_output=True)
     (run_dir/'hardware.json').write_text(json.dumps(dict(gpus=inventory.splitlines(),cuda_visible_devices=visible,count=8,torch=torch.__version__,
                 cuda=torch.version.cuda,ultralytics=ultralytics.__version__,python=platform.python_version(),
-                topology=subprocess.check_output(['nvidia-smi','topo','-m'],text=True)),indent=2))
+                nvidia_smi_stderr=diagnostic.stderr,topology=topology.stdout,
+                topology_returncode=topology.returncode,topology_stderr=topology.stderr),indent=2))
     models_volume.commit()
     print('GPU_INVENTORY '+json.dumps(dict(cuda_visible_devices=visible,nvidia_smi=inventory)),flush=True)
     release=prepare_dataset()
