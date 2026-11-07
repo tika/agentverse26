@@ -105,7 +105,20 @@ def offered_actions(a, p_est, reading):
         venting = near and ('gas_h2' in a.findings or 'acoustic_hiss' in a.findings)
         swab_failed = a.findings.get(f'swab_{drum_id}', {}).get('positive', False)
         if drum_id not in a.flagged and ((hot and venting) or swab_failed or not gamma_ok):
-            actions.append({'id': f'retreat_alert_{name}', 'description': f'Raise an alert for {name} and back off along the aisle'})
+            evidence = []
+            if hot:
+                f = a.findings[f'thermal_{drum_id}']
+                evidence.append(f"surface {f['surface_temp_c']:.0f} C, {f['surface_temp_c'] - f['air_temp_c']:+.0f} C vs air")
+            if venting and 'gas_h2' in a.findings:
+                evidence.append(f"H2 {a.gas.get('hydrogen_ppm', 0):.0f} ppm measured within 3 m of {name}")
+            if venting and 'acoustic_hiss' in a.findings:
+                evidence.append(f'sustained hiss near {name}')
+            if swab_failed:
+                evidence.append('swab above containment limit')
+            if not gamma_ok:
+                evidence.append('dose above back-off level')
+            actions.append({'id': f'retreat_alert_{name}', 'description':
+                            f"Raise an alert for {name} and back off. Corroborated evidence: {'; '.join(evidence)}"})
     return actions
 
 
@@ -504,7 +517,7 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
     for i, line in enumerate(lines):
         draw.text((16, y0 + 40 + 26 * i), line, font=FONT[18], fill='white')
     draw.rectangle((1460, y0 + 84, W, H - 30), fill='#111822')
-    draw.text((1460, y0 + 60), f'ROUND  {a.patrol_index}/{len(a.patrol)} aisle stops  |  {a.status}',
+    draw.text((16, y0 + 197), f'ROUND  {a.patrol_index}/{len(a.patrol)} aisle stops  |  {a.status}',
               font=FONT[16], fill='white')
     if a.cosmos:
         c = a.cosmos

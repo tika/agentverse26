@@ -199,7 +199,11 @@ def place_cameras(p, cam_yaw, scene, onboard_yaw=None):
     _aim(THIRD, p - 2.9 * heading + [0, 0, 1.75], p + 1.6 * heading + [0, 0, 0.2])
     if onboard_yaw is not None:
         heading = np.array([math.cos(onboard_yaw), math.sin(onboard_yaw), 0.0])
-    eye = p + 0.62 * heading + [0, 0, 0.30]  # Ahead of Spot's nose so close looks stay clear of the body.
+    if onboard_yaw is not None:
+        # Match the elevated PTZ mount and leave clearance from the drum at standoff.
+        eye = p + 0.35 * heading + [0, 0, 0.45]
+    else:
+        eye = p + 0.62 * heading + [0, 0, 0.30]
     look = scene.get('look')
     target = np.array([*look, 0.5]) if look is not None else eye + heading + [0, 0, -0.32]
     if onboard_yaw is not None and np.dot(target[:2] - eye[:2], heading[:2]) <= 0.1:
