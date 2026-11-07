@@ -99,18 +99,23 @@ def shots(entries):
 
 
 if __name__ == '__main__':
+    # Same capture path as the verified scripts/spot_spill.py: World + isaacsim Camera class.
     from isaacsim import SimulationApp
-    app = SimulationApp({'headless': True, 'renderer': 'RayTracedLighting', 'display_options': 0})
+    app = SimulationApp({'headless': True, 'fast_shutdown': True,
+                         'extra_args': ['--enable', 'isaacsim.sensors.camera']})
     import sys
     sys.path.insert(0, str(SIM))
     import omni.usd
-    import omni.replicator.core as rep
-    from pxr import Gf, UsdGeom
+    from pxr import Gf
+    from isaacsim.core.api import World
+    from isaacsim.sensors.camera import Camera
     from build_hall import build_scene
-    from training_capture import camera
 
+    fixed_exposure()
     OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / 'frames').mkdir(exist_ok=True)
     stage = omni.usd.get_context().get_stage()
+    world = World(physics_dt=1 / 60, rendering_dt=1 / 60)
     metrics = build_scene(42)
     entries = json.loads((SIM / 'drums.json').read_text())
     check = inventory_check(stage, entries)
@@ -118,54 +123,63 @@ if __name__ == '__main__':
     print('INVENTORY_CHECK', json.dumps({k: check[k] for k in ('usd_drums', 'pallet_decks', 'pass')}), flush=True)
 
     plan = shots(entries)
-    cam = camera(stage, '/World/TourCamera', plan[0][0], plan[0][1], plan[0][2], RES)
-    product = rep.create.render_product(cam, RES)
-    # Read annotators directly after every step (BasicWriter dropped frames with a paused timeline).
-    rgb_ann = rep.AnnotatorRegistry.get_annotator('rgb')
-    depth_ann = rep.AnnotatorRegistry.get_annotator('distance_to_image_plane')
-    rgb_ann.attach([product])
-    depth_ann.attach([product])
-    (OUT / 'frames').mkdir(exist_ok=True)
-    for _ in range(40):
-        app.update()
-        fixed_exposure()
+    cam = Camera('/World/TourCamera', resolution=RES)
+    cam.prim.GetAttribute('horizontalAperture').Set(36.0)
+    cam.prim.GetAttribute('verticalAperture').Set(36.0 * RES[1] / RES[0])
+    cam.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(0.05, 40.0))
 
-    def set_pose(eye, target, focal):
-        prim = UsdGeom.Camera(stage.GetPrimAtPath(cam))
-        pose = Gf.Matrix4d().SetLookAt(Gf.Vec3d(*eye), Gf.Vec3d(*target), Gf.Vec3d(0, 0, 1)).GetInverse()
-        UsdGeom.Xformable(prim).GetOrderedXformOps()[0].Set(pose)
-        prim.GetFocalLengthAttr().Set(focal)
+    def aim(eye, target, focal):
+        m = Gf.Matrix4d().SetLookAt(Gf.Vec3d(*eye), Gf.Vec3d(*target), Gf.Vec3d(0, 0, 1))
+        q = m.GetInverse().ExtractRotationQuat()
+        cam.set_world_pose(position=np.array(eye), orientation=np.array([q.GetReal(), *q.GetImaginary()]),
+                           camera_axes='usd')
+        cam.prim.GetAttribute('focalLength').Set(float(focal))
+
+    world.reset()
+    cam.initialize()
+    cam.add_distance_to_image_plane_to_frame()
+    aim(*plan[0][:3])
+
+    def rgb_now():
+        rgba = cam.get_rgba()
+        return None if rgba is None or not rgba.size else rgba[:, :, :3].astype(np.uint8)
+
+    for _ in range(60):
+        fixed_exposure()
+        world.render()
+        if rgb_now() is not None:
+            break
+    else:
+        raise RuntimeError('Camera warm-up failed')
 
     frames = []
     for i, (eye, target, focal, label) in enumerate(plan):
-        set_pose(eye, target, focal)
+        aim(eye, target, focal)
         fixed_exposure()
-        app.update()
-        app.update()
-        for attempt in range(8):
-            rep.orchestrator.step(rt_subframes=2, delta_time=0.0, pause_timeline=True)
-            raw_rgb = np.asarray(rgb_ann.get_data())
-            raw_d = np.asarray(depth_ann.get_data(), dtype=np.float32)
-            if raw_rgb.size >= RES[0] * RES[1] * 3 and raw_d.size == RES[0] * RES[1]:
-                break
-        else:
-            raise RuntimeError(f'annotators empty at frame {i}: rgb {raw_rgb.shape} depth {raw_d.shape}')
-        pixels = raw_rgb.reshape(RES[1], RES[0], -1)[:, :, :3].astype(np.uint8)
-        d = raw_d.reshape(RES[1], RES[0])
+        world.render()
+        world.render()
+        pixels = rgb_now()
+        if pixels is None:
+            raise RuntimeError(f'Camera dropped out at frame {i}')
         Image.fromarray(pixels).save(OUT / 'frames' / f'{i:05d}.jpg', quality=90)
-        patch = d[RES[1] // 2 - 5:RES[1] // 2 + 6, RES[0] // 2 - 5:RES[0] // 2 + 6]
-        patch = patch[np.isfinite(patch) & (patch > 0)]
+        d = cam.get_depth()
+        centre = None
+        if d is not None and d.size:
+            h, w = d.shape[:2]
+            patch = d[h // 2 - 5:h // 2 + 6, w // 2 - 5:w // 2 + 6]
+            patch = patch[np.isfinite(patch) & (patch > 0)]
+            centre = float(np.median(patch)) if patch.size else None
         frames.append({'frame': i, 'eye': list(eye), 'target': list(target), 'focal_mm': focal,
                        'gt_review_label': label, 'mean_luma': float(pixels.mean()),
-                       'depth_center_m': float(np.median(patch)) if patch.size else None})
+                       'depth_center_m': centre})
         if i % 20 == 0:
             print('TOUR_FRAME', i, flush=True)
-    rep.orchestrator.wait_until_complete()
     assert len(list((OUT / 'frames').glob('*.jpg'))) == len(plan)
-    manifest = {'renderer': 'RayTracedLighting', 'resolution': list(RES), 'fps': 10,
+    manifest = {'renderer': 'RayTracedLighting (default RTX)', 'resolution': list(RES), 'fps': 10,
                 'fixed_exposure': {'iso': 400, 'f_number': 2.8, 'shutter_reciprocal_s': 60},
                 'robot_motion': False, 'scene_metrics': metrics, 'frames': frames,
+                'intrinsics': cam.get_intrinsics_matrix().tolist(),
                 'note': 'gt_review_label is ground truth for review overlays only, never a perception input'}
     (OUT / 'manifest.json').write_text(json.dumps(manifest, indent=2))
     print('STAGE2_TOUR_OK', len(frames), flush=True)
-    app.close(wait_for_replicator=False)
+    app.close()
