@@ -1,5 +1,13 @@
 # Agentverse26 — nuclear-store robot inspection
 
+## Deployed YOLO26s API
+
+The trained detector is live. Start with the **[model API usage guide](docs/model_api.md)**
+for the endpoint URL, teammate credentials, Python/curl examples, response format
+and actual test results. Classes: drum, corrosion patch and bulge. Default confidence: 0.25.
+See the [training and hosting handoff](docs/yolo26s_training_serving.md) to reproduce it.
+API credentials are issued privately by the endpoint owner and are not stored in Git.
+
 Build the Isaac Sim environment one step at a time, following **MVP v2**.
 The environment now includes the fixed **28-drum hall**, seeded corrosion,
 wet/dry releases, class + package labels, scalar sensors and Spot's body-mounted
