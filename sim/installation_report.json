@@ -1,0 +1,226 @@
+{
+  "install_root": "/isaac-sim",
+  "version_files": {
+    "VERSION": "6.2.0-rc.14+release.52805.02189a84.gl"
+  },
+  "extensions": {
+    "isaacsim.core.utils": {
+      "isaacsim/core/utils/prims.py": [
+        "get_prim_at_path",
+        "is_prim_path_valid",
+        "get_prim_attribute_names",
+        "get_prim_attribute_value",
+        "set_prim_attribute_value",
+        "define_prim",
+        "get_prim_type_name",
+        "move_prim",
+        "get_first_matching_child_prim",
+        "get_first_matching_parent_prim",
+        "get_all_matching_child_prims",
+        "find_matching_prim_paths",
+        "get_prim_children",
+        "get_prim_parent",
+        "query_parent_path",
+        "is_prim_ancestral",
+        "is_prim_root_path",
+        "is_prim_no_delete",
+        "is_prim_hidden_in_stage",
+        "get_prim_path",
+        "set_prim_visibility",
+        "create_prim",
+        "delete_prim",
+        "get_prim_property",
+        "set_prim_property",
+        "get_prim_object_type",
+        "is_prim_non_root_articulation_link",
+        "set_prim_hide_in_stage_window",
+        "set_prim_no_delete",
+        "set_targets",
+        "get_articulation_root_api_prim_path"
+      ],
+      "isaacsim/core/utils/semantics.py": [
+        "add_labels",
+        "get_labels",
+        "remove_labels",
+        "check_missing_labels",
+        "check_incorrect_labels",
+        "count_labels_in_scene",
+        "upgrade_prim_semantics_to_labels"
+      ],
+      "isaacsim/core/utils/stage.py": [
+        "use_stage",
+        "get_current_stage",
+        "get_current_stage_id",
+        "update_stage",
+        "update_stage_async",
+        "set_stage_up_axis",
+        "get_stage_up_axis",
+        "clear_stage",
+        "print_stage_prim_paths",
+        "add_reference_to_stage",
+        "create_new_stage",
+        "create_new_stage_in_memory",
+        "create_new_stage_async",
+        "open_stage",
+        "open_stage_async",
+        "save_stage",
+        "close_stage",
+        "set_livesync_stage",
+        "traverse_stage",
+        "is_stage_loading",
+        "set_stage_units",
+        "get_stage_units",
+        "get_next_free_path",
+        "remove_deleted_references"
+      ]
+    },
+    "isaacsim.core.experimental.utils": {
+      "isaacsim/core/experimental/utils/semantics.py": [],
+      "isaacsim/core/experimental/utils/stage.py": [],
+      "isaacsim/core/experimental/utils/impl/semantics.py": [
+        "add_labels",
+        "get_labels",
+        "remove_labels",
+        "remove_all_labels",
+        "upgrade_prim_semantics_to_labels"
+      ],
+      "isaacsim/core/experimental/utils/impl/stage.py": [
+        "use_stage",
+        "is_stage_set",
+        "get_current_stage",
+        "get_stage_id",
+        "generate_stage_representation",
+        "create_new_stage",
+        "create_new_stage_async",
+        "open_stage",
+        "open_stage_async",
+        "save_stage",
+        "close_stage",
+        "add_reference_to_stage",
+        "is_stage_loading",
+        "get_stage_units",
+        "set_stage_units",
+        "get_stage_up_axis",
+        "set_stage_up_axis",
+        "get_stage_time_code",
+        "set_stage_time_code",
+        "define_prim",
+        "_has_hidden_local_dependency",
+        "_rekey_load_rules",
+        "_inherits_parent_transform",
+        "delete_prim",
+        "move_prim",
+        "generate_next_free_path"
+      ]
+    },
+    "isaacsim.sensors.camera.ui": {},
+    "isaacsim.sensors.camera": {
+      "isaacsim/sensors/camera/camera.py": [
+        "point_to_theta",
+        "distort_point_rational_polynomial",
+        "distort_point_kannala_brandt",
+        "Camera",
+        "get_all_camera_objects"
+      ]
+    },
+    "isaacsim.robot.policy.examples": {
+      "isaacsim/robot/policy/examples/bundled/anymal.py": [
+        "_get_default_anymal_spec",
+        "get_anymal_spec"
+      ],
+      "isaacsim/robot/policy/examples/bundled/spot.py": [
+        "_get_default_spot_spec",
+        "get_spot_spec"
+      ],
+      "isaacsim/robot/policy/examples/robots/anymal.py": [],
+      "isaacsim/robot/policy/examples/robots/spot.py": [],
+      "isaacsim/robot/policy/examples/tests/test_anymal.py": [
+        "TestAnymalCPU",
+        "TestAnymalGPU"
+      ],
+      "isaacsim/robot/policy/examples/tests/test_spot.py": [
+        "TestSpotCPU",
+        "TestSpotGPU"
+      ],
+      "isaacsim/robot/policy/examples/interactive/anymal/__init__.py": [],
+      "isaacsim/robot/policy/examples/interactive/anymal/anymal_example.py": [
+        "AnymalExample"
+      ],
+      "isaacsim/robot/policy/examples/interactive/anymal/anymal_example_extension.py": [
+        "AnymalExampleExtension"
+      ],
+      "isaacsim/robot/policy/examples/interactive/quadruped/__init__.py": [],
+      "isaacsim/robot/policy/examples/interactive/quadruped/quadruped_example.py": [
+        "QuadrupedExample"
+      ],
+      "isaacsim/robot/policy/examples/interactive/quadruped/quadruped_example_extension.py": [
+        "QuadrupedExampleExtension"
+      ]
+    },
+    "omni.replicator.core-1.13.38+110.4.0.lx64.r.cp312": {
+      "omni/replicator/core/scripts/orchestrator.py": [
+        "Status",
+        "_get_time",
+        "OrchestratorError",
+        "StatusCallback",
+        "_Orchestrator",
+        "run",
+        "run_async",
+        "stop",
+        "stop_async",
+        "resume",
+        "pause",
+        "preview",
+        "preview_async",
+        "wait_until_complete",
+        "wait_until_complete_async",
+        "run_until_complete_async",
+        "run_until_complete",
+        "_check_is_standalone_workflow",
+        "_verify_is_standalone_workflow",
+        "_next_render_update_async",
+        "_handle_step_scheduling_failure",
+        "_drive_async_orchestrator",
+        "_suspend_dispatch_sync_gate",
+        "_restore_dispatch_sync_gate",
+        "_drain_late_async_step_writer_schedules",
+        "_drain_late_async_step_writer_schedules_async",
+        "step_async",
+        "step",
+        "register_status_callback",
+        "get_is_started",
+        "get_is_paused",
+        "get_status",
+        "get_is_stopped",
+        "_release_trigger",
+        "get_sim_times_to_write",
+        "register_after_capture_waiter",
+        "_add_named_node",
+        "_get_distribution_values",
+        "_get_trigger_values",
+        "_get_named_node_values",
+        "set_next_rt_subframes",
+        "set_minimum_next_rt_subframes",
+        "set_capture_on_play"
+      ]
+    },
+    "omni.kit.viewport.utility-2.1.2+187cf21b": {
+      "omni/kit/viewport/utility/tests/capture.py": [
+        "viewport_capture",
+        "finalize_capture_and_compare",
+        "CaptureViewportFuture",
+        "capture_viewport",
+        "capture_viewport_and_wait",
+        "capture_viewport_and_compare"
+      ]
+    }
+  },
+  "api_details": {
+    "extsDeprecated/isaacsim.core.utils/isaacsim/core/utils/semantics.py:add_labels": "def add_labels(prim: Usd.Prim, labels: list[str], instance_name: str='class', overwrite: bool=True) -> None:\nApply semantic labels to a prim using UsdSemantics.LabelsAPI.\n\nArgs:\n    prim: USD prim to add or update labels on.\n    labels: Labels to apply.\n    instance_name: Name of the semantic instance.\n    overwrite: If True, existing labels for this instance are replaced.\n        If False, new labels are appended to existing labels.",
+    "exts/isaacsim.core.experimental.utils/isaacsim/core/experimental/utils/impl/semantics.py:add_labels": "def add_labels(prim: str | Usd.Prim, *, labels: str | list[str], taxonomy: str='class') -> None:\nAdd semantic labels, given a taxonomy (instance name), to a prim.\n\nBackends: :guilabel:`usd`.\n\nArgs:\n    prim: Prim path or prim instance.\n    labels: Label(s) to add to existing ones (if any).\n    taxonomy: Name of the taxonomy (instance name).\n\nExamples:\n\n.. code-block:: python\n\n    >>> import isaacsim.core.experimental.utils.semantics as semantics_utils\n    >>> import isaacsim.core.experimental.utils.stage as stage_utils\n    >>>\n    >>> stage_utils.define_prim(\"/World/Cube\", \"Cube\")  # doctest: +NO_CHECK\n    >>>\n    >>> # add some labels to the default 'class' and 'custom' taxonomies\n    >>> semantics_utils.add_labels(\"/World/Cube\", labels=[\"label_a\", \"label_b\"])\n    >>> semantics_utils.add_labels(\"/World/Cube\", labels=[\"label_c\"], taxonomy=\"custom\")\n    >>>\n    >>> # get the labels\n    >>> semantics_utils.get_labels(\"/World/Cube\")\n    {'class': ['label_a', 'label_b'], 'custom': ['label_c']}",
+    "extscache/omni.replicator.core-1.13.38+110.4.0.lx64.r.cp312/omni/replicator/core/scripts/orchestrator.py:run": "def run(num_frames: int=None, start_timeline: bool=False) -> None:\nRun the replicator scenario\n\nSubmit the ``Start`` command to replicator without waiting for its status to change to ``Started``.\n\nArgs:\n    num_frames: Optionally specify the maximum number of frames to capture. Note that ``num_frames`` does not\n        override the number of frames specified in triggers defined in the scene.\n    start_timeline: Optionally start the timeline when Replicator starts.",
+    "extscache/omni.replicator.core-1.13.38+110.4.0.lx64.r.cp312/omni/replicator/core/scripts/orchestrator.py:step": "def step(rt_subframes: int=-1, pause_timeline: bool=True, delta_time: float=None, wait_for_render: bool=True) -> None:\nStep one frame (standalone workflow)\n\nSynchronous step function: only use from standalone workflow (controlling Kit app from python).\nIf Replicator is not yet started, an initialization step is first taken to ensure the necessary settings are set\nfor data capture. The renderer will then render as many subframes as required by current settings and schedule a\nframe to be captured by any active annotators and writers.\n\nArgs:\n    rt_subframes: Specify the number of subframes to render. During subframe generation, the simulation is paused.\n        This is often beneficial when large scene changes occur to reduce rendering artifacts or to allow materials\n        to fully load. This setting is enabled for both RTX Real-Time and Path Tracing render modes. Values must be\n        greater than ``0``.\n    pause_timeline: If ``True``, pause timeline after step. Defaults to ``True``.\n    delta_time: The amount of time that timeline advances for each step call. When delta_time == None, default\n        timeline rate will be used. When delta_time == 0.0, timeline will not advance. When delta_time > 0.0,\n        timeline will advance by the custom delta_time.\n    wait_for_render: If ``True``, wait for a render to complete. Set to ``True`` whenever it is necessary for the\n        annotation/writer data match the current simulation state. Defaults to ``True``."
+  },
+  "streaming_experience_exists": true,
+  "python_launcher_exists": true
+}
