@@ -55,3 +55,11 @@ radiation walk override is in [spot_spill.py](../scripts/spot_spill.py).
 For the pitch, use the inventory and facility sources for **why this site and
 waste class**, the monitoring sources for **why these measurements**, and
 the simulator config for **why Spot took this action in the demo**.
+
+For the Idaho case, DOE's 2019 operating experience alert attributes the
+2018 drum breaches to reactive uranium oxidation during repackaging, followed
+by methane production from beryllium carbide hydrolysis. The investigation
+also discusses the use of process knowledge and historical records. This
+motivates separate methane and hydrogen channels and a visible ID-to-record
+check. It supplies no concentration or thermal alarm threshold for this hall.
+[DOE operating experience alert OE-2: 2019-01](https://www.energy.gov/documents/oe-2-2019-01pdf)
