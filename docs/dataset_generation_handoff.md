@@ -8,9 +8,12 @@ The earlier one-image benchmark is complete; do not repeat it or launch duplicat
 generation jobs. First check the active run and release as described below.
 No second account or cross-account workflow is involved.
 
-Current full run: **`20261107T214004Z_e5a5b9`**, Modal app
-`ap-e9DVp4wSjl85LhTUYVoEYg`. Check this run before launching another:
-`python detector/status.py 20261107T214004Z_e5a5b9`.
+Current full run: **`20261107T214634Z_a02466`**, Modal app
+`ap-xSX6rwOfHnoPsLMAWG5XLg`. Check this run before launching another:
+`python detector/status.py 20261107T214634Z_a02466`.
+It preflights seed 1002, the crowded case used to verify cropped-box drawing and
+camera-clearance fixes. The previous persistent-instance attempt is preserved as
+`20261107T214004Z_e5a5b9`; its partial outputs are excluded from the release.
 The earlier `20261107T213255Z_26d31d` attempt failed its annotation gate after
 eight frames; those captures are preserved, but are not part of this release.
 
@@ -95,6 +98,7 @@ python detector/modal_pilot.py \
   --workers 10 \
   --gpu RTX-PRO-6000 \
   --workspace paramsachdeva07 \
+  --preflight-seed 1002 \
   --publish barrels_v2_1200 \
   > out/logs/barrels_1200.log 2>&1
 ```
