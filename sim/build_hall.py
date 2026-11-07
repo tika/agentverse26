@@ -1,11 +1,11 @@
-"""Step 1: re-runnable, empty 20 x 12 x 6 m waste-storage hall."""
+"""Re-runnable 20 x 12 x 6 m storage hall and the fixed clean-drum layout."""
 from pathlib import Path
 import time
 
 SIM = Path(__file__).resolve().parent
 
 
-def build_scene(seed=42):
+def build_scene(seed=42, include_drums=True):
     import carb
     from pxr import Gf, UsdGeom, UsdLux
     from isaacsim.core.experimental.utils.stage import get_current_stage
@@ -110,7 +110,11 @@ def build_scene(seed=42):
     ambient.CreateIntensityAttr(90)
     UsdLux.ShadowAPI.Apply(ambient.GetPrim()).CreateShadowEnableAttr(False)
     write_aisles()
+    if include_drums:
+        from drums import build_drums
+        build_drums(seed)
     return {'seed':seed,'build_seconds':round(time.perf_counter()-started,3),
+            'drum_count':28 if include_drums else 0,
             'hall_interior':[20,12,6],'extra_detail_meshes':32,'failed_fixture':'Row2_L04',
             'camera_exposure':{'iso':400,'f_number':2.8,'shutter_reciprocal_seconds':60}}
 
@@ -119,13 +123,15 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed',type=int,default=42)
+    parser.add_argument('--hall-only',action='store_true')
     args,_ = parser.parse_known_args()
     from isaacsim import SimulationApp
     app = SimulationApp({'headless':True,'renderer':'RayTracedLighting'})
     import omni.usd
     stage = omni.usd.get_context().get_stage()
-    stage.GetRootLayer().Export(str(SIM/'hall.usda'))
-    omni.usd.get_context().open_stage(str(SIM/'hall.usda'))
-    print(build_scene(args.seed),flush=True)
+    scene_file=SIM/('hall.usda' if args.hall_only else 'scene_drums.usda')
+    stage.GetRootLayer().Export(str(scene_file))
+    omni.usd.get_context().open_stage(str(scene_file))
+    print(build_scene(args.seed,include_drums=not args.hall_only),flush=True)
     omni.usd.get_context().get_stage().GetRootLayer().Save()
     app.close(wait_for_replicator=False)

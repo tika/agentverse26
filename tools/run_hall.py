@@ -13,37 +13,48 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
          .add_local_dir(ROOT/'sim','/workspace/sim',copy=True,
                         ignore=['out/**','__pycache__/**','*.usda']))
 app = modal.App('agentverse-hall-render')
+JOBS={'hall':('capture_hall.py','step1','hall.usda','HALL_CAPTURE_OK'),
+      'drums':('capture_drums.py','step2','scene_drums.usda','DRUM_CAPTURE_OK'),
+      'sensors':('capture_sensors.py','sensors','scene_sensors.usda','SENSOR_CAPTURE_OK')}
 
 
 @app.function(image=image,gpu=['L4','L40S','A10G'],cpu=4,memory=16384,
               timeout=600,max_containers=1,single_use_containers=True)
-def render():
+def render(job='hall'):
+    script,step,scene,_=JOBS[job]
     root = Path('/workspace')
     log_path = Path('/tmp/hall.log')
     print('GPU_JOB_STARTED',flush=True)
     print(subprocess.check_output(['nvidia-smi','--query-gpu=name,driver_version','--format=csv'],text=True),flush=True)
     assert Path('/isaac-sim/VERSION').read_text().startswith('6.2.0')
     with log_path.open('w') as log:
-        process = subprocess.run(['/isaac-sim/python.sh','/workspace/sim/capture_hall.py','--allow-root'],
+        process = subprocess.run(['/isaac-sim/python.sh','/workspace/sim/'+script,'--allow-root'],
                                  cwd='/workspace/sim',stdout=log,stderr=subprocess.STDOUT,timeout=540)
     output = io.BytesIO()
     with tarfile.open(fileobj=output,mode='w:gz') as archive:
-        for name in ('sim/out/step1','sim/assets/generated','sim/aisles.json','sim/hall.usda'):
+        paths=['sim/out/'+step,'sim/assets/generated','sim/aisles.json','sim/'+scene]
+        if job in ('drums','sensors'): paths.append('sim/drums.json')
+        for name in paths:
             path = root/name
             if path.exists(): archive.add(path,arcname=name)
     return {'code':process.returncode,'log':log_path.read_text(errors='replace'),'archive':output.getvalue()}
 
 
-if __name__ == '__main__':
-    output = ROOT/'sim/out/step1'
+def run_job(job='hall'):
+    _,step,_,marker=JOBS[job]
+    output = ROOT/'sim/out'/step
     output.mkdir(parents=True,exist_ok=True)
     with modal.enable_output(), app.run():
-        result = render.remote()
+        result = render.remote(job)
     with tarfile.open(fileobj=io.BytesIO(result['archive'])) as archive:
         archive.extractall(ROOT,filter='data')
     (output/'run.log').write_text(result['log'])
-    if result['code'] or 'HALL_CAPTURE_OK' not in result['log']:
+    if result['code'] or marker not in result['log']:
         print(result['log'][-9000:])
-        raise SystemExit('Hall capture failed; see sim/out/step1/run.log')
-    print('HALL_DOWNLOADED',output,flush=True)
+        raise SystemExit(f'Capture failed; see {output}/run.log')
+    print('SCENE_DOWNLOADED',output,flush=True)
     print('GPU_JOB_FINISHED',flush=True)
+
+
+if __name__=='__main__':
+    run_job('hall')

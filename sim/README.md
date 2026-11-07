@@ -1,8 +1,9 @@
-# Nuclear-store simulation — Steps 0–1, MVP v2
+# Nuclear-store simulation — Steps 0–2 plus sensors, MVP v2
 
 Work lives in the `agentverse26` repository. Review each step using exported
-screenshots/video, then explicitly continue to the next step. The empty hall
-is built and checked. Barrels and faults have not been added yet.
+screenshots/video, then explicitly continue to the next step. The hall and all
+28 clean drums are built and checked. RGB/depth and scalar sensor models plus
+inspection criteria are added; visible faults remain a later step.
 
 ## Version and launch
 
@@ -88,10 +89,10 @@ cd /workspace/sim
 To build without rendering review images, on a machine with Isaac installed:
 
 ```bash
-/isaac-sim/python.sh sim/build_hall.py --allow-root --seed 42
+/isaac-sim/python.sh sim/build_hall.py --allow-root --seed 42 --hall-only
 ```
 
-Inside an already-running Isaac script, call `build_hall.build_scene(seed=42)`.
+Inside an already-running Isaac script, call `build_hall.build_scene(seed=42, include_drums=False)`.
 It rebuilds `/World/Hall`, `/World/Drums`, `/World/Defects` and
 `/World/Obstructions`. The latter three stay empty in Step 1. The hall is in
 metres with Z up and its front-left interior floor corner at (0, 0, 0).
@@ -141,5 +142,40 @@ Textures are at most 1024 px and cached in `assets/generated/`. To supply an
 alternative later, put it in `assets/provided/<material>_<channel>.png`, such as
 `floor_diffuseColor.png` or `wall_normal.png`; the builder prefers it over the
 generated version. Delete a generated cache file to regenerate that component.
-No external scene assets have been downloaded. Barrels, faults, robot, radiation
-model, dataset generation and agent/dashboard integration remain later steps.
+No external scene assets have been downloaded by these environment builders.
+Visible faults, robot integration, dataset generation and agent/dashboard
+integration remain later steps for this hall.
+
+
+## Step 2: clean drums and sensor extension
+
+```bash
+python3 tools/run_drums.py
+python3 tools/run_sensors.py
+python3 -m unittest discover -s sim/tests -v
+```
+
+`build_scene(seed=42)` now includes all 28 drums by default. Use
+`include_drums=False` or `--hall-only` for the original empty hall.
+`drums.py` owns the exact inventory and category swap operation;
+`profiles.py` creates revolved profiles, rolling hoops and smooth normals;
+`drum_textures.py` caches clean painted/stainless surfaces and readable plates.
+`drums.json` is world metadata for building/scoring, not agent input.
+`scene_drums.usda` is the clean-drum snapshot; `scene_sensors.usda` adds the
+stationary sensor camera. Both use the tracked relative texture bank.
+
+The Step 2 run checked 16 LLW + 12 ILW drums, exact coordinates, nominal sizes,
+aisle-facing plates, smooth normals, all mesh UVs and clean states. Rebuilding
+with seed 42 produced identical stage and inventory data; swapping D01 to ILW
+changed geometry/materials/plate/source strength and restoring LLW recovered its
+original entry. First/cached builds took approximately 2.9/2.8 seconds.
+
+See [sensor APIs, criteria, safety rules and limitations](../docs/sensors_and_criteria.md).
+`inspection_config.json` is the shared simulation configuration. All threshold
+numbers are simulation policy pending validation, not operational nuclear-store
+limits. `capture_sensors.py` saves real RGB/metric depth, a sensor-only observation
+packet and a report. The scalar sensor and rule behaviour checks run without Isaac.
+
+No YOLO/OCR model, Cosmos planner or walking dog has been integrated into this
+hall at this step. Criteria produce evidence-backed action requests on measured
+inputs; they do not manufacture detector results from hidden drum conditions.

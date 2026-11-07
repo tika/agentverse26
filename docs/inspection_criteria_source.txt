@@ -1,0 +1,175 @@
+Drum Store Inspection Robot: Criteria, Numbers & Sensors
+Nov 7, 2026 · @Tika
+
+Scope
+The robot inspects an intermediate-level waste (ILW) drum store, so every threshold below is set for ILW. The numbers come from three places: the UK waste categories (what is in the drums), the Ionising Radiations Regulations 2017 (what is safe for people, which sets the robot's dose budget), and our own simulation choices.
+
+"ALARA" (in UK law, ALARP: as low as reasonably practicable) is a principle, not a scale. The scale is the waste category: VLLW, LLW, ILW, HLW.
+Values marked sim are our design choices for the hackathon, not regulations. Say so in the PDF's limits section.
+UK waste categories
+Our store holds ILW: above the LLW activity limits, but not hot enough to need heat removal. Categories are defined by activity per tonne inside the package, which a robot cannot measure from outside, so category is a fixed label in the drum table, not something the robot detects.
+
+Category	Official definition	Share of UK waste volume	Typical contents	Role in our sim
+HLW	Temperature may rise significantly from its radioactivity; storage design must allow for heat	Under 1%	Vitrified reprocessing waste in glass	Out of scope (not stored in drums)
+ILW	Exceeds the LLW limits but generates no significant heat	About 6%	Reactor components, graphite, effluent sludges, fuel cladding, PCM	All drums in the store
+LLW	Not exceeding 4 GBq/tonne alpha or 12 GBq/tonne beta/gamma	About 94% (with VLLW)	Scrap metal, paper, plastics	Out of scope
+VLLW	Sub-category of LLW; high-volume VLLW up to 4 MBq/tonne total activity	Included above	Rubble, soil, steel	Out of scope
+Sources: NDA inventory factsheet (definitions, shares); VLLW limit from ONR guidance NS-TAST-GD-024.
+
+Dose limits and area designation (IRR17)
+A worker may receive at most 20 mSv a year, and any area where the dose rate averages over 7.5 µSv/h across a working day is normally a controlled area. These set the robot's map colours and the "people can't stay here" argument in the pitch.
+
+Quantity	Value	Applies to	What we use it for
+Effective dose limit	20 mSv / calendar year	Employees aged 18+	Pitch: what the robot spares people
+Lens of eye limit	20 mSv / year	Employees aged 18+	Not modelled
+Controlled area (by annual dose)	Likely to exceed 6 mSv / year (or 15 mSv eye, 150 mSv skin)	Any area	Zone classification
+Supervised area (by annual dose)	Likely to exceed 1 mSv / year (or 5 mSv eye, 50 mSv skin)	Any area	Zone classification
+Controlled area (by dose rate, guidance)	Over 7.5 µSv/h averaged over a working day	Any area	Map threshold: amber → red
+Instantaneous dose rate trigger (guidance)	Over 100 µSv/h at any point	Any area	Hot-spot flag
+Full-time worker at the annual limit	About 10 µSv/h average (20 mSv ÷ 2,000 h; derived)	Reference only	Context for the pitch
+Sources: IRR17 Schedule 3 (dose limits); IRR17 regulation 17 (area designation); Ionactive summary of HSE guidance (7.5 and 100 µSv/h dose-rate triggers; a secondary source, so check against HSE L121 before quoting).
+
+Surface contamination thresholds
+Use 4 Bq/cm² (beta/gamma) and 0.4 Bq/cm² (alpha) of loose contamination as the "contaminated" line. Current UK law sets no numerical surface limit, so operators set their own; these are the widely used IAEA figures.
+
+Quantity	Threshold	Averaged over	What we use it for
+Loose (non-fixed) beta/gamma contamination	4 Bq/cm²	300 cm²	Leak confirmed: escalate to alert
+Loose (non-fixed) alpha contamination	0.4 Bq/cm²	300 cm²	Leak confirmed: escalate to alert
+Typical wipe (swab) area	About 100 cm²	n/a	Reference for a swab action
+Alpha is only detected at a few centimetres or by swabbing, so in the sim a "swab" is an action the robot chooses when it suspects a leak, not a passive reading.
+sim: a leaking drum gets a loose-contamination value above threshold on the floor patch around it; a clean drum is below.
+Sources: IAEA surface contamination training slides (0.4 / 4 Bq/cm², wipe area); BAM transport definitions (300 cm² averaging); JAEA review comparing Japan and UK rules (no current UK numerical limit).
+
+Drum condition criteria
+Classify every drum into the NDA's three performance zones, Ideal, Tolerable and Failing, with two trigger levels between them. The NDA guidance defines the zones but leaves each store to set its own numbers, so the thresholds below are sim choices.
+
+The NDA defines a first trigger (Ideal → Tolerable) as a flag that the package may need extra management, and a second trigger (Tolerable → Failing) as a flag that it may need physical rework. We map these to robot actions.
+
+Indicator (NDA safety function)	What the robot measures	Ideal	Tolerable (1st trigger)	Failing (2nd trigger)
+Container corrosion (containment, handling)	Rust area as % of visible drum surface	Under 1%	1–10%	Over 10%, or any rust near lifting features
+Wasteform expansion (containment, stacking)	Bulge: increase in max diameter vs baseline	Under 2%	2–5%	Over 5%
+Containment loss	Liquid or residue on floor at drum base; loose contamination on swab	None	Residue, swab below 4 / 0.4 Bq/cm²	Puddle, or swab above 4 / 0.4 Bq/cm²
+Shielding (dose rate)	Dose rate at 1 m vs that drum's baseline	Within ±20%	+20% to +100%	Over +100%, or over 100 µSv/h anywhere
+Identification	Drum ID label readable by camera (OCR)	Readable	Partly readable	Unreadable
+Robot action per zone
+
+Ideal: log the reading, continue the route.
+Tolerable: move closer, re-inspect from a second angle, flag the drum for the next shift.
+Failing: stop, take best-angle images, swab if a leak is suspected, raise an alert, then route around that aisle.
+Context: the NDA estimates thin-walled stainless steel containers can take 10–25% volume expansion before rupture, though handling and stacking may be affected sooner, which is why our bulge triggers are far below that.
+
+Source: NDA Industry Guidance, Interim Storage of ILW Packages, August 2026 (performance zones and triggers, Table 4 indicators, expansion tolerance).
+
+Store environment
+The store's own conditions drive drum corrosion, so the robot should log temperature, humidity and water on the floor along its route. Real stores of remote-handled packages allow little operator access, so their monitoring and inspection generally has to be done remotely, which is our robot's job.
+
+Parameter	Why it matters	Range seen in UK ILW stores	sim threshold for a flag
+Air temperature	Drives corrosion and gas generation	About 0–30 °C	Outside 5–25 °C
+Relative humidity	Salt deposits on steel turn to brine above a critical RH, starting pitting	About 30–100%	Over 60% (placeholder; see open questions)
+Water on floor	Water ingress raises humidity and package corrosion	Should be none	Any standing water not at a drum base
+Chloride on surfaces	Triggers pitting and stress corrosion cracking in 304L/316L steel	Store-specific target	Not modelled
+Flammable gas	Some wastes generate hydrogen	Store-specific	Not modelled
+The NDA lists air temperature, relative humidity, chloride levels, flammable gas build-up and water ingress as typical store monitoring parameters.
+sim: add a cheap temperature and humidity reading as a scalar per zone, plus a "water ingress" event that can serve as a second unscripted change.
+Sources: NDA Industry Guidance, August 2026 (monitoring parameters, store types, water ingress); corrosion study via ResearchGate (0–30 °C and 30–100% RH ranges; secondary).
+
+Robot operating limits
+These are the hard safety rules that always override the AI. All are sim choices, picked to be conservative and easy to defend; the only real-world anchor is Boston Dynamics' report of a Spot running at 4,000 rem (40 Sv) accumulated dose without failure.
+
+Rule	Value (sim)	Trigger	Action
+Mission dose budget	50 mSv per mission	Cumulative dose reaches 80% (40 mSv)	Abort remaining stops, return to dock
+Hot-zone avoidance	100 µSv/h	Reading above this outside an active investigation	Back off to last safe waypoint, mark zone red
+Controlled-zone marking	7.5 µSv/h	Reading above this	Mark zone amber on the map
+Inspection stand-off	1.0 m	Approaching any drum	Stop at 1.0 m to image
+Minimum distance	0.5 m	Any drum, except during a swab	Hard stop
+Speed near drums	0.5 m/s max	Within 2 m of any drum	Clamp speed
+Person in path	2 m	Person detected within this distance	Stop and wait; resume when clear
+Sensor dropout	2 s	No camera or dose reading for this long	Stop in place, raise fault
+Unsure detection	Confidence 0.4–0.7	Detector score in this band	Re-inspect from a second angle before deciding
+Decision timing (sim): the fast loop (detector, geometry, rules) runs every frame; Cosmos is called only on a new detection, a zone change or a failed rule, with a target of under 2 s per decision. Log every call's latency for the PDF.
+
+Source: Boston Dynamics nuclear webinar (4,000 rem without failure).
+
+Sensor requirements
+Five sensors cover every number in this doc: an RGB camera, a depth camera, a dose-rate sensor, a swab action, and a temperature/humidity reading. The first two come from Isaac Sim; the rest we write in Python from the drum table.
+
+Sensor	Real-world equivalent	Measures (criteria it serves)	How we simulate it	Priority
+RGB camera	Spot 360° and pan-tilt-zoom cameras	Rust area, puddles, ID labels (drum condition)	Isaac Sim camera on Spot's body; YOLO + OCR	Must
+Depth camera	Spot depth cameras / LiDAR	Distance to drums (stand-off), bulge vs baseline diameter	Isaac Sim depth camera	Must
+Dose-rate sensor	Gamma survey meter	Dose rate in µSv/h (zones, hot-spot, dose budget, shielding indicator)	Python: sum of strength ÷ distance² + background + noise	Must
+Directional gamma imager	Createc NV-Explore 3D gamma imager	Bearing and intensity of sources (faster localisation)	Python: per-source bearing, blurred into 16 direction bins	Stretch
+Swab	Arm-mounted swab tool	Loose contamination in Bq/cm² (leak confirmation)	An action: robot stops at drum, returns value from drum table + noise after 10 s	Should
+Temperature / humidity	Environmental sensor	°C and % RH (store environment flags)	Python: value per zone, with water-ingress event raising RH	Nice to have
+Dosimeter (internal)	Personal dosimeter equivalent	Cumulative mission dose (dose budget rule)	Integrate dose-rate readings over time	Must
+The agent reads only these sensor outputs, never the drum table; the table is used to build the world and to score runs afterwards.
+
+Simulation config
+One shared file holds every number above, so the sim, the radiation model, the agent's rules and the scoring script never disagree. All values are sim unless the earlier sections cite them.
+
+seed: 42                      # change per evaluation episode
+
+store:
+  rows: 6
+  drums_per_row: 10
+  drum_spacing_m: 1.2
+  aisle_width_m: 1.5
+  drum_types:                 # approximate sizes, verify before quoting
+    200L: {diameter_m: 0.58, height_m: 0.88, material: mild_steel}
+    500L: {diameter_m: 0.80, height_m: 1.20, material: stainless}
+  condition_mix: {ok: 0.80, rusted: 0.10, bulging: 0.05, leaking: 0.05}
+
+radiation:
+  units: uSv_per_h
+  background: 0.2
+  strength_at_1m: {ok: [0.5, 3.0], rusted: [0.5, 3.0], bulging: [1.0, 5.0], leaking: [5.0, 40.0]}
+  noise_fraction: 0.10        # 10% Gaussian noise on each reading
+  shielding_per_drum: 0.5     # reading halves per drum in the line of sight
+
+thresholds:
+  controlled_zone: 7.5        # IRR17 guidance, amber
+  hot_spot: 100.0             # IRR17 guidance, red
+  rust_pct: {tolerable: 1, failing: 10}
+  bulge_pct: {tolerable: 2, failing: 5}
+  dose_vs_baseline_pct: {tolerable: 20, failing: 100}
+  swab_bq_cm2: {beta_gamma: 4.0, alpha: 0.4}
+  detector_unsure: [0.4, 0.7]
+
+robot:
+  mission_dose_budget_mSv: 50
+  return_at_fraction: 0.8
+  standoff_m: 1.0
+  min_distance_m: 0.5
+  max_speed_near_drums_mps: 0.5
+  person_stop_m: 2.0
+  sensor_timeout_s: 2.0
+  swab_duration_s: 10
+
+events:
+  leak:
+    trigger: keypress         # or time_s: 30
+    target: random_ok_drum
+    new_strength_at_1m: 25.0
+  water_ingress:
+    trigger: keypress
+    rh_increase_pct: 25
+Open questions and sources
+Still to verify before quoting in the pitch or PDF
+
+[ ] Target relative humidity for UK ILW stores: the NDA guidance section on environmental limits wasn't readable in our copy.
+[ ] Real dose rates near ILW drums in a store: our source strengths are relative placeholders.
+[ ] Exact 200 L and 500 L drum dimensions used at Sellafield.
+[ ] 7.5 µSv/h and 100 µSv/h triggers: confirm against HSE L121 (we used a secondary summary).
+[ ] Rust, bulge and dose-change thresholds: our own choices; ask a mentor whether they're plausible.
+Sources opened
+
+NDA inventory factsheet: What are the main waste categories?
+ONR guidance NS-TAST-GD-024
+Ionising Radiations Regulations 2017, Schedule 3
+Ionising Radiations Regulations 2017, regulation 17
+Ionactive: IRR17 designation of controlled or supervised areas
+IAEA: surface contamination measurement
+BAM: surface contaminated objects
+JAEA Review 2024-028: Japan vs UK surface contamination rules
+NDA Industry Guidance: Interim Storage of ILW Packages, August 2026
+Corrosion Control of Stainless Steels in Indoor Atmospheres (ResearchGate)
+Boston Dynamics: Enhancing nuclear radiation operations with Spot

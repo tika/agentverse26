@@ -1,0 +1,132 @@
+"""Fixed 28-drum inventory, nominal meshes, aisle-facing plates and category swap."""
+import json
+import math
+from pathlib import Path
+import numpy as np
+from profiles import drum_profile, make_drum_mesh, radius_at
+
+INVENTORY=Path(__file__).with_name('drums.json')
+PAINT_NAMES=('faded_yellow','mid_grey','dark_blue')
+CATEGORIES={'LLW':(.29,.88,1),'ILW':(.40,1.20,20)}
+ROWS=(('A',3.45,1,-1),('B',4.55,2,1),('C',7.45,2,-1),('D',8.55,3,1))
+
+
+def nominal_entry(entry,category):
+    if category not in CATEGORIES: raise ValueError('Category must be LLW or ILW')
+    radius,height,strength=CATEGORIES[category]
+    return {**entry,'category':category,'radius':radius,'height':height,'source_strength':strength,
+            'state':'clean','faults':[],'corrosion_severity':0,'defects':[],
+            'shape':{'max_radius':max(r for r,_ in drum_profile(category)),'lid_rise':0.0,'dents':[]},
+            'obstructed':False,'internal_corrosion':False,
+            'paint_color':PAINT_NAMES[entry['appearance_seed']%3] if category=='LLW' else None}
+
+
+def make_inventory(seed=42):
+    rng=np.random.default_rng(seed)
+    entries=[]
+    for category,xs in (('LLW',(3.0,4.5,6.0,7.5)),('ILW',(12.0,14.0,16.0))):
+        for row,y,aisle,_ in ROWS:
+            for x in xs:
+                name=f'D{len(entries)+1:02d}'
+                entry={'id':name,'category':category,'zone':'A' if x<10 else 'B','row':row,
+                       'x':x,'y':y,'yaw':float(rng.uniform(0,2*math.pi)),'facing_aisle':aisle,
+                       'prim_path':'/World/Drums/'+name,'scene_seed':seed,
+                       'appearance_seed':int(rng.integers(2**31))}
+                entries.append(nominal_entry(entry,category))
+    return entries
+
+
+def write_inventory(entries):
+    INVENTORY.write_text(json.dumps(entries,indent=2)+'\n')
+
+
+def drum_materials(stage,seed):
+    from drum_textures import clean_surfaces
+    from materials import material
+    result={}
+    for name,bank in clean_surfaces(seed).items():
+        metal=1.0 if name=='stainless' else 0.0
+        result[name]=material(stage,'Drum_'+name,(1,1,1),.35,metal,textures=bank['body'])
+        result[name+'_lid']=material(stage,'Drum_'+name+'_Lid',(1,1,1),.49,metal,textures=bank['lid'])
+    result['cap']=material(stage,'DrumBungSteel',(.30,.33,.34),.4,.8)
+    result['filter']=material(stage,'DrumVentFilter',(.12,.14,.14),.65,.1)
+    return result
+
+
+def create_plate(stage,entry,profile):
+    from geometry import mesh
+    from materials import material
+    from drum_textures import plate_texture
+    direction=next(sign for row,_,_,sign in ROWS if row==entry['row'])
+    angle=direction*math.pi/2-entry['yaw']
+    z_center=entry['height']*.6
+    angle_width=.20/radius_at(profile,z_center)
+    low,high=z_center-.07,z_center+.07
+    heights=sorted(set([low+.14*i/4 for i in range(5)] + [z for _,z in profile if low<z<high]))
+    points,faces,uv=[],[],[]
+    for z in heights:
+        radius=radius_at(profile,z)+.002
+        for column in range(13):
+            theta=angle-angle_width/2+angle_width*column/12
+            points.append((radius*math.cos(theta),radius*math.sin(theta),z))
+    for row in range(len(heights)-1):
+        for column in range(12):
+            index=row*13+column
+            faces.append((index,index+1,index+14,index+13))
+            v0,v1=(heights[row]-low)/.14,(heights[row+1]-low)/.14
+            uv.extend([(column/12,v0),((column+1)/12,v0),((column+1)/12,v1),(column/12,v1)])
+    paint=material(stage,'DrumPlate_'+entry['id']+'_'+entry['category'],(1,1,1),.6,textures=plate_texture(entry))
+    return mesh(stage,entry['prim_path']+'/Plate',points,faces,uv,paint)
+
+
+def create_drum(stage,entry,materials):
+    from pxr import UsdGeom, UsdPhysics, Gf
+    from geometry import mesh,cylinder
+    path=entry['prim_path']
+    if stage.GetPrimAtPath(path): stage.RemovePrim(path)
+    root=UsdGeom.Xform.Define(stage,path)
+    root.AddTranslateOp().Set(Gf.Vec3d(entry['x'],entry['y'],0))
+    root.AddRotateZOp().Set(math.degrees(entry['yaw']))
+    profile=drum_profile(entry['category'])
+    data=make_drum_mesh(profile)
+    paint=entry['paint_color'] or 'stainless'
+    body=mesh(stage,path+'/Body',data['points'],data['faces'],data['uv'],materials[paint])
+    body.CreateNormalsAttr(data['normals'])
+    body.SetNormalsInterpolation('faceVarying')
+    UsdPhysics.CollisionAPI.Apply(body.GetPrim())
+    height=entry['height']
+    if entry['category']=='LLW':
+        cylinder(stage,path+'/Lid',(0,0,height-.017),.269,.004,materials[paint+'_lid'],segments=64)
+        cylinder(stage,path+'/BungLarge',(.13,.04,height-.009),.0254,.012,materials['cap'],segments=24)
+        cylinder(stage,path+'/BungSmall',(-.13,-.04,height-.010),.009525,.01,materials['cap'],segments=20)
+    else:
+        cylinder(stage,path+'/Lid',(0,0,1.153),.360,.004,materials['stainless_lid'],segments=64)
+        cylinder(stage,path+'/VentHousing',(.11,.03,1.174),.035,.038,materials['stainless'],segments=24)
+        cylinder(stage,path+'/VentCap',(.11,.03,1.197),.036,.006,materials['filter'],segments=24)
+    create_plate(stage,entry,profile)
+
+
+def build_drums(seed=42):
+    from isaacsim.core.experimental.utils.stage import get_current_stage
+    from pxr import UsdGeom
+    stage=get_current_stage()
+    if stage.GetPrimAtPath('/World/Drums'): stage.RemovePrim('/World/Drums')
+    UsdGeom.Xform.Define(stage,'/World/Drums')
+    entries=make_inventory(seed)
+    materials=drum_materials(stage,seed)
+    for entry in entries: create_drum(stage,entry,materials)
+    write_inventory(entries)
+    return entries
+
+
+def set_drum_category(drum_id,category):
+    from isaacsim.core.experimental.utils.stage import get_current_stage
+    entries=json.loads(INVENTORY.read_text())
+    index=next((i for i,entry in enumerate(entries) if entry['id']==drum_id),None)
+    if index is None: raise KeyError(drum_id)
+    entry=nominal_entry(entries[index],category)
+    stage=get_current_stage()
+    create_drum(stage,entry,drum_materials(stage,entry['scene_seed']))
+    entries[index]=entry
+    write_inventory(entries)
+    return entry
