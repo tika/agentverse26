@@ -2,12 +2,15 @@
 
 ## Objective and current authorization
 
-**Current user instruction: save/time one image on RTX PRO 6000 and one matching
-image on L40S, then stop. Do not launch full dataset creation or training until
-the user explicitly requests it.** The prepared future plan is 1,200 images in
-`paramsachdeva07`, with up to 10 independent RTX PRO 6000 workers. The full plan
-and publication commands below are for that later instruction. No second account
-or cross-account workflow is involved.
+**The user has now authorized the full 1,200-image run on up to 10 RTX PRO 6000
+workers in `paramsachdeva07`. Training is not authorized by this dataset task.**
+The earlier one-image benchmark is complete; do not repeat it or launch duplicate
+generation jobs. First check the active run and release as described below.
+No second account or cross-account workflow is involved.
+
+Full run launched 7 November 2026: **`20261107T213255Z_26d31d`**, Modal app
+`ap-ur84IBTFBexuI9dXtq2eyX`. Check this run before launching another:
+`python detector/status.py 20261107T213255Z_26d31d`.
 
 Code branch: **`detector-training`** in `https://github.com/tika/agentverse26`.
 This branch includes the latest merged main at the time of publication. Preserve
@@ -54,7 +57,7 @@ run ID in the launch log or Volume and monitor it instead of launching a duplica
 A missing release directory is expected before the first run. Do not stop other
 apps to free GPUs. Actual concurrency depends on workspace limits/availability.
 
-## Current task: one-image timing check, then stop
+## Completed one-image timing check (historical reproduction command)
 
 ```sh
 mkdir -p out/logs
@@ -65,6 +68,7 @@ python detector/modal_pilot.py \
 ```
 
 This saves one image per GPU (two total), compares cold job time and stops.
+It has already been completed; the authorized current task uses the next command.
 Do not add `--plan` or `--publish` to this check. The JSON speedup after the first
 frame is null: one frame cannot measure steady-state throughput. Report the
 observed startup/capture times and stop; do not automatically move on below.
@@ -75,7 +79,7 @@ on L40S (36.1% less time for the RTX job). See
 scene construction, warm-up, capture, export and worker overhead. It does not
 measure sustained rendering throughput; a full dataset time is still an estimate.
 
-## Prepared full generation command: only after the user requests it
+## Authorized full generation command
 
 The checked-in `detector/plans/barrels_1200_v1.json` is the authoritative plan.
 It assigns 61 unique seeds starting at 1001, separate from the inspected pilot
@@ -89,7 +93,6 @@ python detector/modal_pilot.py \
   --workers 10 \
   --gpu RTX-PRO-6000 \
   --workspace paramsachdeva07 \
-  --benchmark-l40s \
   --publish barrels_v2_1200 \
   > out/logs/barrels_1200.log 2>&1
 ```
@@ -97,10 +100,9 @@ python detector/modal_pilot.py \
 Keep the process running. Use another terminal for `tail -f out/logs/barrels_1200.log`.
 The log prints `PILOT_RUN RUN_ID`, the output directory and Modal app URL. The
 first production scene must pass before the remaining jobs are submitted.
-The matched L40S control uses the same seed/frame count but a separate output
-directory and does not enter the 1,200-image dataset. Its additional GPU cost is
-limited to one control scene. `GPU_BENCHMARK` reports whole-job and after-first-
-frame ratios; report actual measurements, not an assumed hardware speedup.
+The optional `--benchmark-l40s` flag runs a separate matching control scene and
+reports `GPU_BENCHMARK`. It is omitted for this full run because the requested
+one-image comparison has already completed. No control images enter the dataset.
 
 Rendering is capped at 10 concurrent production workers, regardless of the 61
 queued scenes. Each worker has a 20-minute timeout and an earlier subprocess
@@ -227,10 +229,10 @@ force-overwrite or delete an existing release to make a check pass.
 ## Paste this into a new agent
 
 > Work in agentverse26 on detector-training. Read docs/dataset_generation_handoff.md
-> completely. Current authorization is only one saved image on RTX PRO 6000 and one
-> matching L40S image for timing, then stop. First check whether that benchmark is
-> already running or complete; monitor/report it instead of launching duplicates.
-> Do not run full dataset creation or training until the user explicitly requests
-> it. The future single-workspace 1,200-image / 10-GPU plan and publication commands
-> are prepared in the handoff. Preserve team changes and all captures. Do not change
-> the barrel design or stop other people's apps.
+> completely. Current authorization is the single-workspace 1,200-image dataset
+> on up to 10 RTX PRO 6000 workers in paramsachdeva07. First check whether the run
+> or release already exists; monitor/resume instead of launching duplicates.
+> Validate all images and publish to detector-data:/releases/barrels_v2_1200.
+> Training is a separate task. Preserve team changes and captures. Do not change
+> the barrel design or stop other people's apps. The one-image GPU comparison is
+> complete and should not be repeated for this run.
