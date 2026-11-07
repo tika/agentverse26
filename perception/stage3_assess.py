@@ -17,6 +17,8 @@ import priority as pr
 
 DEFECT_TO_KIND = {"corrosion": "visual_corrosion", "residue": "visual_wet_or_residue",
                   "wet": "visual_wet_or_residue", "bulge": "depth_deformation", "dent": "depth_deformation"}
+# Synthetic screening levels, same values as sim/inspection_config.json thresholds.swab_bq_cm2.
+SWAB_LIMITS = {"beta_gamma": 4.0, "alpha": 0.4}
 CHANNEL_TO_KIND = {"gamma": "dose_rate_level", "hydrogen": "hydrogen_ambient", "thermal": "thermal_surface"}
 
 
@@ -39,6 +41,15 @@ def assess_scenario(sc):
     if wet:
         evs.append(ev.make_evidence("visual_wet_or_residue", value=1, units="detections", t_s=0,
                                     area=area, note=f"mechanism: {wet.get('mechanism')}"))
+    obs = runtime.get("obstruction")
+    if obs:
+        evs.append(ev.make_evidence("route_obstruction", value=obs.get("geometry_m", {}).get("size"), units="m",
+                                    t_s=0, area=obs.get("route_id", area), note=f"cause: {obs.get('cause')}"))
+    swab = runtime.get("swab")
+    if swab and (swab.get("beta_gamma_bq_cm2", 0) > SWAB_LIMITS["beta_gamma"] or
+                 swab.get("alpha_bq_cm2", 0) > SWAB_LIMITS["alpha"]):
+        evs.append(ev.make_evidence("swab_contamination", value=swab, units="Bq/cm2", t_s=swab.get("t_s", 0),
+                                    area=area, note="virtual swab above synthetic screening level"))
     for name, ch in runtime.get("channels", {}).items():
         if ch.get("enabled") and ch.get("anomaly"):
             evs.append(ev.make_evidence(CHANNEL_TO_KIND[name], value=ch.get("anomaly_level", 1),

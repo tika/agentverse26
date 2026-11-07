@@ -50,6 +50,10 @@ KINDS = {
         "source": "virtual swab tool (alpha, beta-gamma Bq/cm2)", "scope": "area",
         "supports": ["surface_contamination"],
         "cannot_establish": ["which drum (without position evidence)"]},
+    "route_obstruction": {
+        "source": "depth/camera geometry inside a planned route", "scope": "area",
+        "supports": ["route_blocked"],
+        "cannot_establish": ["what the object is", "whether it is hazardous", "drum condition"]},
     "coverage": {
         "source": "camera visibility of the drum surface", "scope": "drum",
         "supports": [], "cannot_establish": ["condition of unseen surfaces"]},
@@ -68,6 +72,7 @@ HYPOTHESES = {
     "surface_contamination": (0.75, False),
     # Combined hypotheses need two independent evidence kinds.
     "suspected_release": (0.85, False),
+    "route_blocked": (0.30, False),   # navigation finding, not a drum condition
 }
 COMBINED = {
     # A release is only suspected when visible wet/residue evidence AND an independent channel agree.
@@ -75,6 +80,7 @@ COMBINED = {
                           ("visual_wet_or_residue", "dose_rate_change")],
 }
 SAFETY_HYPOTHESES = {"gas_concern_area", "gas_concern_package", "thermal_anomaly"}
+NON_CONDITION = {"route_blocked"}  # navigation findings never change a drum's condition status
 
 _ids = itertools.count(1)
 
@@ -124,6 +130,7 @@ def findings_for(evidence):
 
 def condition_status(findings, coverage_fraction):
     """Map findings + coverage to contracts.CONDITION_STATUS. Never returns a 'safe' state."""
+    findings = [f for f in findings if f["hypothesis"] not in NON_CONDITION]
     if coverage_fraction is None:
         return "unknown"
     if not findings:
@@ -146,6 +153,8 @@ def actions_for(findings, coverage_fraction):
         actions.append("request_swab_if_safe")
     if "elevated_radiation_field" in hyps and "radiation_field_change" not in hyps:
         actions.append("measure_at_matched_reference_pose")
+    if "route_blocked" in hyps:
+        actions.append("replan_route")
     if coverage_fraction is not None and coverage_fraction < 0.25:
         actions.append("improve_coverage")
     return actions or ["log_continue"]

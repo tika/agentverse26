@@ -228,5 +228,21 @@ class Assessment(unittest.TestCase):
         self.assertEqual(sa.assess_scenario(poisoned)["findings"], [])
 
 
+    def test_obstruction_and_swab(self):
+        import stage3_assess as sa
+        sc = scenario("ob", ["obstruction"])
+        sc["runtime"]["obstruction"] = {"geometry_m": {"size": [0.8, 0.55, 0.9]}, "route_id": "middle_cross_aisle",
+                                        "cause": "dropped tote"}
+        r = sa.assess_scenario(sc)
+        self.assertEqual({f["hypothesis"] for f in r["findings"]}, {"route_blocked"})
+        self.assertIn("replan_route", r["actions"])
+        self.assertEqual(r["condition_status"], "no_visible_defect_in_inspected_area")
+        rel = scenario("rel", ["wet_suspected_release"], wet={"mechanism": "seal failure", "fluid_kind": "residue"},
+                       truth={"contamination": True, "calibration": "synthetic"})
+        self.assertNotIn("suspected_release", {f["hypothesis"] for f in sa.assess_scenario(rel)["findings"]})
+        rel["runtime"]["swab"] = {"alpha_bq_cm2": 0.1, "beta_gamma_bq_cm2": 6.0, "t_s": 30}
+        self.assertIn("suspected_release", {f["hypothesis"] for f in sa.assess_scenario(rel)["findings"]})
+
+
 if __name__ == "__main__":
     unittest.main()
