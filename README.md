@@ -6,6 +6,7 @@ Steps 0–2 are verified: Isaac Sim 6.2 rendered the cube, textured
 adds actual RGB/metric-depth frames, simulated dose/swab/environment readings
 and configurable inspection criteria and safety rules.
 
+- [Team quickstart and copy-paste agent prompt](docs/team_quickstart.md)
 - [Run commands, installed APIs and validation](sim/README.md)
 - [Environment build specification](docs/environment_mvp.md)
 - [Sensors, inspection criteria, safety rules and limitations](docs/sensors_and_criteria.md)
@@ -177,3 +178,44 @@ ffmpeg -framerate 24 -i out/take-ID/%05d.png -pix_fmt yuv420p -movflags +faststa
 
 Stop the worker with `modal app stop APP_ID` when finished. The GPU stays
 allocated between takes and Modal caps the worker invocation at 24 hours.
+
+### Spill perception and detour
+
+```sh
+modal run --detach isaac_sim_modal.py --script scripts/spot_spill.py
+ffmpeg -framerate 8 -i out/spot-spill/spill/%05d.jpg -pix_fmt yuv420p -movflags +faststart out/spot-spill.mp4
+```
+
+The dry and spill cases share the hall, Spot, and camera setup in one Isaac
+process. The spill appears mid-run. A pixel detector looks for a fluorescent
+magenta tracer and projects its mask centroid onto the floor. The rules baseline
+blocks the direct aisle and selects the north cross-aisle when the estimated
+spill is in the direct aisle. The detector receives RGB and camera geometry.
+Depth is displayed separately. The scene's actual spill position is used to
+score sampled base clearance.
+
+Each case exports annotated frames, `events.jsonl`, and `score.json`.
+The tracer and fixed alternate route make this a controlled perception test.
+The demo uses a rules planner and a scripted scene event.
+
+### Benchmark and Cosmos decision training
+
+Use a separate output directory for each profile so the runs remain comparable.
+
+```sh
+modal run isaac_sim_modal.py --script scripts/spot_spill.py --output out/bench-default
+modal run isaac_sim_modal.py --script scripts/spot_spill.py --args=--fast --output out/bench-fast
+```
+
+See [the timing baseline and detector handoff](docs/spot_development.md).
+Validate exported decision captures locally before starting a GPU job:
+
+```sh
+python3 tools/train_spot_lora.py out/bench-default/spot-spill
+modal run tools/train_spot_lora.py --data out/bench-default/spot-spill --steps 1
+```
+
+The one-step GPU check needs approved access to Cosmos Reason 2 and an HF_TOKEN
+in the Modal secret named `huggingface`. The adapter and timing report are
+written to the `spot-cosmos-training` Volume. Use separate layouts and decision
+labels for an evaluation run.
