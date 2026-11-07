@@ -15,8 +15,10 @@ import re
 # Legacy row+slot plates ("A03") are still accepted for the original 28 drums.
 PLATE_RE = re.compile(r"^(?:[A-Z][0-9]{2}|[ABC]-[LR]-[0-9]{2}-T[123])$")
 
-DEFAULT_GATE_M = 0.6      # max distance from a nominal drum centre to accept it as a candidate
+DEFAULT_GATE_M = 0.6      # 2-D: max distance to a nominal centre; 3-D: max distance to the nominal cylinder
 DEFAULT_MARGIN_M = 0.25   # second candidate must be this much farther for a unique geometric match
+GATE_3D_M = 0.15          # 3-D point must lie within 15 cm of a drum's nominal cylinder
+MARGIN_3D_M = 0.10        # and beat the next drum by 10 cm (pallet gaps are 14.4 cm)
 
 
 def _centre(d):
@@ -24,17 +26,26 @@ def _centre(d):
     return (d["x"], d["y"], base + d["height"] / 2)
 
 
-def geometry_candidates(observed_xyz, runtime_map, gate_m=DEFAULT_GATE_M):
+def geometry_candidates(observed_xyz, runtime_map, gate_m=None):
     """Drums whose nominal centre lies within gate_m of the observed position, nearest first.
 
     observed_xyz may be (x, y) for floor-level reasoning or (x, y, z) to separate stacked tiers.
     """
     if len(observed_xyz) not in (2, 3) or not all(math.isfinite(v) for v in observed_xyz):
         raise ValueError("observed position must be 2 or 3 finite metres")
+    if gate_m is None:
+        gate_m = GATE_3D_M if len(observed_xyz) == 3 else DEFAULT_GATE_M
     out = []
     for d in runtime_map["drums"]:
-        c = _centre(d)[:len(observed_xyz)]
-        dist = math.dist(observed_xyz, c)
+        if len(observed_xyz) == 2:
+            dist = math.dist(observed_xyz, _centre(d)[:2])
+        else:
+            # 3-D: distance from the point to the drum's nominal cylinder (0 on/inside it), so a
+            # depth hit on the side of a tall drum is not penalised for being far from the centre.
+            base = _centre(d)[2] - d["height"] / 2
+            radial = max(0.0, math.dist(observed_xyz[:2], (d["x"], d["y"])) - d["radius"])
+            vertical = max(0.0, base - observed_xyz[2], observed_xyz[2] - (base + d["height"]))
+            dist = math.hypot(radial, vertical)
         if dist <= gate_m:
             out.append((dist, d["id"]))
     return sorted(out)
@@ -49,7 +60,7 @@ def plate_to_id(plate_text, runtime_map):
 
 
 def associate(runtime_map, *, plate_text=None, observed_xyz=None, evidence_ids=(),
-              gate_m=DEFAULT_GATE_M, margin_m=DEFAULT_MARGIN_M):
+              gate_m=None, margin_m=None):
     evidence = list(evidence_ids)
     notes = []
     if plate_text is not None and not PLATE_RE.match(plate_text):
@@ -61,6 +72,8 @@ def associate(runtime_map, *, plate_text=None, observed_xyz=None, evidence_ids=(
     if plate_text is not None and any(d["id"] == plate_text for d in runtime_map["drums"]) and plate_id != plate_text:
         notes.append(f"plate text {plate_text!r} is a display_id, not immutable id {plate_text}")
 
+    if margin_m is None:
+        margin_m = MARGIN_3D_M if observed_xyz is not None and len(observed_xyz) == 3 else DEFAULT_MARGIN_M
     geo = geometry_candidates(observed_xyz, runtime_map, gate_m) if observed_xyz is not None else []
     geo_ids = [i for _, i in geo]
     unique_geo = geo_ids[0] if (len(geo) == 1 or (len(geo) > 1 and geo[1][0] - geo[0][0] >= margin_m)) else None

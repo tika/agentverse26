@@ -59,6 +59,8 @@ def main():
     ap.add_argument("run", type=Path)
     ap.add_argument("out", type=Path)
     ap.add_argument("--sim", type=Path, required=True)
+    ap.add_argument("--pose-lag", type=int, default=1,
+                    help="image i shows camera pose i-lag (measured: frames 0/1 identical, 1 for tour 28bc52f)")
     args = ap.parse_args()
     sys.path.insert(0, str(args.sim))
     import stacking
@@ -80,7 +82,9 @@ def main():
         stream = container.add_stream("libx264", rate=manifest["fps"])
         stream.width, stream.height, stream.pix_fmt = w, h + bar_top + bar_bot, "yuv420p"
         stream.options = {"crf": "20"}
-        for fr in manifest["frames"]:
+        frames = manifest["frames"]
+        for idx, fr in enumerate(frames):
+            pose = frames[max(idx - args.pose_lag, 0)]
             img = Image.open(args.run / "frames" / f"{fr['frame']:05d}.jpg").convert("RGB")
             canvas = Image.new("RGB", (w, h + bar_top + bar_bot), (16, 22, 34))
             canvas.paste(img, (0, bar_top))
@@ -88,12 +92,12 @@ def main():
             t = fr["frame"] / manifest["fps"]
             d.text((14, 9), f"STAGE 2 REVIEW | stacked store tour | {t:04.1f}s | review camera only, robot not moving",
                    font=big, fill=(235, 238, 240))
-            label = fr["gt_review_label"]
+            label = pose["gt_review_label"]
             gt = label.split(":", 1)[1] if label.startswith("plate:") else label.replace("_", " ")
-            d.text((14, h + bar_top + 8), f"GROUND-TRUTH REVIEW LABEL (not a perception input): {gt}",
+            d.text((14, h + bar_top + 8), f"GROUND-TRUTH REVIEW LABEL (not a perception input): camera aimed toward {gt} (nearest tier, approximate)" if label.startswith("plate:") else f"GROUND-TRUTH REVIEW LABEL (not a perception input): {gt}",
                    font=small, fill=(150, 160, 175))
             if label.startswith("plate:"):
-                p = centre_point(fr)
+                p = centre_point({**pose, "depth_center_m": fr["depth_center_m"]})
                 res = ident.associate(rmap, observed_xyz=p) if p else {"status": "unread", "candidates": []}
                 text, colour = describe(res, by_id)
                 d.text((14, h + bar_top + 36), "IDENTITY (depth at image centre + asset map): " + text,
