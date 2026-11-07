@@ -113,7 +113,7 @@ def train(run_id,source_commit):
     return result
 
 
-@app.function(image=image,gpu='L4',cpu=4,memory=16384,timeout=1800,volumes=MOUNTS,
+@app.function(image=image,gpu=['RTX-PRO-6000','L4'],cpu=4,memory=16384,timeout=1800,volumes=MOUNTS,
               single_use_containers=True,max_containers=1)
 def evaluate(run_id):
     models_volume.reload();run_dir=Path('/models/runs')/run_id

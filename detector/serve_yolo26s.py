@@ -21,7 +21,7 @@ serving_image = (image.pip_install('fastapi==0.162.2', 'python-multipart==0.0.33
                  .env({'DETECTOR_MODEL_RUN': RUN_ID}))
 
 
-@app.cls(image=serving_image, gpu='L4', cpu=2, memory=8192,
+@app.cls(image=serving_image, gpu=['L4','RTX-PRO-6000'], cpu=2, memory=8192,
          volumes={'/models': models}, timeout=120,
          min_containers=0, max_containers=1, scaledown_window=60)
 @modal.concurrent(max_inputs=4)
@@ -33,6 +33,7 @@ class DrumDetector:
         import threading
         import numpy as np
         from ultralytics import YOLO
+        import torch
         models.reload()
         directory = Path('/models/runs')/RUN_ID
         # A deployment can never silently load an unevaluated or different run.
@@ -44,6 +45,7 @@ class DrumDetector:
         self.thresholds = json.loads((directory/'thresholds.json').read_text())
         assert list(self.model.names.values()) == ['drum', 'corrosion', 'bulge']
         self.lock = threading.Lock()
+        self.gpu = torch.cuda.get_device_name(0)
         self.model.predict(np.zeros((640, 640, 3), dtype=np.uint8), imgsz=640, device=0, verbose=False)
 
     @modal.asgi_app(requires_proxy_auth=True)
@@ -62,7 +64,7 @@ class DrumDetector:
         def health():
             return dict(status='ready', model='YOLO26s', run_id=RUN_ID, best_sha256=self.sha,
                         classes=self.model.names, thresholds=self.thresholds,
-                        auth='Modal proxy token', gpu='L4')
+                        auth='Modal proxy token', gpu=self.gpu)
 
         def predict_image(raw, band, confidence, frame_timestamp):
             try:

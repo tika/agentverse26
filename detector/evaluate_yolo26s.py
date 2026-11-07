@@ -42,6 +42,7 @@ def main():
     p.add_argument('--dataset', type=Path, required=True)
     a = p.parse_args()
     from ultralytics import YOLO
+    import torch
     from PIL import Image, ImageDraw
     started = time.perf_counter()
     destination = a.run_dir/'evaluation'
@@ -54,7 +55,7 @@ def main():
         for name in ('evaluate_yolo26s.py','evaluation_metrics.py')}, indent=2))
     model = YOLO(str(a.run_dir/'best.pt'))
     assert list(model.names.values()) == list(CLASSES)
-    results = dict(run_id=a.run_dir.name, model='YOLO26s', classes=list(CLASSES),
+    results = dict(run_id=a.run_dir.name, model='YOLO26s', classes=list(CLASSES), gpu=torch.cuda.get_device_name(0),
                    best_sha256=hashlib.sha256((a.run_dir/'best.pt').read_bytes()).hexdigest(),
                    selection='Best validation fitness from one training run; validation-only thresholds.',
                    scope='Synthetic painted LLW drums; not measured real-world or full-hall performance.',
