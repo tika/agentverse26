@@ -60,6 +60,7 @@ class SensorWorld:
         self._last_time = None
         self._dose_mSv = 0.0
         self._previous_rate = None
+        self._dose_complete = True
         self._pending_swab = None
 
     def _sources(self, position):
@@ -70,10 +71,11 @@ class SensorWorld:
             blockers = sum(intersects_drum(position, source, other) for other in self._drums if other['id'] != drum['id'])
             yield source, drum['source_strength']/distance2*cfg['shielding_per_drum']**blockers
 
-    def sample(self, position, time_s):
+    def sample(self, position, time_s, *, gamma_operational=True):
         """Call once per simulation tick. Time is simulation seconds, not wall clock.
 
         Trapezoidal dose integration; first sample contributes no elapsed exposure.
+        Invalid readings interrupt integration and mark the cumulative proxy incomplete.
         Camera/depth timestamps are supplied separately by the RTX capture pipeline.
         """
         if len(position) != 3 or not all(math.isfinite(v) for v in position):
@@ -81,18 +83,35 @@ class SensorWorld:
         if not math.isfinite(time_s) or time_s < 0 or (self._last_time is not None and time_s < self._last_time):
             raise ValueError('Simulation time must be finite, nonnegative and monotonic')
         cfg = self.config['radiation']
-        rate = cfg['background']+sum(value for _, value in self._sources(position))
-        rate = max(0.0, self._dose_rng.gauss(rate, rate*cfg['noise_fraction']))
-        if self._last_time is not None:
-            self._dose_mSv += (self._previous_rate+rate)/2*(time_s-self._last_time)/3_600_000
-        self._last_time, self._previous_rate = time_s, rate
+        rate = uncertainty = None
+        status = 'failed'
+        if gamma_operational:
+            expected = cfg['background']+sum(value for _, value in self._sources(position))
+            uncertainty = expected * cfg['noise_fraction']
+            rate = max(0.0, self._dose_rng.gauss(expected, uncertainty))
+            saturation = cfg.get('saturation_uSv_h', 1000.0)
+            status = 'saturated' if rate >= saturation else 'ok'
+            rate = min(rate, saturation)
+        current_rate = rate if status == 'ok' else None
+        if current_rate is None or (self._last_time is not None and self._previous_rate is None):
+            self._dose_complete = False
+        if self._previous_rate is not None and current_rate is not None:
+            self._dose_mSv += (self._previous_rate+current_rate)/2*(time_s-self._last_time)/3_600_000
+        self._last_time, self._previous_rate = time_s, current_rate
+        gamma = {
+            'sensor_id': 'spot_gamma', 'unit': 'uSv/h', 'value': rate,
+            'timestamp_s': time_s, 'age_s': 0.0, 'position_m': list(position),
+            'uncertainty_uSv_h': uncertainty if status == 'ok' else None,
+            'valid': status == 'ok', 'status': status,
+        }
         zone = 'A' if position[0] < 10 else 'B'
         env = self.config['environment']
         values = self._zones[zone]
         temperature = self._env_rng.gauss(values['temperature_c'], env['temperature_noise_std_c'])
         humidity = min(100.0, max(0.0, self._env_rng.gauss(values['relative_humidity_pct'], env['humidity_noise_std_pct'])))
         return {'time_s': time_s, 'dose_rate_uSv_h': rate, 'dose_timestamp_s': time_s,
-                'mission_dose_mSv': self._dose_mSv, 'zone': zone,
+                'mission_dose_mSv': self._dose_mSv, 'dose_complete': self._dose_complete,
+                'gamma': gamma, 'zone': zone,
                 'temperature_c': temperature, 'relative_humidity_pct': humidity}
 
     def gamma_bins(self, position, yaw_rad=0.0):

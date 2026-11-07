@@ -104,7 +104,10 @@ def safety_decision(observation, now_s, config=None):
         if not finite(timestamp) or timestamp > now_s or now_s-timestamp > r['sensor_timeout_s']:
             override('stop', sensor+'_dropout')
     dose = observation.get('dose_rate_uSv_h')
-    if not finite(dose) or dose < 0:
+    gamma = observation.get('gamma', {})
+    if gamma.get('status') == 'saturated':
+        override('back_off_last_safe_waypoint','gamma_saturation')
+    elif not finite(dose) or dose < 0 or gamma.get('valid') is False:
         override('stop','dose_missing')
     elif dose > t['hot_spot']:
         # Deliberate entry into a hot zone is not authorised by a model's text.

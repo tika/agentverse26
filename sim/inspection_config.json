@@ -23,7 +23,8 @@
     "noise_fraction": 0.1,
     "shielding_per_drum": 0.5,
     "distance_floor_m": 0.1,
-    "strength_definition": "Existing source_strength is simulated unshielded contribution at 1 m from source centre"
+    "saturation_uSv_h": 1000.0,
+    "strength_definition": "Synthetic calibration: each source_strength unit contributes 1 uSv/h at 1 m unshielded. Each intervening drum scales contribution by shielding_per_drum. This is a dose proxy, not radiation transport."
   },
   "thresholds": {
     "controlled_zone": 7.5,
