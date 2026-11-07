@@ -4,7 +4,7 @@ Status: **execution authorized**. The user requested one YOLO26s distributed run
 on eight GPUs and an authenticated inference API, then requested switching to
 RTX PRO 6000 when the eight-H100 node remained queued. Dataset generation is complete.
 The current implementation defaults to one `RTX-PRO-6000`, global batch 64, 640 px, AdamW,
-40 epochs maximum and patience 10. Evaluation and serving use separate L4 workers
+40 epochs maximum and patience 10. Evaluation and serving use separate GPU workers
 after the training node is released. See `docs/yolo26s_training_serving.md` for
 commands and the final measured run report.
 
@@ -149,7 +149,7 @@ views from the same scene are independent observations.
   RTX/L4 engine. Verify prediction/metric parity and actual inference latency.
 - The robot receives boxes/classes/confidences plus frame timestamps. It uses
   separate depth/temperature/radiation observations and planning logic to act.
-- Deploy an authenticated Modal HTTPS endpoint on an L4, with zero minimum
+- Deploy an authenticated Modal HTTPS endpoint on an L4 with RTX fallback, with zero minimum
   containers and an idle timeout. Serve the pinned best PyTorch checkpoint;
   engine export is optional follow-up work. Keep Isaac's Python clean.
 

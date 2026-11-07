@@ -1,0 +1,21 @@
+{
+  "run_id": "yolo26s_20261107T225757Z_d625ef",
+  "model": "YOLO26s",
+  "source_commit": "ecb0c696740420c8c23bba36bfef306781776325",
+  "dataset": "barrels_v2_1200",
+  "dataset_manifest_sha256": "706bb40c68af8165970b329457ab6fb043328a3017bf8ea5d0da8f641abcab8e",
+  "classes": [
+    "drum",
+    "corrosion",
+    "bulge"
+  ],
+  "global_batch": 64,
+  "epochs_cap": 40,
+  "patience": 10,
+  "world_size": 1,
+  "gpu_request": "RTX-PRO-6000",
+  "gpu_names": [
+    "NVIDIA RTX PRO 6000 Blackwell Server Edition"
+  ],
+  "created_utc": "2026-11-07T22:58:11.799946+00:00"
+}

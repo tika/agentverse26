@@ -47,7 +47,8 @@ python3 detector/training_status.py
 # Or supply the explicit run ID to inspect an older run.
 ```
 
-After training, the training worker exits. A separate L4 worker calibrates
+After training, the training worker exits. A separate single-GPU worker (RTX PRO
+6000 preferred, L4 fallback) calibrates
 suspect/confirm confidence thresholds **using validation only**, then evaluates
 the 150 test images. The highest validation fitness selects `best.pt`. Test
 scores never choose weights or thresholds. The runner downloads small reports
@@ -96,7 +97,7 @@ DETECTOR_MODEL_RUN=RUN_ID python3 -m modal deploy detector/serve_yolo26s.py --en
 ```
 
 The resulting HTTPS URL is the API base. It loads the exact `best.pt` whose SHA256
-matches the evaluation report. One L4 serves it, minimum containers 0, maximum 1,
+matches the evaluation report. One L4 (RTX PRO 6000 fallback) serves it, minimum containers 0, maximum 1,
 idle timeout 60 seconds. Cold requests start the GPU/container; model inference
 timings exclude cold start and network. Model export/engine optimization is
 optional later work. An H100 TensorRT engine would not be portable to every GPU.
@@ -132,7 +133,7 @@ with open('camera_frame.jpg', 'rb') as image:
         headers={'Modal-Key': os.environ['DETECTOR_API_KEY'],
                  'Modal-Secret': os.environ['DETECTOR_API_SECRET']},
         files={'file': ('camera_frame.jpg', image, 'image/jpeg')},
-        params={'band': 'suspect'},  # or confirm; optional confidence overrides thresholds
+        params={'band': 'fixed', 'confidence': 0.25},  # optional suspect/confirm profiles
         data={'frame_timestamp': 'simulation-frame-123'},
         timeout=180,
     )
@@ -143,7 +144,8 @@ print(result.json())
 `POST /predict` accepts JPEG/PNG/WebP up to 8 MiB and 4096 px per side. It returns
 the run ID, checkpoint hash, dimensions, frame timestamp, `detections` with
 `class_id`, `class_name`, `confidence`, pixel `bbox_xyxy`, suspect/confirm band,
-and timing. `GET /health` identifies the pinned model. `/docs` is interactive
+grouped barrel conditions and timing. Default confidence is 0.25; see
+[actual test results and API modes](model_api.md). `GET /health` identifies the pinned model. `/docs` is interactive
 OpenAPI documentation, with the same proxy-auth headers required at the gateway.
 Class-aware predictions retain overlapping drum/bulge boxes.
 
@@ -156,7 +158,7 @@ simulator's physics loop. The API does not decide whether a drum contains gas.
 ## Code map
 
 - `training_image.py`: pinned isolated dependency image.
-- `modal_train.py`: RTX (or optional eight-H100) orchestration, hash validation, persistence and L4 evaluation.
+- `modal_train.py`: RTX (or optional eight-H100) orchestration, hash validation, persistence and separate evaluation.
 - `train_yolo26s.py`: eight-rank torchrun entry point and checkpoint/progress callbacks.
 - `evaluation_metrics.py`, `evaluate_yolo26s.py`: validation calibration and held-out metrics.
 - `training_status.py`: read-only progress query.
