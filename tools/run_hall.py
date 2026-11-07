@@ -13,7 +13,7 @@ GPU_COUNT = int(os.environ.get('ISAAC_RENDER_GPU_COUNT','1'))
 WORKER_COUNT = int(os.environ.get('ISAAC_RENDER_WORKERS','1'))
 if WORKER_COUNT not in (1,2,3,4): raise ValueError('ISAAC_RENDER_WORKERS must be 1–4')
 if GPU_COUNT not in (1,2,3,4): raise ValueError('ISAAC_RENDER_GPU_COUNT must be 1–4')
-GPU_OPTIONS = [f'{name}:{GPU_COUNT}' for name in ('L40S','L4','A10G')] if GPU_COUNT>1 else ['L40S','L4','A10G']
+GPU_OPTIONS = [f'{name}:{GPU_COUNT}' for name in ('L40S','L4','A10')] if GPU_COUNT>1 else ['RTX-PRO-6000','L40S','L4']
 image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
                                  add_python='3.13',setup_dockerfile_commands=['USER root'])
          .entrypoint([])
@@ -31,7 +31,8 @@ JOBS={'hall':('capture_hall.py','step1','hall.usda','HALL_CAPTURE_OK'),
       'environment':('build_environment.py','environment','scene_environment.usda','ENVIRONMENT_BUILD_OK'),
       'presentation':('capture_presentation.py','presentation','scene_presentation.usda','PRESENTATION_CAPTURE_OK'),
       'barrel_preview':('render_barrel_preview.py','barrel_preview','scene_barrel_preview.usda','BARREL_PREVIEW_OK'),
-      'plates':('capture_plates.py','plates','scene_plates.usda','PLATES_CAPTURE_OK')}
+      'plates':('capture_plates.py','plates','scene_plates.usda','PLATES_CAPTURE_OK'),
+      'hall_review':('capture_barrel_hall.py','hall_barrel_v2','scene_barrel_hall.usda','HALL_BARREL_REVIEW_OK')}
 
 
 @app.function(image=image,gpu=GPU_OPTIONS,cpu=max(6,GPU_COUNT*2),memory=max(24576,GPU_COUNT*8192),
@@ -67,7 +68,7 @@ def render(job='hall',shard=0,shards=1):
     with tarfile.open(fileobj=output,mode='w:gz') as archive:
         paths=['sim/out/'+step]
         if shard==0:paths+=['sim/assets/generated','sim/aisles.json','sim/'+scene]
-        if job in ('drums','sensors','training','robot','environment','presentation','plates'): paths.append('sim/drums.json')
+        if job in ('drums','sensors','training','robot','environment','presentation','plates','hall_review'): paths.append('sim/drums.json')
         for name in paths:
             path = root/name
             if path.exists(): archive.add(path,arcname=name)

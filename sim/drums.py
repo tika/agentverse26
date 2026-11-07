@@ -119,7 +119,8 @@ def build_drums(seed=42):
     UsdGeom.Xform.Define(stage,'/World/Drums')
     entries=make_inventory(seed)
     materials=drum_materials(stage,seed)
-    for entry in entries: create_drum(stage,entry,materials)
+    from barrel_appearance import create_reviewed_drum
+    for entry in entries: create_reviewed_drum(stage,entry,materials)
     write_inventory(entries)
     return entries
 
@@ -134,7 +135,8 @@ def set_drum_category(drum_id,category):
     was_labelled=any('LabelsAPI:' in schema for schema in stage.GetPrimAtPath(entry['prim_path']).GetAppliedSchemas())
     defect_path='/World/Defects/'+drum_id
     if stage.GetPrimAtPath(defect_path): stage.RemovePrim(defect_path)
-    create_drum(stage,entry,drum_materials(stage,entry['scene_seed']))
+    from barrel_appearance import create_reviewed_drum
+    create_reviewed_drum(stage,entry,drum_materials(stage,entry['scene_seed']))
     entries[index]=entry
     write_inventory(entries)
     # Category changes reset faults to clean and keep the new root labelled.
@@ -148,13 +150,15 @@ def set_drum_faults(drum_id,faults,seed=42,severity=2):
     """Replace this drum's Step 3/4 fault meshes; unsupported later faults fail explicitly."""
     from isaacsim.core.experimental.utils.stage import get_current_stage
     from defects import build_corrosion, build_release
-    supported={'corrosion','leak','residue'}
+    supported={'corrosion','bulge','leak','residue'}
     if set(faults)-supported:
-        raise NotImplementedError('Currently supported: corrosion, leak, residue')
+        raise NotImplementedError('Currently supported: corrosion, bulge (LLW), leak, residue')
     if severity not in (1,2,3): raise ValueError('Severity must be 1, 2 or 3')
     entries=json.loads(INVENTORY.read_text())
     entry=next((e for e in entries if e['id']==drum_id),None)
     if entry is None: raise KeyError(drum_id)
+    if 'bulge' in faults and entry['category']!='LLW':
+        raise NotImplementedError('The reviewed bulge fixture is LLW-only')
     stage=get_current_stage()
     path='/World/Defects/'+drum_id
     if stage.GetPrimAtPath(path): stage.RemovePrim(path)
@@ -162,7 +166,10 @@ def set_drum_faults(drum_id,faults,seed=42,severity=2):
     entry['state']='+'.join(entry['faults']) or 'clean'
     entry['corrosion_severity']=severity if 'corrosion' in faults else 0
     entry['defects']=[]
-    if 'corrosion' in faults: entry['defects']+=build_corrosion(stage,entry,seed,severity)
+    from barrel_appearance import create_reviewed_drum
+    create_reviewed_drum(stage,entry,drum_materials(stage,entry['scene_seed']),seed)
+    if 'corrosion' in faults and entry['category']=='ILW':
+        entry['defects']+=build_corrosion(stage,entry,seed,severity)
     for index,fault in enumerate(('leak','residue')):
         if fault in faults: entry['defects']+=build_release(stage,entry,fault,seed+1009*(index+1))
     write_inventory(entries)
@@ -174,7 +181,7 @@ def set_drum_faults(drum_id,faults,seed=42,severity=2):
 
 def set_drum_state(drum_id,state,seed=42,severity=2):
     """Teammate compatibility helper: clean/rusted/rust/spill or composable fault list."""
-    aliases={'rust':'corrosion','rusted':'corrosion','spill':'leak','ok':'clean'}
+    aliases={'rust':'corrosion','rusted':'corrosion','bulged':'bulge','spill':'leak','ok':'clean'}
     if isinstance(state,str):
         state=aliases.get(state,state)
         faults=[] if state=='clean' else [aliases.get(s,s) for s in state.split('+')]

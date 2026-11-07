@@ -4,4 +4,6 @@ __pycache__/
 .runtime/
 sim/out/
 /out/
+sim/assets/generated/hall_v2_*.png
+sim/assets/generated/preview_weathered_yellow_s*_v2*.png
 .claude/settings.local.json

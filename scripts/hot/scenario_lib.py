@@ -125,6 +125,9 @@ def perceive(scene):
             drum_keys[int(key)] = drum_id
         elif label.get('class') == 'corrosion':
             corrosion[drum_id] = corrosion.get(drum_id, 0) + count
+            # This is the thermal sensor's rendering backend, not a visual
+            # detection result: oxide on a drum shares that surface temperature.
+            drum_keys[int(key)] = drum_id
     # Render at sensor resolution: nearest-neighbour ids and depth.
     h, w = LWIR_RES[1], LWIR_RES[0]
     rows = (np.arange(h) * ids_full.shape[0] / h).astype(int)
