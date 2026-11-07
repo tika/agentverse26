@@ -212,11 +212,14 @@ def main():
             dome_lid(stage,entry,paint,rise=spec['lid_rise_m'])
             for part in ('BungLarge','BungSmall'):
                 op=UsdGeom.Xformable(stage.GetPrimAtPath(entry['prim_path']+'/'+part)).GetOrderedXformOps()[0]
-                t=op.Get(); r=math.hypot(t[0],t[1]);t[2]+=spec['lid_rise_m']*(1-(r/.269)**2)**1.5;op.Set(t)
+                t=op.Get(); r=math.hypot(t[0],t[1]);lid_radius=drum_profile('LLW')[-1][0]
+                t[2]+=spec['lid_rise_m']*(1-(r/lid_radius)**2)**1.5;op.Set(t)
         stage.RemovePrim(entry['prim_path']+'/Plate');create_plate(stage,entry,profile)
         root=stage.GetPrimAtPath(entry['prim_path'])
         add_labels(root,labels=['drum'],taxonomy='class');add_labels(root,labels=[entry['id']],taxonomy='drum_id')
         spec['max_diameter_m']=2*max(r for r,z in profile)
+        spec['nominal_diameter_m']=2*entry['radius']
+        spec['nominal_height_m']=entry['height']
         spec['rust_circumference_shift_px']=shift
         spec['rust_cluster_count']=rust_clusters(stage,entry,oxide,alpha,profile) if spec['rust'] else 0
     settings=carb.settings.get_settings()

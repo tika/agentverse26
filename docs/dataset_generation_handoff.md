@@ -108,7 +108,7 @@ and a selection of close, rear, side and occluded frames as well.
 
 - Three detector classes, in order: **0 drum, 1 corrosion, 2 bulge**. This is an
   isolated detector map; the existing hall's `spill` mapping is unchanged.
-- All current studio assets are painted LLW drums: nominal 580 mm outer diameter,
+- All current studio assets are painted LLW drums: nominal 598 mm outer diameter,
   880 mm height. Normal rusted, bulged clean and bulged rusted appearances follow
   `docs/barrel_design_handoff.md`. Include a normal clean control too.
 - Bulging varies mildly: 7–9% peak local radial scale, 65–75 mm lid rise above
