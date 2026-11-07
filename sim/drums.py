@@ -82,9 +82,11 @@ def create_plate(stage,entry,profile):
 def create_drum(stage,entry,materials):
     from pxr import UsdGeom, UsdPhysics, Gf
     from geometry import mesh,cylinder
+    from sensors import author_gamma_source
     path=entry['prim_path']
     if stage.GetPrimAtPath(path): stage.RemovePrim(path)
     root=UsdGeom.Xform.Define(stage,path)
+    author_gamma_source(root.GetPrim(),entry)
     root.AddTranslateOp().Set(Gf.Vec3d(entry['x'],entry['y'],0))
     root.AddRotateZOp().Set(math.degrees(entry['yaw']))
     profile=drum_profile(entry['category'])

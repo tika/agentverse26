@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import sys
 from pathlib import Path
 import json
 import math
@@ -12,6 +13,7 @@ from isaacsim import SimulationApp
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--fast", action="store_true", help="Use RTX Minimal and skip the default viewport")
+parser.add_argument("--radiation", action="store_true", help="Walk the full hall with a gamma hotspot")
 args = parser.parse_args()
 config = {"headless": True, "extra_args": [
     "--enable", "isaacsim.robot.policy.examples",
@@ -40,13 +42,47 @@ def run():
     stage = omni.usd.get_context().get_stage()
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
-    hall = UsdGeom.Xform.Define(stage, "/World/Hall")
-    hall.GetPrim().GetReferences().AddReference("/scene/hall.usda", "/World/Hall")
+    start_x = 3.0 if args.radiation else 8.6
+    if args.radiation:
+        from pxr import Usd
+        import carb
+
+        settings = carb.settings.get_settings()
+        settings.set_bool("/rtx/post/histogram/enabled", False)
+        settings.set_float("/rtx/post/tonemap/filmIso", 400.0)
+        settings.set_float("/rtx/post/tonemap/fNumber", 2.8)
+        settings.set_float("/rtx/post/tonemap/cameraShutter", 60.0)
+
+        sys.path.insert(0, "/scene")
+        from sensors import SensorWorld, author_gamma_source, load_config
+
+        scene = UsdGeom.Xform.Define(stage, "/World")
+        scene.GetPrim().GetReferences().AddReference("/scene/scene_environment.usda", "/World")
+        stage.GetPrimAtPath("/World/Spot").SetActive(False)
+        inventory = json.loads(Path("/scene/drums.json").read_text())
+        scenario = load_config()
+        for drum in inventory:
+            if drum["id"] == "D23":
+                drum["source_strength"] = 280.0  # Scenario-only source strength at 1 m.
+            author_gamma_source(stage.GetPrimAtPath(drum["prim_path"]), drum)
+        sensor = SensorWorld(inventory, scenario)
+    else:
+        hall = UsdGeom.Xform.Define(stage, "/World/Hall")
+        hall.GetPrim().GetReferences().AddReference("/scene/hall.usda", "/World/Hall")
     UsdPhysics.Scene.Define(stage, "/World/PhysicsScene")
     SimulationManager.set_physics_sim_device("cpu")
-    spot = RobotPolicyRunner(get_spot_spec(default_spawn_position=(8.6, 6.0, 0.5)),
-                             prim_path="/World/Spot")
+    spot = RobotPolicyRunner(get_spot_spec(default_spawn_position=(start_x, 6.0, 0.5)),
+                             prim_path="/World/WalkingSpot" if args.radiation else "/World/Spot")
     spot.spawn()
+    mount_height = 0.15
+    if args.radiation:
+        body = next(
+            prim for prim in Usd.PrimRange(stage.GetPrimAtPath("/World/WalkingSpot"))
+            if prim.GetName().lower() in {"body", "base", "base_link"}
+            and prim.HasAPI(UsdPhysics.RigidBodyAPI)
+        )
+        mount = UsdGeom.Xform.Define(stage, body.GetPath().AppendChild("GammaDetector"))
+        mount.AddTranslateOp().Set(Gf.Vec3d(0, 0, mount_height))
 
     def aim(camera, eye, target):
         matrix = Gf.Matrix4d().SetLookAt(Gf.Vec3d(*eye), Gf.Vec3d(*target), Gf.Vec3d(0, 0, 1))
@@ -60,7 +96,7 @@ def run():
         world = World(physics_dt=dt, rendering_dt=dt)
         light = UsdLux.DomeLight.Define(stage, "/World/InspectionFill")
         light.CreateIntensityAttr(250)
-        for row, y in enumerate((4.6, 7.4, 11.3)):
+        for row, y in enumerate(() if args.radiation else (4.6, 7.4, 11.3)):
             for column, x in enumerate((11.4, 12.5, 13.6, 14.7)):
                 drum = UsdGeom.Cylinder.Define(stage, f"/World/Drum_{row}_{column}")
                 drum.CreateHeightAttr(0.88)
@@ -95,7 +131,10 @@ def run():
         front = Camera("/World/RobotCamera", resolution=(480, 270))
         for camera in (side, front):
             camera.prim.GetAttribute("focalLength").Set(15.0)
-        aim(side, (10.7, 2.2, 5.5), (11.7, 7.7, 0.1))
+        if args.radiation:
+            aim(side, (7.8, 1.3, 5.45), (8.0, 6.0, 0.25))
+        else:
+            aim(side, (10.7, 2.2, 5.5), (11.7, 7.7, 0.1))
         world.reset()
         for camera in (side, front):
             camera.initialize()
@@ -105,10 +144,10 @@ def run():
         spot.restart_from_default_state(zero)
         stride = round(1 / (8 * dt))
         frame_seconds = stride * dt
-        root = Path(os.environ.get("OUTPUT_DIR", "out")) / "spot-spill"
+        root = Path(os.environ.get("OUTPUT_DIR", "out")) / ("spot-radiation" if args.radiation else "spot-spill")
         root.mkdir(parents=True, exist_ok=True)
         font = ImageFont.load_default(size=17)
-        direct = [(14.2, 6.0)]
+        direct = [(12.5 if args.radiation else 14.2, 6.0)]
         alternate = [(10.0, 6.0), (10.0, 10.0), (14.2, 10.0)]
 
         def pose():
@@ -116,7 +155,10 @@ def run():
             p, q = p.numpy().reshape(3), q.numpy().reshape(4)
             w, x, y, z = q
             yaw = math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
-            return p, yaw
+            sensor_position = p + mount_height * np.array([
+                2 * (x * z + w * y), 2 * (y * z - w * x), 1 - 2 * (x * x + y * y),
+            ])
+            return p, yaw, sensor_position
 
         def camera_basis(position, yaw):
             heading = np.array([math.cos(yaw), math.sin(yaw), 0.0])
@@ -149,7 +191,7 @@ def run():
             rgba = camera.get_rgba()
             return None if rgba is None or not rgba.size else rgba[:, :, :3].astype(np.uint8)
 
-        def annotate(side_rgb, rgb, mask, robot, estimate, message, t, nearest, mode):
+        def annotate(side_rgb, rgb, mask, robot, estimate, message, t, nearest, mode, radiation, trail):
             canvas = Image.new("RGB", (960, 344), "#111822")
             canvas.paste(Image.fromarray(side_rgb), (0, 28))
             marked = rgb.copy()
@@ -157,16 +199,32 @@ def run():
             canvas.paste(Image.fromarray(marked), (480, 28))
             draw = ImageDraw.Draw(canvas)
             draw.text((10, 4), f"HALL  |  {mode.upper()}  |  {t:04.1f}s", font=font, fill="white")
-            draw.text((490, 4), "ONBOARD RGB  |  predicted tracer mask", font=font, fill="white")
+            draw.text((490, 4), ("ONBOARD RGB  |  gamma sensor history" if args.radiation else "ONBOARD RGB  |  predicted tracer mask"), font=font, fill="white")
             draw.text((10, 307), message, font=font, fill="white")
             depth_text = f"{nearest:.1f} m" if nearest is not None else "unavailable"
             draw.text((10, 325), f"Central depth: {depth_text}  |  planner: rules baseline", font=font, fill="#b9c8d6")
+            if radiation is not None:
+                color = {"green": "#5fe2af", "amber": "#ffc55e", "red": "#ff6767"}
+                draw.rectangle((0, 320, 959, 343), fill="#111822")
+                draw.text((10, 324), f"SIM GAMMA  {radiation['dose_rate_uSv_h']:5.1f} uSv/h  |  "
+                          f"{radiation['status'].upper()}  |  heat {radiation['temperature_c']:.1f} C  |  "
+                          f"RH {radiation['relative_humidity_pct']:.0f}%", font=font,
+                          fill=color[radiation["status"]])
+                draw.rectangle((640, 34, 947, 94), fill="#111822")
+                stop_rate = scenario["thresholds"]["hot_spot"]
+                draw.line([(645, 54), (943, 54)], fill="#ff6767")
+                draw.text((648, 36), f"Dose history  |  stop above {stop_rate:g} uSv/h",
+                          font=ImageFont.load_default(size=12), fill="white")
+                points = [(646 + i * 5, 89 - min(rate / stop_rate, 1.4) * 35)
+                          for i, rate in enumerate(trail[-59:])]
+                if len(points) > 1:
+                    draw.line(points, fill=color[radiation["status"]], width=2)
             def map_point(point):
-                return (17 + (point[0] - 8) * 20, 42 + (10.5 - point[1]) * 15)
+                return (17 + (point[0] - (4 if args.radiation else 8)) * (13 if args.radiation else 20), 42 + (10.5 - point[1]) * 15)
             draw.rectangle((9, 35, 151, 121), fill="#111822")
-            draw.line([map_point(p) for p in [(8.6, 6), *direct]], fill="#999999", width=2)
+            draw.line([map_point(p) for p in [(start_x, 6), *direct]], fill="#999999", width=2)
             if estimate is not None:
-                draw.line([map_point(p) for p in [(8.6, 6), *alternate]], fill="#5fe2af", width=2)
+                draw.line([map_point(p) for p in [(start_x, 6), *alternate]], fill="#5fe2af", width=2)
                 x, y = map_point(estimate)
                 draw.ellipse((x-5, y-5, x+5, y+5), fill="#ff57d9")
             x, y = map_point(robot)
@@ -175,7 +233,7 @@ def run():
 
         timing["scene_setup_s"] = perf_counter() - setup_started
         warm_started = perf_counter()
-        camera_basis(*pose())
+        camera_basis(*pose()[:2])
         for _ in range(30):
             world.render()
             if pixels(side) is not None and pixels(front) is not None:
@@ -186,7 +244,7 @@ def run():
         timing["camera_warmup_s"] = perf_counter() - warm_started
         print(f"[spot-timing] {timing}", flush=True)
         scores = {}
-        for mode in ("dry", "spill"):
+        for mode in (("radiation",) if args.radiation else ("dry", "spill")):
             episode_started = perf_counter()
             totals = dict(render_s=0.0, perception_s=0.0, overlay_and_write_s=0.0, physics_s=0.0)
             patch.MakeInvisible()
@@ -199,13 +257,18 @@ def run():
             detection_time = None
             min_distance = math.inf
             message = "Patrolling direct aisle"
+            trail = []
+            radiation = None
+            retreating = False
+            retreated = False
+            last_clear = None
             with (output / "events.jsonl").open("w") as log:
-                for index in range(145):
+                for index in range(175 if args.radiation else 145):
                     t = index * frame_seconds
                     if mode == "spill" and index == 10:
                         patch.MakeVisible()
                         log.write(json.dumps({"event": "scene_spill_appeared", "time_s": t}) + "\n")
-                    position, yaw = pose()
+                    position, yaw, sensor_position = pose()
                     phase = perf_counter()
                     basis = camera_basis(position, yaw)
                     world.render()
@@ -215,7 +278,7 @@ def run():
                         raise RuntimeError("Camera dropped out")
                     totals["render_s"] += perf_counter() - phase
                     phase = perf_counter()
-                    mask, hit = detect(rgb, basis)
+                    mask, hit = (np.zeros(rgb.shape[:2], dtype=bool), None) if args.radiation else detect(rgb, basis)
                     depth = front.get_depth()
                     nearest = None
                     if depth is not None and depth.size:
@@ -223,8 +286,27 @@ def run():
                         valid = core[np.isfinite(core) & (core > 0)]
                         if valid.size:
                             nearest = float(np.percentile(valid, 10))
+                    if args.radiation:
+                        radiation = sensor.sample(sensor_position, t)
+                        rate = radiation["dose_rate_uSv_h"]
+                        limits = scenario["thresholds"]
+                        radiation["status"] = ("red" if rate > limits["hot_spot"]
+                                               else "amber" if rate > limits["controlled_zone"] else "green")
+                        trail.append(rate)
+                        log.write(json.dumps({"event": "dose_sample", "position_m": sensor_position.tolist(),
+                                              **radiation}) + "\n")
+                        if not retreating:
+                            if rate < 0.7 * limits["hot_spot"]:
+                                last_clear = tuple(map(float, position[:2]))
+                            if radiation["status"] == "red":
+                                retreating = True
+                                detection_time = t
+                                path = [last_clear] if last_clear is not None else []
+                                message = "Gamma limit crossed | backing off to last below-threshold position"
+                                log.write(json.dumps({"event": "radiation_veto", "time_s": t,
+                                                      "dose_rate_uSv_h": rate, "retreat_target": last_clear}) + "\n")
                     hold = False
-                    if estimate is None and hit is not None and abs(hit[1] - 6.0) < 0.8:
+                    if not args.radiation and estimate is None and hit is not None and abs(hit[1] - 6.0) < 0.8:
                         estimate = hit
                         detection_time = t
                         path = list(alternate)
@@ -235,8 +317,13 @@ def run():
                     if path and np.linalg.norm(position[:2] - path[0]) < 0.26:
                         path.pop(0)
                     if not path:
-                        reached = True
-                        message = "Inspection viewpoint reached"
+                        if retreating:
+                            retreated = radiation["status"] != "red"
+                            message = ("Stopped after retreat | gamma reading below alert threshold" if retreated
+                                       else "Holding | no below-threshold retreat point reached")
+                        else:
+                            reached = True
+                            message = "Inspection viewpoint reached"
                     command = zero
                     if path and not hold:
                         delta = np.array(path[0]) - position[:2]
@@ -264,7 +351,7 @@ def run():
                             },
                         }
                         (output / "decision.json").write_text(json.dumps(snapshot, indent=2))
-                    annotate(side_rgb, rgb, mask, position[:2], estimate, message, t, nearest, mode).save(
+                    annotate(side_rgb, rgb, mask, position[:2], estimate, message, t, nearest, mode, radiation, trail).save(
                         output / f"{index:05d}.jpg", quality=80)
                     if mode == "spill" and index >= 10:
                         min_distance = min(min_distance, float(np.linalg.norm(position[:2] - spill_center)))
@@ -274,16 +361,19 @@ def run():
                         spot.step(dt, command)
                         world.step(render=False)
                     totals["physics_s"] += perf_counter() - phase
-                    if reached and index > 15:
+                    if (reached or (retreating and not path)) and index > 15:
                         break
             score = {"mode": mode, "detection_time_s": detection_time, "reached": reached,
                      "minimum_base_to_spill_center_m": min_distance if math.isfinite(min_distance) else None}
+            if args.radiation:
+                score.update(retreated=retreated, peak_dose_rate_uSv_h=max(trail),
+                             final_dose_rate_uSv_h=trail[-1])
             scores[mode] = score
             (output / "score.json").write_text(json.dumps(score, indent=2))
             timing[mode] = {**totals, "frames": index + 1, "simulated_s": (index + 1) * frame_seconds,
                             "episode_wall_s": perf_counter() - episode_started}
             print(f"[spot-spill] {score}", flush=True)
-        timing["passed"] = (
+        timing["passed"] = scores["radiation"]["retreated"] if args.radiation else (
             scores["dry"]["reached"] and scores["dry"]["detection_time_s"] is None
             and scores["spill"]["reached"] and scores["spill"]["detection_time_s"] is not None
             and scores["spill"]["minimum_base_to_spill_center_m"] > 1.5

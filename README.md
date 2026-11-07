@@ -223,3 +223,22 @@ The one-step GPU check needs approved access to Cosmos Reason 2 and an HF_TOKEN
 in the Modal secret named `huggingface`. The adapter and timing report are
 written to the `spot-cosmos-training` Volume. Use separate layouts and decision
 labels for an evaluation run.
+
+### Spot radiation walk
+
+```sh
+modal run isaac_sim_modal.py --script scripts/spot_spill.py --args=--radiation --output out/radiation-demo
+ffmpeg -framerate 8 -i out/radiation-demo/spot-radiation/radiation/%05d.jpg \
+  -c:v libx264 -pix_fmt yuv420p -movflags +faststart out/spot-radiation.mp4
+```
+
+This mode uses the full hall inventory. Each drum has simulator-side USD
+attributes for source strength at one metre and source height. The scenario
+raises one source to make the transition visible during a short walk. The
+body-mounted gamma detector samples the existing dose and environment
+backend. The controller uses measured dose only to veto the forward path
+and back off toward a previously sampled location. The overlay shows the
+dose-rate history and configured thresholds in simulation units, with air
+temperature and humidity alongside. The event log records dose, position,
+accumulated exposure and the veto. This is a simulated gamma survey, and
+the overlay reports dose at the sampled position.
