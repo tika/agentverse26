@@ -132,3 +132,43 @@ class Association(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DenseLayoutIdentity(unittest.TestCase):
+    """v1.2.1 dense store: -D2 back-row codes, stencilled package IDs, 3-digit IDs."""
+
+    @classmethod
+    def setUpClass(cls):
+        scene_sim = Path("/Users/levi/Desktop/agentverse/worktrees/claude-s2-scene/sim")
+        if not (scene_sim / "stacking.py").exists():
+            raise unittest.SkipTest("scene worktree not available")
+        sys.path.insert(0, str(scene_sim))
+        import stacking
+        cls.entries = stacking.stack_inventory(json.loads((scene_sim / "drums.json").read_text()))
+        cls.map = am.runtime_view(cls.entries)
+        cls.by_id = {d["id"]: d for d in cls.map["drums"]}
+
+    def test_map_valid_and_codes_parse(self):
+        self.assertEqual(am.map_errors(self.map), [])
+        self.assertEqual(am.display_id_collisions(self.map), [])
+        for d in self.map["drums"]:
+            self.assertEqual(c.location_errors(d["location"]), [])
+
+    def test_stencil_confirms_and_conflicts(self):
+        e = next(x for x in self.entries if x["id"] == "D133")  # B-L-01-T2, 3-digit id
+        surface = (e["x"], e["y"] - e["radius"], e["base_z"] + 0.72 * e["height"])
+        r = ident.associate(self.map, stencil_text="D133", observed_xyz=surface)
+        self.assertEqual((r["status"], r["candidates"]), ("confirmed", ["D133"]))
+        r = ident.associate(self.map, stencil_text="D133", plate_text="B-L-01-T1")
+        self.assertEqual(r["status"], "conflict")
+        self.assertEqual(ident.associate(self.map, stencil_text="D999")["status"], "unread")
+
+    def test_hidden_back_row_drum_stays_unread_from_the_aisle(self):
+        back = next(x for x in self.entries if x["location"]["depth"] == 2 and x["location"]["tier"] == 1)
+        self.assertTrue(back["display_id"].endswith("-D2"))
+        self.assertTrue(ident.PLATE_RE.match(back["display_id"]))
+        front = next(x for x in self.entries if x["location"]["depth"] == 1 and x["x"] == back["x"]
+                     and x["stack_id"] == back["stack_id"] and x["location"]["tier"] == 1)
+        face_y = front["y"] + front["face_sign"] * front["radius"]
+        r = ident.associate(self.map, observed_xyz=(front["x"], face_y, 0.5))
+        self.assertEqual(r["candidates"], [front["id"]])  # only the visible drum, never the hidden one

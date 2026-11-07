@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 # Plate text: stage-2 location code (A-L-01-T2) or legacy row+slot (A03).
-PLATE_TEXT_RE = re.compile(r"(?:[A-Z][0-9]{2}|[ABC]-[LR]-[0-9]{2}-T[123])")
+PLATE_TEXT_RE = re.compile(r"(?:[A-Z][0-9]{2}|[ABC]-[LR]-[0-9]{2}-T[123](?:-D2)?)")
 
 def finite_number(value):
     return type(value) in (int, float) and math.isfinite(value)

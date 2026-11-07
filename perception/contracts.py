@@ -45,7 +45,7 @@ CONDITION_STATUS = ("unknown", "insufficient_coverage", "no_visible_defect_in_in
 IDENTITY_STATUS = ("confirmed", "ambiguous", "unread", "conflict")
 
 LANES, SIDES = ("A", "B", "C"), ("L", "R")
-LOCATION_RE = re.compile(r"^([ABC])-([LR])-(\d{2})-T([123])$")
+LOCATION_RE = re.compile(r"^([ABC])-([LR])-(\d{2})-T([123])(?:-D(2))?$")  # -D2: hidden back-row drum
 DRUM_ID_RE = re.compile(r"^D\d{2,3}$")
 
 
@@ -89,8 +89,8 @@ def legacy_degrees_to_rad(yaw_deg):
 
 # ---------------------------------------------------------------------- location
 
-def format_location(lane, side, column, tier):
-    code = f"{lane}-{side}-{int(column):02d}-T{int(tier)}"
+def format_location(lane, side, column, tier, depth=1):
+    code = f"{lane}-{side}-{int(column):02d}-T{int(tier)}" + ("" if int(depth) == 1 else f"-D{int(depth)}")
     if not LOCATION_RE.match(code) or int(column) < 1:
         raise ValueError(f"invalid location parts {lane!r},{side!r},{column!r},{tier!r}")
     return code
@@ -100,7 +100,8 @@ def parse_location(code):
     m = LOCATION_RE.match(code or "")
     if not m or int(m.group(3)) < 1:
         raise ValueError(f"invalid location code {code!r}")
-    return {"lane": m.group(1), "side": m.group(2), "column": int(m.group(3)), "tier": int(m.group(4))}
+    return {"lane": m.group(1), "side": m.group(2), "column": int(m.group(3)), "tier": int(m.group(4)),
+            "depth": int(m.group(5) or 1)}
 
 
 def location_errors(loc, where="location: "):
@@ -113,8 +114,8 @@ def location_errors(loc, where="location: "):
         parts = parse_location(loc["location_code"])
     except ValueError as e:
         return [where + str(e)]
-    for k in ("lane", "side", "column", "tier"):
-        if parts[k] != loc[k]:
+    for k in ("lane", "side", "column", "tier", "depth"):
+        if parts[k] != loc.get(k, 1 if k == "depth" else None):
             errors.append(f"{where}{k}={loc[k]!r} disagrees with location_code {loc['location_code']}")
     if loc["tier_count"] not in (1, 2, 3) or not 1 <= loc["tier"] <= loc["tier_count"]:
         errors.append(f"{where}tier must lie in 1..tier_count (1-3)")

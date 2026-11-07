@@ -13,7 +13,9 @@ import re
 
 # Stage 2 (Codex 20:28): plates print the location code, e.g. "A-L-01-T1".
 # Legacy row+slot plates ("A03") are still accepted for the original 28 drums.
-PLATE_RE = re.compile(r"^(?:[A-Z][0-9]{2}|[ABC]-[LR]-[0-9]{2}-T[123])$")
+PLATE_RE = re.compile(r"^(?:[A-Z][0-9]{2}|[ABC]-[LR]-[0-9]{2}-T[123](?:-D2)?)$")
+# v1.2.1: aisle-facing drums also carry a large stencilled package ID = the immutable D-number.
+STENCIL_RE = re.compile(r"^D[0-9]{2,3}$")
 
 DEFAULT_GATE_M = 0.6      # 2-D: max distance to a nominal centre; 3-D: max distance to the nominal cylinder
 DEFAULT_MARGIN_M = 0.25   # second candidate must be this much farther for a unique geometric match
@@ -59,7 +61,7 @@ def plate_to_id(plate_text, runtime_map):
     return matches[0] if len(matches) == 1 else None
 
 
-def associate(runtime_map, *, plate_text=None, observed_xyz=None, evidence_ids=(),
+def associate(runtime_map, *, plate_text=None, stencil_text=None, observed_xyz=None, evidence_ids=(),
               gate_m=None, margin_m=None):
     evidence = list(evidence_ids)
     notes = []
@@ -67,6 +69,16 @@ def associate(runtime_map, *, plate_text=None, observed_xyz=None, evidence_ids=(
         notes.append(f"plate text {plate_text!r} malformed; ignored")
         plate_text = None
     plate_id = plate_to_id(plate_text, runtime_map)
+    if stencil_text is not None:
+        ids = {d["id"] for d in runtime_map["drums"]}
+        if not STENCIL_RE.match(stencil_text) or stencil_text not in ids:
+            notes.append(f"stencil text {stencil_text!r} not a known package id; ignored")
+        elif plate_id and plate_id != stencil_text:
+            notes.append("stencil and plate name different drums")
+            return {"status": "conflict", "candidates": [stencil_text, plate_id], "evidence": evidence,
+                    "method": "stencil_read+plate_read", "notes": notes}
+        else:
+            plate_id = stencil_text  # stencil prints the immutable id directly
     if plate_text is not None and plate_id is None:
         notes.append(f"plate text {plate_text!r} not in asset map")
     if plate_text is not None and any(d["id"] == plate_text for d in runtime_map["drums"]) and plate_id != plate_text:
