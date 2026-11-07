@@ -39,8 +39,11 @@ def assess_scenario(sc):
                                     drum_ids=[drum], view_id="view-1", note=d.get("surface_region", "")))
     wet = runtime.get("wet_case")
     if wet:
-        evs.append(ev.make_evidence("visual_wet_or_residue", value=1, units="detections", t_s=0,
-                                    area=area, note=f"mechanism: {wet.get('mechanism')}"))
+        kind_text = str(wet.get("fluid_kind", "")).lower()
+        water = ("water" in kind_text or "condensation" in kind_text) and "residue" not in kind_text
+        evs.append(ev.make_evidence("visual_water" if water else "visual_wet_or_residue", value=1,
+                                    units="detections", t_s=0, area=area,
+                                    note=f"appearance: {wet.get('fluid_kind')}; mechanism (scenario): {wet.get('mechanism')}"))
     obs = runtime.get("obstruction")
     if obs:
         evs.append(ev.make_evidence("route_obstruction", value=obs.get("geometry_m", {}).get("size"), units="m",

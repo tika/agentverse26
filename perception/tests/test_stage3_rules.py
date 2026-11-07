@@ -221,12 +221,19 @@ class Assessment(unittest.TestCase):
         self.assertEqual(out["s3"]["findings"], [])
         self.assertEqual(out["s3"]["condition_status"], "no_visible_defect_in_inspected_area")
         self.assertEqual(out["s4"]["findings"], [])
-        self.assertEqual({f["hypothesis"] for f in out["s5"]["findings"]}, {"wet_or_residue_unexplained"})
-        self.assertIn("request_swab_if_safe", out["s5"]["actions"])
+        # Clear water is a maintenance observation, not a release indicator (Levi 22:20).
+        self.assertEqual({f["hypothesis"] for f in out["s5"]["findings"]}, {"water_or_condensation"})
+        self.assertIn("log_maintenance_check_water_source", out["s5"]["actions"])
+        self.assertNotIn("request_swab_if_safe", out["s5"]["actions"])
         poisoned = copy.deepcopy(GOOD_SET[2])
         poisoned["truth"] = {"internal_corrosion": True, "faults": ["corrosion"], "visible": True}
         self.assertEqual(sa.assess_scenario(poisoned)["findings"], [])
 
+
+    def test_dose_change_alone_never_makes_a_release(self):
+        wet = ev.make_evidence("visual_wet_or_residue", value=1, units="detections", t_s=1, area="A-L")
+        dose = ev.make_evidence("dose_rate_change", value=40, units="%", t_s=2, area="A-L")
+        self.assertNotIn("suspected_release", {f["hypothesis"] for f in ev.findings_for([wet, dose])})
 
     def test_obstruction_and_swab(self):
         import stage3_assess as sa

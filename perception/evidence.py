@@ -17,8 +17,15 @@ KINDS = {
         "source": "camera+detector (YOLO class 1)", "scope": "drum",
         "supports": ["external_corrosion"],
         "cannot_establish": ["remaining wall thickness", "internal corrosion", "leak", "radioactivity"]},
+    # Levi guidance 22:20: clear wet spots/condensation are maintenance observations (NDA WPS/630:
+    # dense packing can promote stagnant-air condensation; roof leaks/flooding are possible water
+    # entry). A suspected radioactive release is rare and needs an independent contact swab.
+    "visual_water": {
+        "source": "camera+detector (YOLO class 2 'spill'; clear/dark wet appearance)", "scope": "drum_or_area",
+        "supports": ["water_or_condensation"],
+        "cannot_establish": ["radioactivity", "contamination", "the water source", "which drum is involved"]},
     "visual_wet_or_residue": {
-        "source": "camera+detector (YOLO class 2 'spill')", "scope": "drum_or_area",
+        "source": "camera+detector (YOLO class 2 'spill'; tinted residue appearance)", "scope": "drum_or_area",
         "supports": ["wet_or_residue_unexplained"],
         "cannot_establish": ["radioactivity", "contamination", "chemistry", "which drum released it"]},
     "depth_deformation": {
@@ -63,6 +70,7 @@ KINDS = {
 HYPOTHESES = {
     "external_corrosion": (0.45, True),
     "wet_or_residue_unexplained": (0.55, True),
+    "water_or_condensation": (0.20, False),   # maintenance observation, not a release indicator
     "suspected_deformation": (0.60, True),
     "elevated_radiation_field": (0.40, False),
     "radiation_field_change": (0.55, False),
@@ -76,8 +84,9 @@ HYPOTHESES = {
 }
 COMBINED = {
     # A release is only suspected when visible wet/residue evidence AND an independent channel agree.
+    # Only an independent contact swab supports the screened release label (Levi guidance 22:20).
     "suspected_release": [("visual_wet_or_residue", "swab_contamination"),
-                          ("visual_wet_or_residue", "dose_rate_change")],
+                          ("visual_water", "swab_contamination")],
 }
 SAFETY_HYPOTHESES = {"gas_concern_area", "gas_concern_package", "thermal_anomaly"}
 NON_CONDITION = {"route_blocked"}  # navigation findings never change a drum's condition status
@@ -153,6 +162,8 @@ def actions_for(findings, coverage_fraction):
         actions.append("second_view")
     if "wet_or_residue_unexplained" in hyps and "suspected_release" not in hyps:
         actions.append("request_swab_if_safe")
+    if "water_or_condensation" in hyps and "suspected_release" not in hyps:
+        actions.append("log_maintenance_check_water_source")
     if "elevated_radiation_field" in hyps and "radiation_field_change" not in hyps:
         actions.append("measure_at_matched_reference_pose")
     if "route_blocked" in hyps:
