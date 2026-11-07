@@ -1,17 +1,29 @@
 """Record a dry control and a camera-triggered spill detour in the storage hall."""
 
+import argparse
 import os
 from pathlib import Path
 import json
 import math
 import traceback
+from time import perf_counter
 
 from isaacsim import SimulationApp
 
-app = SimulationApp({"headless": True, "extra_args": [
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--fast", action="store_true", help="Use RTX Minimal and skip the default viewport")
+args = parser.parse_args()
+config = {"headless": True, "extra_args": [
     "--enable", "isaacsim.robot.policy.examples",
     "--enable", "isaacsim.sensors.camera",
-]})
+]}
+if args.fast:
+    config.update(renderer="MinimalRendering", minimal_shading_mode=1, disable_viewport_updates=True)
+started = perf_counter()
+app = SimulationApp(config)
+timing = {"renderer_profile": "fast" if args.fast else "default",
+          "kit_start_s": perf_counter() - started}
+
 
 
 def run():
@@ -24,6 +36,7 @@ def run():
     from isaacsim.robot.policy.examples import RobotPolicyRunner, get_spot_spec
     from isaacsim.sensors.camera import Camera
 
+    setup_started = perf_counter()
     stage = omni.usd.get_context().get_stage()
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
@@ -160,6 +173,8 @@ def run():
             draw.ellipse((x-3, y-3, x+3, y+3), fill="white")
             return canvas
 
+        timing["scene_setup_s"] = perf_counter() - setup_started
+        warm_started = perf_counter()
         camera_basis(*pose())
         for _ in range(30):
             world.render()
@@ -168,7 +183,12 @@ def run():
         else:
             raise RuntimeError("Camera warm-up failed")
 
+        timing["camera_warmup_s"] = perf_counter() - warm_started
+        print(f"[spot-timing] {timing}", flush=True)
+        scores = {}
         for mode in ("dry", "spill"):
+            episode_started = perf_counter()
+            totals = dict(render_s=0.0, perception_s=0.0, overlay_and_write_s=0.0, physics_s=0.0)
             patch.MakeInvisible()
             spot.restart_from_default_state(zero)
             output = root / mode
@@ -186,12 +206,15 @@ def run():
                         patch.MakeVisible()
                         log.write(json.dumps({"event": "scene_spill_appeared", "time_s": t}) + "\n")
                     position, yaw = pose()
+                    phase = perf_counter()
                     basis = camera_basis(position, yaw)
                     world.render()
                     world.render()
                     rgb, side_rgb = pixels(front), pixels(side)
                     if rgb is None or side_rgb is None:
                         raise RuntimeError("Camera dropped out")
+                    totals["render_s"] += perf_counter() - phase
+                    phase = perf_counter()
                     mask, hit = detect(rgb, basis)
                     depth = front.get_depth()
                     nearest = None
@@ -221,19 +244,52 @@ def run():
                         c, s = math.cos(yaw), math.sin(yaw)
                         command = np.array([c * velocity[0] + s * velocity[1],
                                             -s * velocity[0] + c * velocity[1], 0], dtype=np.float32)
+                    totals["perception_s"] += perf_counter() - phase
+                    phase = perf_counter()
+                    if (mode == "dry" and index == 11 and estimate is None) or hold:
+                        Image.fromarray(rgb).save(output / "decision.png")
+                        snapshot = {
+                            "rgb_path": "decision.png",
+                            "readings": {"central_depth": {"value": nearest, "unit": "m", "age_s": 0}},
+                            "goals": [
+                                {"id": "direct_aisle", "route_clear": not hold},
+                                {"id": "north_viewpoint", "route_clear": True},
+                            ],
+                            "findings": ([{"id": "tracer_1", "label": "possible spill",
+                                           "position_m": hit.tolist()}] if hold else []),
+                            "target": {
+                                "goal_id": "north_viewpoint" if hold else "direct_aisle",
+                                "reason": ("A possible spill blocks the direct aisle."
+                                           if hold else "The direct aisle is clear."),
+                            },
+                        }
+                        (output / "decision.json").write_text(json.dumps(snapshot, indent=2))
                     annotate(side_rgb, rgb, mask, position[:2], estimate, message, t, nearest, mode).save(
                         output / f"{index:05d}.jpg", quality=80)
                     if mode == "spill" and index >= 10:
                         min_distance = min(min_distance, float(np.linalg.norm(position[:2] - spill_center)))
+                    totals["overlay_and_write_s"] += perf_counter() - phase
+                    phase = perf_counter()
                     for _ in range(stride):
                         spot.step(dt, command)
                         world.step(render=False)
+                    totals["physics_s"] += perf_counter() - phase
                     if reached and index > 15:
                         break
             score = {"mode": mode, "detection_time_s": detection_time, "reached": reached,
                      "minimum_base_to_spill_center_m": min_distance if math.isfinite(min_distance) else None}
+            scores[mode] = score
             (output / "score.json").write_text(json.dumps(score, indent=2))
+            timing[mode] = {**totals, "frames": index + 1, "simulated_s": (index + 1) * frame_seconds,
+                            "episode_wall_s": perf_counter() - episode_started}
             print(f"[spot-spill] {score}", flush=True)
+        timing["passed"] = (
+            scores["dry"]["reached"] and scores["dry"]["detection_time_s"] is None
+            and scores["spill"]["reached"] and scores["spill"]["detection_time_s"] is not None
+            and scores["spill"]["minimum_base_to_spill_center_m"] > 1.5
+        )
+        (root / "timing.json").write_text(json.dumps(timing, indent=2))
+        print(f"[spot-timing] {timing}", flush=True)
     finally:
         spot.close()
 
@@ -242,7 +298,7 @@ try:
     run()
 except Exception:
     traceback.print_exc()
-    app.close(wait_for_replicator=False, exit_code=1)
+    app.close(wait_for_replicator=False, skip_cleanup=True, exit_code=1)
     raise
 else:
-    app.close(wait_for_replicator=False)
+    app.close(wait_for_replicator=False, skip_cleanup=True)

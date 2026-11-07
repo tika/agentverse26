@@ -70,6 +70,24 @@ def decide(snapshot, limits, planner):
     return {"action": "navigate", "source": "planner", "goal_id": goal_id, "reason": reason}
 
 
+def planner_messages(snapshot, rgb=None):
+    image = {"type": "image"} if rgb is None else {"type": "image", "image": rgb}
+    context = {key: snapshot[key] for key in ("readings", "goals")}
+    context["findings"] = snapshot.get("findings", [])
+    return [
+        {"role": "system", "content": [{"type": "text", "text": (
+            "You plan a waste-drum inspection. Use the image, sensor readings and findings "
+            "to choose one offered goal. Prioritize a useful view of suspected damage, "
+            "otherwise continue inspection. Return only JSON with goal_id (an offered ID "
+            "or null to hold) and reason (one short sentence grounded in the observations)."
+        )}]},
+        {"role": "user", "content": [
+            image,
+            {"type": "text", "text": json.dumps(context)},
+        ]},
+    ]
+
+
 class CosmosPlanner:
     def __init__(self, model_path, adapter_path):
         import torch
@@ -96,20 +114,7 @@ class CosmosPlanner:
         with Image.open(snapshot["rgb_path"]) as frame:
             rgb = frame.convert("RGB")
         rgb.thumbnail((640, 480))
-        context = {key: snapshot[key] for key in ("readings", "goals")}
-        context["findings"] = snapshot.get("findings", [])
-        messages = [
-            {"role": "system", "content": (
-                "You plan a waste-drum inspection. Use the image, sensor readings and findings "
-                "to choose one offered goal. Prioritize a useful view of suspected damage, "
-                "otherwise continue inspection. Return only JSON with goal_id (an offered ID "
-                "or null to hold) and reason (one short sentence grounded in the observations)."
-            )},
-            {"role": "user", "content": [
-                {"type": "image", "image": rgb},
-                {"type": "text", "text": json.dumps(context)},
-            ]},
-        ]
+        messages = planner_messages(snapshot, rgb)
         inputs = self.processor.apply_chat_template(
             messages, tokenize=True, add_generation_prompt=True,
             return_dict=True, return_tensors="pt",

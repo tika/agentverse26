@@ -15,6 +15,7 @@ import os
 import pathlib
 import subprocess
 import tarfile
+import time
 
 import modal
 
@@ -78,14 +79,19 @@ def run(script_name: str, script_source: str | None = None, args: list[str] | No
     else:
         path = pathlib.Path("/scripts") / script_name
 
+    started = time.perf_counter()
     try:
         subprocess.run([f"{ISAAC_HOME}/python.sh", str(path), *(args or [])], check=True, cwd=ISAAC_HOME)
     finally:
+        exited = time.perf_counter()
         cache.commit()
+        print(f"[timing] Isaac subprocess {exited - started:.2f}s; cache commit {time.perf_counter() - exited:.2f}s", flush=True)
 
+    started = time.perf_counter()
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
         tar.add(OUTPUT_DIR, arcname=".")
+    print(f"[timing] archive {time.perf_counter() - started:.2f}s; {buf.tell()} bytes", flush=True)
     return buf.getvalue()
 
 
@@ -116,15 +122,18 @@ def shell():
 
 
 @app.local_entrypoint()
-def main(script: str = "", args: str = ""):
+def main(script: str = "", args: str = "", output: str = "out"):
+    started = time.perf_counter()
     if script:
         local = pathlib.Path(script)
         payload = run.remote(local.name, local.read_text(), args.split())
     else:
         payload = run.remote("smoke_test.py")
 
-    out = pathlib.Path("out")
+    returned = time.perf_counter()
+    out = pathlib.Path(output)
     out.mkdir(exist_ok=True)
     with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as tar:
         tar.extractall(out)  # archive comes from our own container
+    print(f"[timing] remote call plus transfer {returned - started:.2f}s; local extraction {time.perf_counter() - returned:.2f}s")
     print(f"Outputs saved to {out.resolve()}: {sorted(p.name for p in out.iterdir())}")
