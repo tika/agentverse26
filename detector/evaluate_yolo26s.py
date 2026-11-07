@@ -4,7 +4,10 @@ import hashlib
 import json
 from pathlib import Path
 import time
-from evaluation_metrics import CLASSES, calibrate, fixed_metrics
+if __package__:
+    from .evaluation_metrics import CLASSES, calibrate, fixed_metrics, match_detections
+else:
+    from evaluation_metrics import CLASSES, calibrate, fixed_metrics, match_detections
 
 
 def load_truth(dataset, split):
@@ -24,7 +27,11 @@ def load_predictions(path):
     predictions = []
     for row in json.loads(path.read_text()):
         x, y, w, h = row['bbox']
-        predictions.append(dict(image_id=str(row['image_id']), class_id=int(row['category_id']), confidence=float(row['score']), box=[x, y, x+w, y+h]))
+        # Ultralytics 8.4.207 exports custom-dataset COCO JSON with IDs 1..N.
+        # Our YOLO TXT labels and API class IDs remain 0..N-1.
+        class_id = int(row['category_id']) - 1
+        assert class_id in range(len(CLASSES)), 'Unexpected exported category mapping'
+        predictions.append(dict(image_id=str(row['image_id']), class_id=class_id, confidence=float(row['score']), box=[x, y, x+w, y+h]))
     return predictions
 
 
@@ -55,7 +62,7 @@ def main():
                             project=str(destination), name=split, exist_ok=True, verbose=False)
         truth, images = load_truth(a.dataset, split)
         predictions = load_predictions(destination/split/'predictions.json')
-        # Assert custom-dataset IDs are names, not COCO IDs with an offset.
+        # Validate normalized class IDs and custom image stems after JSON conversion.
         assert predictions and all(r['class_id'] in range(3) and r['image_id'] in {i.stem for i in images} for r in predictions)
         if split == 'val':
             thresholds = calibrate(truth, predictions, len(images))
@@ -68,7 +75,6 @@ def main():
         print('EVAL_PROGRESS '+json.dumps(dict(split=split, state='complete', overall=results[split]['overall'])), flush=True)
     results['thresholds'] = thresholds
     # Draw actual test predictions, plus difficult images selected by fixed-threshold misses/FPs.
-    from evaluation_metrics import match_detections
     truth, predictions, images = cached['test']
     errors = {image.stem: 0 for image in images}
     for c, name in enumerate(CLASSES):

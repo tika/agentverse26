@@ -133,17 +133,23 @@ def evaluate(run_id):
 
 
 def main():
+    import argparse
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--evaluate-only',metavar='RUN_ID')
+    args=parser.parse_args()
     sys.path.insert(0,str(ROOT))
     from detector.dataset_release import check_workspace
     check_workspace('paramsachdeva07')
-    run_id='yolo26s_'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+uuid.uuid4().hex[:6]
-    output=ROOT/'out/detector_training'/run_id;output.mkdir(parents=True)
+    run_id=args.evaluate_only or 'yolo26s_'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+uuid.uuid4().hex[:6]
+    assert run_id.startswith('yolo26s_') and '/' not in run_id
+    output=ROOT/'out/detector_training'/run_id;output.mkdir(parents=True,exist_ok=bool(args.evaluate_only))
     (ROOT/'out/detector_training/latest.json').write_text(json.dumps(dict(run_id=run_id,local_path=str(output)),indent=2))
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     print('TRAIN_RUN_ID '+run_id,flush=True)
     with modal.enable_output(),app.run():
-        result=train.remote(run_id,commit)
-        (output/'training_runtime.json').write_text(json.dumps(result,indent=2));print('TRAINING_FINISHED '+json.dumps(result),flush=True)
+        if not args.evaluate_only:
+            result=train.remote(run_id,commit)
+            (output/'training_runtime.json').write_text(json.dumps(result,indent=2));print('TRAINING_FINISHED '+json.dumps(result),flush=True)
         evaluated=evaluate.remote(run_id)
     with tarfile.open(fileobj=io.BytesIO(evaluated['archive'])) as tar:tar.extractall(output,filter='data')
     print('TRAINING_AND_TEST_COMPLETE '+json.dumps(evaluated['results']),flush=True)
