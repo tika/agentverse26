@@ -4,6 +4,18 @@ import math
 from pathlib import Path
 
 
+def _refined_profile(profile, step_m=.015):
+    """Insert real sidewall vertices so a deformation is spatially resolved."""
+    dense=[]
+    for (r0,z0),(r1,z1) in zip(profile,profile[1:]):
+        steps=max(1,int(math.ceil(abs(z1-z0)/step_m)))
+        for i in range(steps):
+            t=i/steps
+            dense.append((r0+(r1-r0)*t,z0+(z1-z0)*t))
+    dense.append(profile[-1])
+    return dense
+
+
 def apply_visual_scenario(stage, scenario, inventory_path=None):
     """Build only runtime-visible geometry; hidden faults stay in scenario['truth']."""
     from pxr import Gf, UsdGeom
@@ -48,6 +60,26 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
                 body = UsdGeom.Mesh.Get(stage, entry['prim_path'] + '/Body')
                 if not body:
                     raise RuntimeError(f"missing body mesh for {entry['id']}")
+                # The stock drum has only a few profile rings. Add fine vertical
+                # resolution to this one affected asset, preserving its paint and
+                # collision, so the declared shape change is really represented.
+                from pxr import UsdPhysics, UsdShade
+                from geometry import mesh as define_mesh
+                from profiles import drum_profile, make_drum_mesh
+                binding = body.GetPrim().GetRelationship('material:binding')
+                targets = binding.GetTargets() if binding else []
+                if not targets:
+                    raise RuntimeError(f"body has no material binding: {entry['id']}")
+                paint = UsdShade.Material.Get(stage, targets[0])
+                data = make_drum_mesh(_refined_profile(drum_profile(entry['category'])))
+                body_path = entry['prim_path'] + '/Body_Stage3'
+                old_prim=body.GetPrim()
+                body = define_mesh(stage, body_path, data['points'], data['faces'], data['uv'], paint)
+                body.CreateNormalsAttr(data['normals'])
+                body.SetNormalsInterpolation('faceVarying')
+                UsdPhysics.CollisionAPI.Apply(body.GetPrim())
+                UsdGeom.Imageable(old_prim).MakeInvisible()
+                UsdPhysics.CollisionAPI.Apply(old_prim).CreateCollisionEnabledAttr(False)
                 points_attr = body.GetPointsAttr()
                 points = points_attr.Get()
                 theta_center = float(defect.get('angle_rad',

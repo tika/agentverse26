@@ -81,12 +81,14 @@ if __name__ == '__main__':
     cam.prim.GetAttribute('horizontalAperture').Set(36.0)
     cam.prim.GetAttribute('verticalAperture').Set(36.0*RES[1]/RES[0])
     cam.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(.05, 40.0))
-    # Small neutral inspection lamp attached to the camera rig for defect close-ups.
-    fill = UsdLux.SphereLight.Define(stage, '/World/Stage3ReviewCamera/InspectionFill')
-    fill.CreateIntensityAttr(1800.0)
-    fill.CreateRadiusAttr(.035)
+    # Neutral camera-mounted rectangular inspection lamp. It is only enabled for
+    # close-up review shots; it is a declared capture light, not a scene sensor.
+    fill = UsdLux.RectLight.Define(stage, '/World/Stage3InspectionLight')
+    fill.CreateWidthAttr(.32); fill.CreateHeightAttr(.24)
+    fill.CreateIntensityAttr(9500.0)
+    fill.CreateEnableColorTemperatureAttr(False)
     fill.CreateColorAttr(Gf.Vec3f(1.0,1.0,1.0))
-    UsdGeom.Xformable(fill).AddTranslateOp().Set(Gf.Vec3d(0,0,0))
+    fill_xf = UsdGeom.Xformable(fill).AddTransformOp()
     world.reset(); cam.initialize(); cam.add_distance_to_image_plane_to_frame()
 
     def aim(eye, target, focal):
@@ -94,6 +96,8 @@ if __name__ == '__main__':
         q = matrix.GetInverse().ExtractRotationQuat()
         cam.set_world_pose(position=np.asarray(eye), orientation=np.asarray([q.GetReal(),*q.GetImaginary()]), camera_axes='usd')
         cam.prim.GetAttribute('focalLength').Set(float(focal))
+        fill_xf.Set(matrix.GetInverse())
+        fill.GetIntensityAttr().Set(9500.0 if np.linalg.norm(np.asarray(eye)-np.asarray(target)) < 4.0 else 0.0)
 
     def rgb_now():
         pixels = cam.get_rgba()
@@ -126,11 +130,17 @@ if __name__ == '__main__':
         # Samples exercise the startup lag and then a valid observation. Truth is not copied.
         trace={'scenario_id':scenario['scenario_id'],'samples':[source.sample([1.0,6.0,.55],0.0),
                 source.sample([1.0,6.0,.55],5.0)]}
+        swab=scenario['runtime'].get('swab')
+        if swab:
+            trace['independent_observations']=[{'kind':'virtual_contact_swab','timestamp_s':swab['t_s'],
+                'units':'Bq/cm2','alpha':swab['alpha_bq_cm2'],'beta_gamma':swab['beta_gamma_bq_cm2'],
+                'calibration':swab['calibration'],'cause':swab['cause']}]
         traces.append(trace)
     (OUT/'sensor_traces.json').write_text(json.dumps(traces,indent=2)+'\n')
     report={'renderer':'RayTracedLighting (RTX)','resolution':list(RES),'warmup_renders':warm,
             'scene_metrics':metrics,'frame_count':len(frames),'frames':frames,
-            'camera_fill_light':{'type':'neutral sphere inspection lamp on review camera','intensity':1800.0},
+            'camera_fill_light':{'type':'neutral rectangular inspection lamp on review camera',
+                                 'intensity_closeup':9500.0,'enabled_for_overview':False},
             'note':'scenario truth is excluded from sensor_traces; no leak/source conclusion is inferred from a visual defect'}
     (OUT/'manifest.json').write_text(json.dumps(report,indent=2)+'\n')
     print('STAGE3_PILOT_OK',len(frames),'frames',flush=True)
