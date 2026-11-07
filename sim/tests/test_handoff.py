@@ -42,5 +42,16 @@ class HandoffChecks(unittest.TestCase):
             Image.new('RGB',(640,640),(0,0,0)).save(d/'rgb_0000.png')
             with self.assertRaises(AssertionError):export_boxes(d)
 
+    def test_drums_are_real_scale_next_to_spot(self):
+        # The bundled Spot USD is real scale: 1.10 m long, 0.50 m wide (Boston Dynamics spec).
+        spot_width=.50
+        llw=2*max(r for r,_ in drum_profile('LLW'))
+        ilw=2*max(r for r,_ in drum_profile('ILW'))
+        self.assertTrue(.584<=llw<=.603,llw)  # 55 US gal / 208 L steel drum OD
+        self.assertAlmostEqual(ilw,.80,3)     # 500 L ILW drum
+        self.assertAlmostEqual(llw/spot_width,1.196,2)
+        for entry in make_inventory():
+            self.assertAlmostEqual(entry['radius'],max(r for r,_ in drum_profile(entry['category'])))
+
 
 if __name__=='__main__':unittest.main()

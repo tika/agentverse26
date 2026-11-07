@@ -185,7 +185,7 @@ STEP 2: Drums and waste categories
 ----------------------------------------------------------------------
 | Category | Size | Look | Zone | Count |
 |---|---|---|---|---|
-| LLW | 200 L: 0.58 m diameter × 0.88 m tall | painted carbon steel | x < 10 | 16 (D01–D16) |
+| LLW | 208 L (55 US gal): 0.598 m diameter × 0.88 m tall | painted carbon steel | x < 10 | 16 (D01–D16) |
 | ILW | 500 L: 0.80 m diameter × 1.20 m tall | bare stainless steel | x ≥ 10 | 12 (D17–D28) |
 
 Build each drum body as a REVOLVED-PROFILE MESH:
@@ -231,7 +231,7 @@ drums.json, one entry per drum (keep these keys; teammates rely on them):
  "faults": [],
  "corrosion_severity": 0,
  "defects": [],
- "shape": {"max_radius": 0.29, "lid_rise": 0.0, "dents": []},
+ "shape": {"max_radius": 0.299, "lid_rise": 0.0, "dents": []},
  "obstructed": false,
  "internal_corrosion": false}
 - x and y are the drum centre on the floor.

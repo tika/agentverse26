@@ -64,7 +64,7 @@ if __name__=='__main__':
                 prim=stage.GetPrimAtPath(entry['prim_path']+'/'+part)
                 ops=UsdGeom.Xformable(prim).GetOrderedXformOps()
                 t=ops[0].Get(); r=(xy[0]**2+xy[1]**2)**.5
-                t[2]+=.070*(1-(r/.269)**2)**1.5
+                t[2]+=.070*(1-(r/.278)**2)**1.5
                 ops[0].Set(t)
             # Plate stays on the outside of the swollen body, never buried in steel.
             plate=UsdGeom.Mesh(stage.GetPrimAtPath(entry['prim_path']+'/Plate'))
@@ -79,7 +79,7 @@ if __name__=='__main__':
         stage.RemovePrim(entry['prim_path']+'/Plate')
         create_plate(stage,{**entry,'row':'A'},profile)
         if rusty: build_oxide(stage,entry,oxide_maps,alpha,profile)
-        details.append({'name':name,'display_label':tag,'internal_id':entry['id'],'rusted':rusty,'nominal_radius_m':.29,'height_m':.88,
+        details.append({'name':name,'display_label':tag,'internal_id':entry['id'],'rusted':rusty,'nominal_radius_m':.299,'height_m':.88,
                         'radial_swelling_fraction':.08 if bulged else 0,
                         'lid_dome_rise_m':.07 if bulged else 0})
     # Reapply fixed exposure after creating assets and materials.

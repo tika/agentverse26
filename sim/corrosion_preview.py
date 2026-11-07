@@ -113,7 +113,7 @@ def dome_lid(stage,entry,paint,rise=.070):
     from geometry import mesh
     rings,segments=14,96
     points=[];faces=[];uv=[]
-    radius=.269; edge=.865
+    radius=.278; edge=.865
     for row in range(rings+1):
         r=radius*row/rings
         z=edge+rise*(1-(r/radius)**2)**1.5
