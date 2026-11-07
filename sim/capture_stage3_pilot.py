@@ -112,18 +112,28 @@ if __name__ == '__main__':
     frames=[]
     for i,(eye,target,focal,label) in enumerate(plans):
         aim(eye,target,focal); fixed_exposure()
-        fill.GetIntensityAttr().Set(5000.0 if label in ('corroded_no_dose_change',
+        fill.GetIntensityAttr().Set(7500.0 if label in ('corroded_no_dose_change',
                                   'deformation_only', 'measured_bulge') else 0.0)
-        # Match the verified Stage-2 tour path: two render flushes per paused
-        # camera pose, then capture exactly that pose.
-        world.render(); world.render()
+        # Flush the paused camera until the centre-depth sample matches the
+        # requested close-up distance. This catches one-frame-late RGB/depth.
+        expected = float(np.linalg.norm(np.asarray(target)-np.asarray(eye)))
+        d = None
+        for _ in range(16):
+            world.render()
+            depth = cam.get_depth()
+            if depth is None or not depth.size:
+                continue
+            h,w = depth.shape[:2]
+            tile = depth[h//2-4:h//2+5,w//2-4:w//2+5]
+            tile = tile[np.isfinite(tile)&(tile>0)]
+            d = float(np.median(tile)) if tile.size else None
+            if label == 'overview' or (d is not None and expected-.75 <= d <= expected+.25):
+                break
+        if label != 'overview' and (d is None or not expected-.75 <= d <= expected+.25):
+            raise RuntimeError(f'camera pose/depth gate failed for {label}: requested range {expected:.3f} m, depth {d}')
         pixels=rgb_now()
         if pixels is None: raise RuntimeError(f'camera returned no RGB at pilot frame {i}')
         Image.fromarray(pixels).save(OUT/'frames'/f'{i:05d}.jpg',quality=92)
-        depth=cam.get_depth(); d=None
-        if depth is not None and depth.size:
-            h,w=depth.shape[:2]; tile=depth[h//2-4:h//2+5,w//2-4:w//2+5]
-            tile=tile[np.isfinite(tile)&(tile>0)]; d=float(np.median(tile)) if tile.size else None
         frames.append({'frame':i,'label':label,'eye_m':list(eye),'target_m':list(target),
                        'mean_luma':float(pixels.mean()),'center_depth_m':d})
     traces=[]
@@ -141,7 +151,7 @@ if __name__ == '__main__':
     (OUT/'sensor_traces.json').write_text(json.dumps(traces,indent=2)+'\n')
     report={'renderer':'RayTracedLighting (RTX)','resolution':list(RES),'warmup_renders':warm,
             'scene_metrics':metrics,'frame_count':len(frames),'frames':frames,
-            'camera_fill_light':{'enabled_for_defect_closeups':True,'intensity':5000.0,
+            'camera_fill_light':{'enabled_for_defect_closeups':True,'intensity':7500.0,
                                  'reason':'neutral low-power camera-mounted inspection illuminator'},
             'note':'scenario truth is excluded from sensor_traces; no leak/source conclusion is inferred from a visual defect'}
     (OUT/'manifest.json').write_text(json.dumps(report,indent=2)+'\n')
