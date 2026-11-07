@@ -114,11 +114,21 @@ def assess_scenario(sc, trace=None):
     if obs:
         evs.append(ev.make_evidence("route_obstruction", value=obs.get("geometry_m", {}).get("size"), units="m",
                                     t_s=0, area=obs.get("route_id", area), note=f"cause: {obs.get('cause')}"))
-    swab = runtime.get("swab")
-    if swab and (swab.get("beta_gamma_bq_cm2", 0) > SWAB_LIMITS["beta_gamma"] or
-                 swab.get("alpha_bq_cm2", 0) > SWAB_LIMITS["alpha"]):
-        evs.append(ev.make_evidence("swab_contamination", value=swab, units="Bq/cm2", t_s=swab.get("t_s", 0),
-                                    area=area, note="virtual swab above synthetic screening level"))
+    # Swab: on the measured path, ONLY the captured independent contact observation counts.
+    if trace is not None:
+        swabs = [{"alpha_bq_cm2": o.get("alpha", 0.0), "beta_gamma_bq_cm2": o.get("beta_gamma", 0.0),
+                  "t_s": o.get("timestamp_s", 0.0), "source": "trace independent_observations"}
+                 for o in trace.get("independent_observations", []) if o.get("kind") == "virtual_contact_swab"]
+    else:
+        swabs = [runtime["swab"]] if runtime.get("swab") else []
+    swab_record = None
+    for swab in swabs:
+        above = (swab.get("beta_gamma_bq_cm2", 0) > SWAB_LIMITS["beta_gamma"] or
+                 swab.get("alpha_bq_cm2", 0) > SWAB_LIMITS["alpha"])
+        swab_record = {**swab, "screening": SWAB_LIMITS, "above": above}
+        if above:
+            evs.append(ev.make_evidence("swab_contamination", value=swab, units="Bq/cm2", t_s=swab.get("t_s", 0),
+                                        area=area, note="virtual contact swab above synthetic screening level"))
     provenance = None
     if trace is not None:
         channel_evs, provenance = channel_evidence(trace, sc, area)
@@ -139,7 +149,7 @@ def assess_scenario(sc, trace=None):
             "evidence": [{k: e[k] for k in ("id", "kind", "value", "units", "note", "cannot_establish")} for e in evs],
             "findings": [{k: f[k] for k in ("hypothesis", "evidence_ids", "distinct_views")} for f in findings],
             "condition_status": status, "actions": ev.actions_for(findings, coverage),
-            "priority": rank, "notes": notes, "channel_method": method, "channel_provenance": provenance,
+            "priority": rank, "notes": notes, "channel_method": method, "channel_provenance": provenance, "swab": swab_record,
             "camera_method": "declared visible defects (no trained detector yet)"}
 
 

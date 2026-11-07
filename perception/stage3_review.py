@@ -155,6 +155,16 @@ def main():
                                  f"{m[key]*1000:.1f} mm on {m['nominal_diameter_m']*1000:.0f} mm drum — "
                                  "a shape change only; does not establish pressure or hydrogen")
                     cols.append(white)
+                if sc["runtime"].get("wet_case"):
+                    wc = sc["runtime"]["wet_case"]
+                    lines.append(f"WET MARK (camera; appearance {wc.get('fluid_kind')}): a camera can't show radioactivity or contamination")
+                    cols.append(white)
+                if rep.get("swab"):
+                    sw = rep["swab"]
+                    lines.append(f"SWAB (independent contact sample, synthetic, t={sw['t_s']:.0f}s): alpha {sw['alpha_bq_cm2']} / "
+                                 f"beta-gamma {sw['beta_gamma_bq_cm2']} Bq/cm² vs screening {sw['screening']['alpha']} / "
+                                 f"{sw['screening']['beta_gamma']} → {'ABOVE' if sw['above'] else 'below'}")
+                    cols.append(red if sw["above"] else white)
                 hyps = ", ".join(f["hypothesis"].replace("_", " ") for f in rep["findings"]) or "none"
                 lines.append(f"RULES: findings: {hyps} → {rep['condition_status'].replace('_', ' ')} → "
                              f"actions: {', '.join(a.replace('_', ' ') for a in rep['actions'])}")

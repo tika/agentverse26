@@ -295,5 +295,20 @@ class MeasuredTraces(unittest.TestCase):
         self.assertIn("elevated_radiation_field", hyps)
 
 
+    def test_swab_only_from_trace_on_measured_path(self):
+        import stage3_assess as sa
+        rel = scenario("rel", ["wet_suspected_release"], wet={"mechanism": "seal", "fluid_kind": "unknown_process_residue"},
+                       truth={"contamination": True, "calibration": "synthetic"})
+        rel["runtime"]["swab"] = {"alpha_bq_cm2": 0.9, "beta_gamma_bq_cm2": 9.0, "t_s": 1}   # declared: ignored
+        tr = self.trace("rel")
+        self.assertNotIn("suspected_release", self.hyps(rel, tr)[0])
+        tr["independent_observations"] = [{"kind": "virtual_contact_swab", "timestamp_s": 12.0, "alpha": 0.62,
+                                           "beta_gamma": 6.4, "units": "Bq/cm2"}]
+        hyps, r = self.hyps(rel, tr)
+        self.assertIn("suspected_release", hyps)
+        self.assertTrue(r["swab"]["above"])
+        self.assertIn("mark_area_avoid_tracking_and_alert", r["actions"])
+
+
 if __name__ == "__main__":
     unittest.main()
