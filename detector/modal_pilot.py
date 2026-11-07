@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tarfile
 import time
+import uuid
 from datetime import datetime, timezone
 import modal
 
@@ -31,12 +32,15 @@ app=modal.App('agentverse-detector-pilot')
 
 @app.function(image=image,gpu='L40S',cpu=8,memory=32768,timeout=1200,max_containers=16,
               single_use_containers=True,volumes={'/datasets':volume})
-def render(seed,run_id,frame_count=5):
+def render(seed,run_id,frame_count=5,gpu_type='L40S'):
     start=time.perf_counter()
     output=Path('/datasets/pilots')/run_id/f'seed_{seed:02d}'
+    if output.exists() and any(output.iterdir()):
+        output.rename(output.with_name(output.name+'_previous_'+uuid.uuid4().hex[:6]))
     output.mkdir(parents=True,exist_ok=True)
     inventory=subprocess.check_output(['nvidia-smi','--query-gpu=name,uuid','--format=csv,noheader'],text=True).strip()
-    assert inventory.startswith('NVIDIA L40S') and len(inventory.splitlines())==1,inventory
+    expected='L40S' if gpu_type=='L40S' else 'RTX PRO 6000'
+    assert expected in inventory and len(inventory.splitlines())==1,inventory
     status=dict(seed=seed,state='starting_isaac',completed=0,target=frame_count,gpu=inventory,
                 started_utc=datetime.now(timezone.utc).isoformat())
     def update(**values):
@@ -79,40 +83,112 @@ def render(seed,run_id,frame_count=5):
             tar.add(output,arcname=f'seed_{seed:02d}')
         return dict(ok=True,seed=seed,runtime=runtime,archive=payload.getvalue())
     except Exception as exc:
-        update(state='failed',error=repr(exc));raise
+        update(state='failed',error=repr(exc))
+        return dict(ok=False,seed=seed,log=''.join(log_lines)[-8000:]+repr(exc),
+                    runtime=dict(seed=seed,gpu=inventory,return_code=-1,worker_seconds=time.perf_counter()-start))
 
 
 def main():
+    sys.path.insert(0,str(ROOT))
+    from detector.dataset_plan import validate_plan,digest,source_hashes,CLASSES,CAMERA
     parser=argparse.ArgumentParser()
     parser.add_argument('--seeds',type=int,default=8)
     parser.add_argument('--frames-per-seed',type=int,default=5)
     parser.add_argument('--seed-start',type=int,default=1)
+    parser.add_argument('--plan',type=Path)
+    parser.add_argument('--workers',type=int)
+    parser.add_argument('--gpu',choices=['L40S','RTX-PRO-6000'],default='L40S')
+    parser.add_argument('--workspace',default='paramsachdeva07')
+    parser.add_argument('--publish',help='Build and upload this named dataset release after validation')
+    parser.add_argument('--resume',type=Path,help='Previous local run with generation.json; retry missing seeds only')
+    parser.add_argument('--benchmark-l40s',action='store_true',help='Matched L40S control for first RTX scene')
     args=parser.parse_args()
-    if not 1<=args.seeds<=16 or not 5<=args.frames_per_seed<=50:
-        raise SystemExit('Use 1–16 seeds and 5–50 frames per seed for this review runner')
-    target_images=args.seeds*args.frames_per_seed
+    from detector.dataset_release import check_workspace,validate_seed
+    check_workspace(args.workspace)
+    if args.plan:
+        plan=validate_plan(json.loads(args.plan.read_text()))
+    elif args.resume:
+        plan=validate_plan(json.loads((args.resume/'generation.json').read_text())['plan'])
+    else:
+        if not 1<=args.seeds<=16 or not 5<=args.frames_per_seed<=50 or args.seed_start<1:
+            raise SystemExit('Use 1–16 seeds, positive starting seed and 5–50 frames per seed')
+        plan=dict(schema=1,images=args.seeds*args.frames_per_seed,workers=args.workers or args.seeds,
+                  classes=CLASSES,camera=CAMERA,jobs=[dict(seed=s,frames=args.frames_per_seed,split='pilot')
+                  for s in range(args.seed_start,args.seed_start+args.seeds)])
+    jobs=plan['jobs'];target_images=plan['images'];workers=args.workers or plan['workers']
+    if not 1<=workers<=16:raise SystemExit('Use 1–16 workers')
     started=time.perf_counter()
-    run_id=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
-    output=ROOT/'out/detector_pilot'/run_id;output.mkdir(parents=True)
-    summary=dict(run_id=run_id,requested_gpus=args.seeds,target_images=target_images,completed_images=0,
+    if args.resume:
+        output=args.resume.resolve();run_id=output.name
+        generation=json.loads((output/'generation.json').read_text())
+        if generation['source_hashes']!=source_hashes(ROOT) or generation['plan_sha256']!=digest(plan):
+            raise SystemExit('Resume source/plan differs; use the original checkout and frozen plan')
+        if generation['workspace']!=args.workspace or generation['gpu_type']!=args.gpu:
+            raise SystemExit('Resume must use original workspace and GPU type')
+    else:
+        run_id=datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'_'+uuid.uuid4().hex[:6]
+        output=ROOT/'out/detector_pilot'/run_id;output.mkdir(parents=True)
+        generation=dict(schema=1,run_id=run_id,plan=plan,plan_sha256=digest(plan),classes=CLASSES,camera=CAMERA,
+                        source_hashes=source_hashes(ROOT),gpu_type=args.gpu,workspace=args.workspace,
+                        git_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip())
+        (output/'generation.json').write_text(json.dumps(generation,indent=2))
+        with volume.batch_upload() as upload:
+            upload.put_file(output/'generation.json',f'/pilots/{run_id}/generation.json')
+    complete=[]
+    for job in jobs:
+        folder=output/f"seed_{job['seed']:02d}"
+        if folder.exists():
+            try:validate_seed(output,job);complete.append(job['seed'])
+            except (ValueError,AssertionError,FileNotFoundError):
+                # Only archive this run's failed local outputs; completed ones are immutable.
+                folder.rename(output/(folder.name+'_failed_'+uuid.uuid4().hex[:6]))
+    pending=[j for j in jobs if j['seed'] not in complete]
+    summary=dict(run_id=run_id,requested_gpus=workers,target_jobs=len(jobs),gpu_type=args.gpu,
+                 target_images=target_images,completed_images=sum(j['frames'] for j in jobs if j['seed'] in complete),
                  state='starting',workers=[],started_utc=datetime.now(timezone.utc).isoformat())
     (output/'progress.json').write_text(json.dumps(summary,indent=2))
     print(f'PILOT_RUN {run_id}\nOUTPUT {output}',flush=True)
     failures=[]
+    def accept(result):
+        if isinstance(result,Exception):
+            failures.append('platform_error');print(repr(result),flush=True);return
+        summary['workers'].append(result['runtime'])
+        if result['ok']:
+            with tarfile.open(fileobj=io.BytesIO(result['archive'])) as tar:tar.extractall(output,filter='data')
+            summary['completed_images']+=next(j['frames'] for j in jobs if j['seed']==result['seed'])
+        else:
+            failures.append(result['seed']);(output/f"failed_seed_{result['seed']:02d}.log").write_text(result['log'])
+            print(result['log'][-3000:],flush=True)
+        summary.update(state='rendering',elapsed_seconds=round(time.perf_counter()-started,3))
+        (output/'progress.json').write_text(json.dumps(summary,indent=2))
+        print(f"DATASET_PROGRESS {summary['completed_images']}/{target_images} images; {summary['elapsed_seconds']}s",flush=True)
     with modal.enable_output(),app.run():
         batch_started=time.perf_counter()
-        for result in render.starmap([(s,run_id,args.frames_per_seed) for s in range(args.seed_start,args.seed_start+args.seeds)],order_outputs=False):
-            summary['workers'].append(result['runtime'])
-            if result['ok']:
-                with tarfile.open(fileobj=io.BytesIO(result['archive'])) as tar:
-                    tar.extractall(output,filter='data')
-                summary['completed_images']+=args.frames_per_seed
-            else:
-                failures.append(result['seed']);(output/f"failed_seed_{result['seed']:02d}.log").write_text(result['log'])
-                print(result['log'][-3000:],flush=True)
-            summary.update(state='rendering',elapsed_seconds=round(time.perf_counter()-started,3))
-            (output/'progress.json').write_text(json.dumps(summary,indent=2))
-            print(f"PILOT_TOTAL {summary['completed_images']}/{target_images} images; {len(summary['workers'])}/{args.seeds} workers finished; {summary['elapsed_seconds']}s",flush=True)
+        configured=render.with_options(gpu=args.gpu,max_containers=workers)
+        if pending:
+            first=pending[0]
+            production=configured.spawn(first['seed'],run_id,first['frames'],args.gpu)
+            control=None
+            if args.benchmark_l40s and args.gpu=='RTX-PRO-6000':
+                control=render.with_options(gpu='L40S',max_containers=1).spawn(first['seed'],run_id+'_l40s_control',first['frames'],'L40S')
+            accept(production.get())
+            if control:
+                result=control.get()
+                if result['ok']:
+                    directory=output/'benchmark_l40s';directory.mkdir(exist_ok=True)
+                    with tarfile.open(fileobj=io.BytesIO(result['archive'])) as tar:tar.extractall(directory,filter='data')
+                    folder=f"seed_{first['seed']:02d}"
+                    from detector.benchmark import compare
+                    measurement=compare(json.loads((output/folder/'report.json').read_text()),
+                                        json.loads((directory/folder/'report.json').read_text()),
+                                        json.loads((output/folder/'runtime.json').read_text()),result['runtime'])
+                    (output/'benchmark.json').write_text(json.dumps(measurement,indent=2))
+                    print('GPU_BENCHMARK '+json.dumps(measurement),flush=True)
+                else:
+                    (output/'benchmark_failed.log').write_text(result['log']);print('L40S control failed; no speedup claim',flush=True)
+            if failures:raise SystemExit(f'Compatibility scene failed. See {output}; remaining jobs were not launched.')
+            for result in configured.starmap([(j['seed'],run_id,j['frames'],args.gpu) for j in pending[1:]],
+                                              order_outputs=False,return_exceptions=True):accept(result)
         summary['dispatch_through_download_seconds']=round(time.perf_counter()-batch_started,3)
     summary.update(state='failed' if failures else 'complete',failed_seeds=failures,
                    total_wall_seconds=round(time.perf_counter()-started,3),
@@ -124,13 +200,21 @@ def main():
     if failures:raise SystemExit(f'Failed seeds {failures}; see {output}')
     from PIL import Image,ImageDraw
     frames=sorted(output.glob('seed_*/frame_*/boxes.jpg'))
+    frames=[p for p in frames if p.parent.parent.name in {f"seed_{j['seed']:02d}" for j in jobs}]
     assert len(frames)==target_images,len(frames)
-    grid=Image.new('RGB',(5*320,((target_images+4)//5)*344),(25,25,25));draw=ImageDraw.Draw(grid)
+    # Avoid a 20,000-pixel-tall preview for production: retain up to 100 examples.
+    frames=frames[::max(1,(len(frames)+99)//100)]
+    grid=Image.new('RGB',(5*320,((len(frames)+4)//5)*344),(25,25,25));draw=ImageDraw.Draw(grid)
     for i,path in enumerate(frames):
         with Image.open(path) as image: grid.paste(image.resize((320,320)),((i%5)*320,(i//5)*344))
         draw.text(((i%5)*320+5,(i//5)*344+323),str(path.relative_to(output).parent),fill='white')
     grid.save(output/'contact_sheet.jpg',quality=92)
     (ROOT/'out/detector_pilot/latest.json').write_text(json.dumps(dict(run_id=run_id,path=str(output)),indent=2))
+    if args.publish:
+        from detector.dataset_release import build_release,upload_release
+        release=ROOT/'out/detector_releases'/args.publish
+        build_release(output,release)
+        upload_release(release,args.workspace)
 
 
 if __name__=='__main__':main()

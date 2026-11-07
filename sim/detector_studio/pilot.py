@@ -250,20 +250,32 @@ def main():
             angle=view['bearing_rad']
             ops[0].Set(Gf.Vec3d(1.35*math.cos(angle),1.35*math.sin(angle),.16))
         else:occluder.MakeInvisible()
-        camera(stage,path,view['eye'],view['target'],22.5,(640,640))
+        view=dict(view)
         for light,power in lights:light.GetIntensityAttr().Set(power*view['light_scale'])
         directory=out/f'frame_{i:03d}';directory.mkdir()
-        writer=rep.WriterRegistry.get('BasicWriter')
-        writer.initialize(output_dir=str(directory),rgb=True,bounding_box_2d_tight=True,semantic_types=['class','drum_id'])
-        writer.attach([product])
-        # Flush the previous pose/visibility/lighting before requesting annotation.
-        for _ in range(30 if i==0 else 6):app.update()
-        rep.orchestrator.step(rt_subframes=4,delta_time=0.,pause_timeline=True)
-        rep.orchestrator.wait_until_complete()
-        writer.detach()
-        meta=dict(**view,width=640,height=640,fx=400,fy=400,cx=320,cy=320,focal_mm=22.5,
-                  horizontal_aperture_mm=36,environment=environment)
-        frame_counts=export_frame(directory,active,meta)
+        for attempt in range(4):
+            camera(stage,path,view['eye'],view['target'],22.5,(640,640))
+            writer=rep.WriterRegistry.get('BasicWriter')
+            writer.initialize(output_dir=str(directory),rgb=True,bounding_box_2d_tight=True,semantic_types=['class','drum_id'])
+            writer.attach([product])
+            for _ in range(30 if i==0 and attempt==0 else 6):app.update()
+            rep.orchestrator.step(rt_subframes=4,delta_time=0.,pause_timeline=True)
+            rep.orchestrator.wait_until_complete();writer.detach()
+            meta=dict(**view,width=640,height=640,fx=400,fy=400,cx=320,cy=320,focal_mm=22.5,
+                      horizontal_aperture_mm=36,environment=environment,capture_attempt=attempt)
+            try:
+                frame_counts=export_frame(directory,active,meta)
+                break
+            except AssertionError:
+                if view['mode']!='context' or attempt==3:raise
+                # An end-on row can hide all but one drum. Retain rejected raw
+                # files outside frame_* and move the camera; never invent boxes.
+                rejected=out/'rejected'/f'frame_{i:03d}_attempt_{attempt}'
+                rejected.mkdir(parents=True)
+                for file in directory.iterdir():file.rename(rejected/file.name)
+                view['bearing_rad']+=math.pi/6
+                bearing=view['bearing_rad'];distance=view['distance_m']
+                view['eye']=[distance*math.cos(bearing),distance*math.sin(bearing),view['eye'][2]]
         frame_reports.append(dict(frame=i,mode=view['mode'],class_counts=frame_counts,
                                   elapsed_seconds=time.perf_counter()-render_started))
         for c in counts:counts[c]+=frame_counts[c]

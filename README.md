@@ -16,6 +16,7 @@ local Isaac and Modal commands, editing, picture-ready settings and video captur
 - [Detector/camera API and training start gate](docs/training_handoff.md)
 - [Isolated rust/bulge appearance review and two-cue screening](docs/barrel_appearance_review.md)
 - [Technical barrel design handoff for the next developer](docs/barrel_design_handoff.md)
+- [Single-workspace 1,200-image dataset: standalone agent instructions](docs/dataset_generation_handoff.md)
 
 Use Python 3.12+ locally. Review each step through exported screenshots/video,
 as selected by the user; this replaces the specification's interactive-viewer
