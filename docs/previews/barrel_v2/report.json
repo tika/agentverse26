@@ -4,7 +4,8 @@
   "barrels": [
     {
       "name": "NormalRusted",
-      "display_label": "A3",
+      "display_label": "A03",
+      "internal_id": "D03",
       "rusted": true,
       "nominal_radius_m": 0.29,
       "height_m": 0.88,
@@ -13,7 +14,8 @@
     },
     {
       "name": "BulgedClean",
-      "display_label": "B1",
+      "display_label": "B01",
+      "internal_id": "D05",
       "rusted": false,
       "nominal_radius_m": 0.29,
       "height_m": 0.88,
@@ -22,7 +24,8 @@
     },
     {
       "name": "BulgedRusted",
-      "display_label": "C2",
+      "display_label": "C02",
+      "internal_id": "D10",
       "rusted": true,
       "nominal_radius_m": 0.29,
       "height_m": 0.88,
@@ -44,6 +47,20 @@
       ],
       "focal_length_mm": 49,
       "image": "rust_barrel/rgb_0000.png"
+    },
+    "bulged_lid": {
+      "eye": [
+        1.2,
+        -1.5,
+        1.12
+      ],
+      "look_at": [
+        0.95,
+        0,
+        0.76
+      ],
+      "focal_length_mm": 56,
+      "image": "bulged_lid/rgb_0000.png"
     },
     "normal_vs_bulged": {
       "eye": [
@@ -86,24 +103,112 @@
       ],
       "focal_length_mm": 49,
       "image": "bulged_rusted/rgb_0000.png"
-    },
-    "bulged_lid": {
-      "eye": [
-        1.2,
-        -1.5,
-        1.12
-      ],
-      "look_at": [
-        0.95,
-        0,
-        0.76
-      ],
-      "focal_length_mm": 56,
-      "image": "bulged_lid/rgb_0000.png"
     }
+  },
+  "renderer_gpu_settings": {
+    "/renderer/multiGpu/enabled": true,
+    "/renderer/multiGpu/maxGpuCount": 1,
+    "/renderer/multiGpu/activeCudaGpus": null
   },
   "limits": [
     "Bulge is an illustrative pressure/expansion cue, not a confirmed gas measurement",
     "No pressure, gas chemistry, shell mechanics or rupture physics simulated"
-  ]
+  ],
+  "render_mode": "four independent single-GPU workers; shared multi-GPU renderer rejected for missing geometry",
+  "workers": [
+    {
+      "requested_gpu_count": 1,
+      "visible_gpus": [
+        "0, NVIDIA L40S, GPU-7d323cb0-09a6-20a2-3c29-8fa8e6e88f28"
+      ],
+      "renderer_active_gpu_count": 1,
+      "renderer_active_rows": [
+        "| 0   | NVIDIA L40S                      | Yes: 0 |     | 46068   MB | 10de      | 0          |"
+      ],
+      "subprocess_seconds": 143.023,
+      "arguments": [
+        "/isaac-sim/python.sh",
+        "/workspace/sim/render_barrel_preview.py",
+        "--allow-root",
+        "--/renderer/multiGpu/enabled=true",
+        "--/renderer/multiGpu/maxGpuCount=1"
+      ],
+      "return_code": 0,
+      "shard": 0,
+      "shards": 4
+    },
+    {
+      "requested_gpu_count": 1,
+      "visible_gpus": [
+        "0, NVIDIA L40S, GPU-d4b16576-d71d-fb2a-76a9-2654c156930c"
+      ],
+      "renderer_active_gpu_count": 1,
+      "renderer_active_rows": [
+        "| 0   | NVIDIA L40S                      | Yes: 0 |     | 46068   MB | 10de      | 0          |"
+      ],
+      "subprocess_seconds": 140.816,
+      "arguments": [
+        "/isaac-sim/python.sh",
+        "/workspace/sim/render_barrel_preview.py",
+        "--allow-root",
+        "--/renderer/multiGpu/enabled=true",
+        "--/renderer/multiGpu/maxGpuCount=1"
+      ],
+      "return_code": 0,
+      "shard": 1,
+      "shards": 4
+    },
+    {
+      "requested_gpu_count": 1,
+      "visible_gpus": [
+        "0, NVIDIA L40S, GPU-c1cefd65-a6b8-c118-e9f8-c9d5eeb45fe5"
+      ],
+      "renderer_active_gpu_count": 1,
+      "renderer_active_rows": [
+        "| 0   | NVIDIA L40S                      | Yes: 0 |     | 46068   MB | 10de      | 0          |"
+      ],
+      "subprocess_seconds": 139.508,
+      "arguments": [
+        "/isaac-sim/python.sh",
+        "/workspace/sim/render_barrel_preview.py",
+        "--allow-root",
+        "--/renderer/multiGpu/enabled=true",
+        "--/renderer/multiGpu/maxGpuCount=1"
+      ],
+      "return_code": 0,
+      "shard": 2,
+      "shards": 4
+    },
+    {
+      "requested_gpu_count": 1,
+      "visible_gpus": [
+        "0, NVIDIA L40S, GPU-2ddaffa4-132c-ff90-bc43-b48caec92abd"
+      ],
+      "renderer_active_gpu_count": 1,
+      "renderer_active_rows": [
+        "| 0   | NVIDIA L40S                      | Yes: 0 |     | 46068   MB | 10de      | 0          |"
+      ],
+      "subprocess_seconds": 137.555,
+      "arguments": [
+        "/isaac-sim/python.sh",
+        "/workspace/sim/render_barrel_preview.py",
+        "--allow-root",
+        "--/renderer/multiGpu/enabled=true",
+        "--/renderer/multiGpu/maxGpuCount=1"
+      ],
+      "return_code": 0,
+      "shard": 3,
+      "shards": 4
+    }
+  ],
+  "parallel_wall_seconds": 178.616,
+  "visual_validation": {
+    "fixture": "three yellow barrel study",
+    "all_three_paint_surfaces_present": true,
+    "paint_roi_fractions": [
+      0.7519123365146695,
+      0.7729515729939908,
+      0.7714528101802757
+    ]
+  }
 }

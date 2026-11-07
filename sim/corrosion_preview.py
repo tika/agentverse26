@@ -128,35 +128,3 @@ def dome_lid(stage,entry,paint,rise=.070):
             uv.extend((.5+points[idx][0]/(2*radius),.5+points[idx][1]/(2*radius)) for idx in ids)
     stage.RemovePrim(entry['prim_path']+'/Lid')
     mesh(stage,entry['prim_path']+'/Lid',points,faces,uv,paint)
-
-
-def add_preview_label(stage,entry,profile,text):
-    """Plain legible sample ID; independent of the real hall's canonical package IDs."""
-    from PIL import ImageDraw
-    from textures import text_image
-    from geometry import mesh
-    from materials import material
-    path=ASSETS/f'preview_tag_{text}_v1.png'
-    image=Image.new('RGB',(384,192),(224,219,197))
-    draw=ImageDraw.Draw(image)
-    draw.rectangle((4,4,379,187),outline=(65,65,56),width=3)
-    letters=text_image(text,115,(28,30,26,255))
-    image.paste(letters,((384-letters.width)//2,(192-letters.height)//2),letters)
-    image.save(path)
-    paint=material(stage,'PreviewTag_'+text,(1,1,1),.7,textures={'diffuseColor':path})
-    points=[];faces=[];uv=[]
-    zc=.46;width=.18;height=.09;columns=24
-    for row in range(3):
-        z=zc-height/2+height*row/2
-        radius=radius_at(profile,z)+.0015
-        for i in range(columns+1):
-            a=-math.pi/2+(i/columns-.5)*width/entry['radius']
-            points.append((radius*math.cos(a),radius*math.sin(a),z))
-    for row in range(2):
-        for i in range(columns):
-            k=row*(columns+1)+i
-            faces.append((k,k+1,k+columns+2,k+columns+1))
-            uv.extend([(i/columns,row/2),((i+1)/columns,row/2),((i+1)/columns,(row+1)/2),(i/columns,(row+1)/2)])
-    old=entry['prim_path']+'/Plate'
-    if stage.GetPrimAtPath(old):stage.RemovePrim(old)
-    mesh(stage,old,points,faces,uv,paint)

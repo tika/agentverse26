@@ -1,9 +1,13 @@
 """One isolated barrel design plus a normal/bulged pressure-risk comparison."""
 import copy
 import json
+import os
 from pathlib import Path
 SIM=Path(__file__).resolve().parent
 OUT=SIM/'out/barrel_preview'
+SHARD=int(os.environ.get('ISAAC_VIEW_SHARD','0'))
+SHARDS=int(os.environ.get('ISAAC_VIEW_SHARDS','1'))
+if SHARDS>1:OUT=OUT/f'shard_{SHARD:02d}'
 
 if __name__=='__main__':
     from isaacsim import SimulationApp
@@ -11,11 +15,11 @@ if __name__=='__main__':
     import omni.usd
     import carb
     from pxr import UsdGeom,UsdLux,Gf,UsdShade,UsdPhysics
-    from drums import make_inventory,drum_materials,create_drum
+    from drums import make_inventory,drum_materials,create_drum,create_plate
     from materials import material
     from geometry import box,mesh
     from profiles import make_drum_mesh,drum_profile
-    from corrosion_preview import weathered_maps,build_oxide,swollen_profile,dome_lid,add_preview_label
+    from corrosion_preview import weathered_maps,build_oxide,swollen_profile,dome_lid
     from capture_hall import capture_views
     OUT.mkdir(parents=True,exist_ok=True)
     context=omni.usd.get_context()
@@ -42,8 +46,10 @@ if __name__=='__main__':
     materials['faded_yellow']=material(stage,'PreviewWeatheredPaint',(1,1,1),.5,textures=base_maps)
     materials['faded_yellow_lid']=materials['faded_yellow']
     details=[]
-    for name,x,bulged,rusty,tag in [('NormalRusted',-.95,False,True,'A3'),('BulgedClean',0.,True,False,'B1'),('BulgedRusted',.95,True,True,'C2')]:
-        entry=copy.deepcopy(make_inventory()[2])
+    for name,x,bulged,rusty,drum_id in [('NormalRusted',-.95,False,True,'D03'),('BulgedClean',0.,True,False,'D05'),('BulgedRusted',.95,True,True,'D10')]:
+        entry=copy.deepcopy(next(e for e in make_inventory() if e['id']==drum_id))
+        tag=entry['display_id']
+        entry['paint_color']='faded_yellow'
         entry.update(x=x,y=0,yaw=0.,prim_path='/World/'+name)
         create_drum(stage,entry,materials)
         profile=swollen_profile() if bulged else drum_profile('LLW')
@@ -69,9 +75,11 @@ if __name__=='__main__':
                 factor=(radius_at(profile,p[2])+.002)/old
                 p[0]*=factor;p[1]*=factor
             plate.GetPointsAttr().Set(pts)
-        add_preview_label(stage,entry,profile,tag)
+        # Use the actual repository plate generator, with all preview plates facing the review camera.
+        stage.RemovePrim(entry['prim_path']+'/Plate')
+        create_plate(stage,{**entry,'row':'A'},profile)
         if rusty: build_oxide(stage,entry,oxide_maps,alpha,profile)
-        details.append({'name':name,'display_label':tag,'rusted':rusty,'nominal_radius_m':.29,'height_m':.88,
+        details.append({'name':name,'display_label':tag,'internal_id':entry['id'],'rusted':rusty,'nominal_radius_m':.29,'height_m':.88,
                         'radial_swelling_fraction':.08 if bulged else 0,
                         'lid_dome_rise_m':.07 if bulged else 0})
     # Reapply fixed exposure after creating assets and materials.
@@ -87,8 +95,11 @@ if __name__=='__main__':
            'bulged_clean':((.20,-1.9,1.20),(0,0,.46),49),
            'bulged_rusted':((1.20,-1.9,1.20),(.95,0,.46),49),
            'bulged_lid':((1.2,-1.5,1.12),(.95,0,.76),56)}
-    report={'seed':74,'scope':'isolated appearance study; full hall not changed',
+    views={name:pose for index,(name,pose) in enumerate(views.items()) if index%SHARDS==SHARD}
+    assert views,'Empty view shard'
+    report={'shard':SHARD,'shards':SHARDS,'seed':74,'scope':'isolated appearance study; full hall not changed',
             'barrels':details,'views':capture_views(app,stage,views,OUT),
+            'renderer_gpu_settings':{key:settings.get(key) for key in ('/renderer/multiGpu/enabled','/renderer/multiGpu/maxGpuCount','/renderer/multiGpu/activeCudaGpus')},
             'limits':['Bulge is an illustrative pressure/expansion cue, not a confirmed gas measurement',
                       'No pressure, gas chemistry, shell mechanics or rupture physics simulated']}
     stage.GetRootLayer().Save()

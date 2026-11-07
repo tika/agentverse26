@@ -1,0 +1,91 @@
+{
+  "mode": "four independent single-GPU workers",
+  "total_gpus": 4,
+  "workers": [
+    {
+      "requested_gpu_count": 1,
+      "visible_gpus": [
+        "0, NVIDIA L40S, GPU-7d323cb0-09a6-20a2-3c29-8fa8e6e88f28"
+      ],
+      "renderer_active_gpu_count": 1,
+      "renderer_active_rows": [
+        "| 0   | NVIDIA L40S                      | Yes: 0 |     | 46068   MB | 10de      | 0          |"
+      ],
+      "subprocess_seconds": 143.023,
+      "arguments": [
+        "/isaac-sim/python.sh",
+        "/workspace/sim/render_barrel_preview.py",
+        "--allow-root",
+        "--/renderer/multiGpu/enabled=true",
+        "--/renderer/multiGpu/maxGpuCount=1"
+      ],
+      "return_code": 0,
+      "shard": 0,
+      "shards": 4
+    },
+    {
+      "requested_gpu_count": 1,
+      "visible_gpus": [
+        "0, NVIDIA L40S, GPU-d4b16576-d71d-fb2a-76a9-2654c156930c"
+      ],
+      "renderer_active_gpu_count": 1,
+      "renderer_active_rows": [
+        "| 0   | NVIDIA L40S                      | Yes: 0 |     | 46068   MB | 10de      | 0          |"
+      ],
+      "subprocess_seconds": 140.816,
+      "arguments": [
+        "/isaac-sim/python.sh",
+        "/workspace/sim/render_barrel_preview.py",
+        "--allow-root",
+        "--/renderer/multiGpu/enabled=true",
+        "--/renderer/multiGpu/maxGpuCount=1"
+      ],
+      "return_code": 0,
+      "shard": 1,
+      "shards": 4
+    },
+    {
+      "requested_gpu_count": 1,
+      "visible_gpus": [
+        "0, NVIDIA L40S, GPU-c1cefd65-a6b8-c118-e9f8-c9d5eeb45fe5"
+      ],
+      "renderer_active_gpu_count": 1,
+      "renderer_active_rows": [
+        "| 0   | NVIDIA L40S                      | Yes: 0 |     | 46068   MB | 10de      | 0          |"
+      ],
+      "subprocess_seconds": 139.508,
+      "arguments": [
+        "/isaac-sim/python.sh",
+        "/workspace/sim/render_barrel_preview.py",
+        "--allow-root",
+        "--/renderer/multiGpu/enabled=true",
+        "--/renderer/multiGpu/maxGpuCount=1"
+      ],
+      "return_code": 0,
+      "shard": 2,
+      "shards": 4
+    },
+    {
+      "requested_gpu_count": 1,
+      "visible_gpus": [
+        "0, NVIDIA L40S, GPU-2ddaffa4-132c-ff90-bc43-b48caec92abd"
+      ],
+      "renderer_active_gpu_count": 1,
+      "renderer_active_rows": [
+        "| 0   | NVIDIA L40S                      | Yes: 0 |     | 46068   MB | 10de      | 0          |"
+      ],
+      "subprocess_seconds": 137.555,
+      "arguments": [
+        "/isaac-sim/python.sh",
+        "/workspace/sim/render_barrel_preview.py",
+        "--allow-root",
+        "--/renderer/multiGpu/enabled=true",
+        "--/renderer/multiGpu/maxGpuCount=1"
+      ],
+      "return_code": 0,
+      "shard": 3,
+      "shards": 4
+    }
+  ],
+  "parallel_wall_seconds": 178.616
+}

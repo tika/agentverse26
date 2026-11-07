@@ -67,10 +67,40 @@ requires emissivity/reflected-temperature correction; see [FLIR's guidance](http
 A gas-specific measurement would be needed to identify a gas; this screening
 module does not simulate one.
 
-Sample tags are **A3** (nominal rusted), **B1** (bulged clean), **C2** (bulged rusted). These review tags do not rename any Dxx package in the hall inventory.
+Sample tags are **A03** (nominal rusted), **B01** (bulged clean), **C02** (bulged rusted). These review tags do not rename any Dxx package in the hall inventory.
 
 The [rendered three-variant comparison](previews/barrel_v2/README.md) is now
-checked in. B1/C2 share a maximum-diameter increase of approximately 5.37%
+checked in. B01/C02 share a maximum-diameter increase of approximately 5.37%
 and a 70 mm lid dome. The larger dome is an illustrative review choice, not a
 validated physical prediction. The viewport reference grid is explicitly hidden
 in captures (see the [upstream rendering issue](https://github.com/isaac-sim/IsaacSim/issues/887)).
+
+Plates use the repository’s existing `plate_texture()` / `create_plate()` functions: yellow warning plate, trefoil, LLW, A03/B01/C02, WASTE PACKAGE and barcode. Internal identities remain D03/D05/D10. Preview copies face the review camera; the hall’s row-based plate orientation remains unchanged.
+
+## Four GPUs for rendering
+
+Use four independent one-GPU render workers:
+
+```sh
+python3 tools/run_barrel_parallel.py
+```
+
+This distributes the five camera views across four Modal workers. Each worker
+owns an independent Isaac instance with one RTX GPU. Results are merged into
+`sim/out/barrel_preview/`. The combined report includes each worker's actual GPU
+and render-active count, subprocess duration and overall parallel wall time.
+All four workers terminate after results download. Queue/startup/shader time can
+still dominate a tiny preview; this is not a fourfold-speedup claim.
+
+A shared four-L40S Isaac renderer was also tested: all four devices were Active,
+but the rendered image omitted two barrel paint surfaces. That output was
+**rejected**, despite the successful process exit and GPU activation. The exact
+cause is unresolved in this Modal/image/scene combination. Prefer independent
+workers for this preview. The runner now checks known yellow-body regions to
+reject missing-surface output before accepting a preview.
+
+The lower-level experimental host mode remains available through
+`ISAAC_RENDER_GPU_COUNT=4 python3 tools/run_barrel_preview.py`, but it currently
+fails that visual acceptance check for this fixture. Existing team entry points
+still default to one GPU. See [NVIDIA's multi-camera performance notes](https://docs.isaacsim.omniverse.nvidia.com/latest/reference_material/benchmarks.html)
+and [Modal's multi-GPU support](https://modal.com/docs/guide/gpu).
