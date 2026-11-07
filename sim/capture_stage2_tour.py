@@ -44,7 +44,7 @@ def inventory_check(stage, entries):
         want = (e['x'], e['y'], e.get('base_z', 0.0))
         if max(abs(a - b) for a, b in zip(got[:3], want)) > 1e-4:
             mismatches.append(f"{e['id']} USD {got[:3]} != inventory {want}")
-        if e.get('depth',1) == 1 and not got[3]:
+        if e.get('visible_face',True) and not got[3]:
             mismatches.append(f"{e['id']} has no plate")
     extra = sorted(set(usd) - {e['id'] for e in entries})
     pallets = len([p for p in stage.GetPrimAtPath('/World/Pallets').GetChildren() if p.GetName().endswith('_Deck')])
