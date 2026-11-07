@@ -46,6 +46,12 @@ def main():
     started = time.perf_counter()
     destination = a.run_dir/'evaluation'
     destination.mkdir(exist_ok=True)
+    progress = json.loads((a.run_dir/'progress.json').read_text())
+    progress.update(state='evaluating', epoch=min(progress['epoch'],progress['max_epochs']), eta_seconds=0)
+    (a.run_dir/'progress.json').write_text(json.dumps(progress, indent=2))
+    (a.run_dir/'evaluation_source.json').write_text(json.dumps({
+        name: hashlib.sha256((Path(__file__).parent/name).read_bytes()).hexdigest()
+        for name in ('evaluate_yolo26s.py','evaluation_metrics.py')}, indent=2))
     model = YOLO(str(a.run_dir/'best.pt'))
     assert list(model.names.values()) == list(CLASSES)
     results = dict(run_id=a.run_dir.name, model='YOLO26s', classes=list(CLASSES),
@@ -55,6 +61,8 @@ def main():
                    metrics_note='Ultralytics P/R summarize its confidence curve. Fixed-threshold P/R use validation-frozen thresholds and class-wise IoU >= 0.5 matching.')
     cached = {}
     for split in ('val', 'test'):
+        progress.update(evaluation_split=split)
+        (a.run_dir/'progress.json').write_text(json.dumps(progress, indent=2))
         print('EVAL_PROGRESS '+json.dumps(dict(split=split, state='starting')), flush=True)
         metrics = model.val(data=a.data, split=split, imgsz=640, batch=16, device=0,
                             workers=0, conf=.001, iou=.7, max_det=300, plots=True,

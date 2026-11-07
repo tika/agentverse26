@@ -44,10 +44,11 @@ def main():
         duration=float(getattr(trainer,'epoch_time',0))
         if duration>0:epoch_durations.append(duration)
         mean=sum(epoch_durations[-5:])/len(epoch_durations[-5:]) if epoch_durations else None
-        record=dict(state='training',model='YOLO26s',run_id=a.run_dir.name,epoch=trainer.epoch+1,
+        completed_epoch=min(trainer.epoch+1,trainer.epochs)
+        record=dict(state='training',phase='final_validation' if trainer.epoch>=trainer.epochs else 'epoch',model='YOLO26s',run_id=a.run_dir.name,epoch=completed_epoch,
                     max_epochs=trainer.epochs,metrics=metrics,best_fitness=float(trainer.best_fitness),
                     epoch_seconds=duration,elapsed_seconds=time.perf_counter()-start,
-                    eta_seconds=(trainer.epochs-trainer.epoch-1)*mean if mean else None,
+                    eta_seconds=max(0,trainer.epochs-completed_epoch)*mean if mean else None,
                     world_size=world,global_batch=64)
         atomic_json(a.run_dir/'progress.json',record)
         with (a.run_dir/'epoch_events.jsonl').open('a') as file:file.write(json.dumps(record)+'\n')
