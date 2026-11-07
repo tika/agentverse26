@@ -300,10 +300,12 @@ def run():
                         app.update()
                         world.render()
                     capture_position, _, _ = pose()
-                    if abs(world.current_time - capture_time) > 1e-8 or np.linalg.norm(capture_position-position) > 1e-5:
-                        raise RuntimeError("Physics advanced while flushing camera updates")
                     rgb, side_rgb = pixels(front), pixels(side)
+                    stopped_time = world.current_time
+                    stopped_position, _, _ = pose()
                     world.play()
+                    if abs(stopped_time - capture_time) > 1e-8 or np.linalg.norm(stopped_position-position) > 1e-5:
+                        raise RuntimeError("Physics advanced while paused for camera flush")
                     if rgb is None or side_rgb is None:
                         raise RuntimeError("Camera dropped out")
                     totals["render_s"] += perf_counter() - phase
