@@ -181,15 +181,16 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
         geom = obstruction['geometry_m']
         center, size = geom['center'], geom['size']
         paint = material(stage, 'ScenarioObstruction', (.14,.22,.27), .72)
-        prim = box(stage, '/World/Obstructions/Scenario_'+scenario['scenario_id'], center, size, paint, collision=True)
+        obstruction_path = '/World/Obstructions/Scenario_'+scenario['scenario_id']
+        prim = box(stage, obstruction_path, center, size, paint, collision=True)
         # Handles and a reinforced rim make the equipment recognizable as a tote.
         from geometry import box as make_box
         dark = material(stage, 'ScenarioObstructionTrim', (.055,.07,.075), .82)
         cx, cy, cz = map(float, center); sx, sy, sz = map(float, size)
         for side in (-1, 1):
-            make_box(stage, f'{prim.GetPath()}/Handle_{side:+d}',
+            make_box(stage, f'{obstruction_path}/Handle_{side:+d}',
                      (cx+side*sx*.38,cy,cz+sz*.50+.03), (.035,sy*.52,.10), dark)
-            make_box(stage, f'{prim.GetPath()}/Rim_{side:+d}',
+            make_box(stage, f'{obstruction_path}/Rim_{side:+d}',
                      (cx+side*sx*.5,cy,cz+sz*.42), (.045,sy*1.02,.055), dark)
         result['obstructions'].append({'path':str(prim.GetPath()), 'route_id':obstruction['route_id'],
                                        'geometry_m':geom})
