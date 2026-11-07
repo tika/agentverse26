@@ -1,4 +1,4 @@
-"""Train ONE YOLO26s on eight H100s, then evaluate after releasing the training node."""
+"""Train ONE YOLO26s on RTX PRO 6000 (or an explicitly requested eight-H100 node)."""
 import io
 import json
 import os
@@ -15,6 +15,11 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 sys.path.insert(0,'/workspace/detector')
 from training_image import image
+
+GPU_REQUEST=os.environ.get('DETECTOR_TRAIN_GPU','RTX-PRO-6000')
+assert GPU_REQUEST in ('RTX-PRO-6000','H100:8')
+WORLD_SIZE=8 if GPU_REQUEST=='H100:8' else 1
+image=image.env({'DETECTOR_TRAIN_GPU':GPU_REQUEST})
 
 app=modal.App('agentverse-yolo26s-training')
 data_volume=modal.Volume.from_name('detector-data',environment_name='main')
@@ -61,7 +66,7 @@ def run_child(args,run_dir,log_name,markers,timeout):
         raise RuntimeError(f'Subprocess failed ({code}); saved {log_name}')
 
 
-@app.function(image=image,gpu='H100:8',cpu=16,memory=65536,timeout=3600,
+@app.function(image=image,gpu=GPU_REQUEST,cpu=16,memory=65536,timeout=3600,
               volumes=MOUNTS,single_use_containers=True,max_containers=1)
 def train(run_id,source_commit):
     import hashlib,platform
@@ -70,12 +75,12 @@ def train(run_id,source_commit):
     run_dir.mkdir(parents=True,exist_ok=False)
     diagnostic=subprocess.run(['nvidia-smi','--query-gpu=index,name,uuid,driver_version','--format=csv,noheader'],text=True,capture_output=True)
     inventory=diagnostic.stdout
-    assert torch.cuda.is_available() and torch.cuda.device_count()==8
+    assert torch.cuda.is_available() and torch.cuda.device_count()==WORLD_SIZE
     visible=[torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())]
     # CUDA's visible devices are authoritative; nvidia-smi can include host devices
     # or provider diagnostics outside the container's CUDA-visible allocation.
     topology=subprocess.run(['nvidia-smi','topo','-m'],text=True,capture_output=True)
-    (run_dir/'hardware.json').write_text(json.dumps(dict(gpus=inventory.splitlines(),cuda_visible_devices=visible,count=8,torch=torch.__version__,
+    (run_dir/'hardware.json').write_text(json.dumps(dict(gpus=inventory.splitlines(),cuda_visible_devices=visible,count=WORLD_SIZE,torch=torch.__version__,
                 cuda=torch.version.cuda,ultralytics=ultralytics.__version__,python=platform.python_version(),
                 nvidia_smi_stderr=diagnostic.stderr,topology=topology.stdout,
                 topology_returncode=topology.returncode,topology_stderr=topology.stderr),indent=2))
@@ -85,9 +90,9 @@ def train(run_id,source_commit):
     metadata=dict(run_id=run_id,model='YOLO26s',source_commit=source_commit,dataset='barrels_v2_1200',
                   dataset_manifest_sha256=hashlib.sha256((release/'manifest.json').read_bytes()).hexdigest(),
                   classes=['drum','corrosion','bulge'],global_batch=64,epochs_cap=40,patience=10,
-                  world_size=8,gpu_type='H100',created_utc=datetime.now(timezone.utc).isoformat())
+                  world_size=WORLD_SIZE,gpu_request=GPU_REQUEST,gpu_names=visible,created_utc=datetime.now(timezone.utc).isoformat())
     (run_dir/'run_manifest.json').write_text(json.dumps(metadata,indent=2))
-    (run_dir/'progress.json').write_text(json.dumps(dict(state='initializing',epoch=0,max_epochs=40,world_size=8)))
+    (run_dir/'progress.json').write_text(json.dumps(dict(state='initializing',epoch=0,max_epochs=40,world_size=WORLD_SIZE)))
     models_volume.commit()
     print('TRAIN_NODE_READY '+json.dumps(metadata),flush=True)
     from ultralytics import YOLO
@@ -96,12 +101,12 @@ def train(run_id,source_commit):
     import shutil
     shutil.copy2('yolo26s.pt',weights)
     del model
-    args=[sys.executable,'-m','torch.distributed.run','--standalone','--nnodes=1','--nproc_per_node=8',
+    args=[sys.executable,'-m','torch.distributed.run','--standalone','--nnodes=1',f'--nproc_per_node={WORLD_SIZE}',
           '/workspace/detector/train_yolo26s.py','--run-dir',str(run_dir),
-          '--data',str(release/'training.yaml'),'--weights',str(weights)]
+          '--data',str(release/'training.yaml'),'--weights',str(weights),'--expected-world-size',str(WORLD_SIZE)]
     run_child(args,run_dir,'training.log',('TRAIN_PROGRESS ','TRAIN_COMPLETE '),timeout=3000)
     ranks=[json.loads(p.read_text()) for p in sorted((run_dir/'ranks').glob('rank_*.json'))]
-    assert {p['rank'] for p in ranks}==set(range(8)) and all(p['world_size']==8 for p in ranks)
+    assert {p['rank'] for p in ranks}==set(range(WORLD_SIZE)) and all(p['world_size']==WORLD_SIZE for p in ranks)
     result=dict(run_id=run_id,training_node_seconds=time.perf_counter()-started,rank_count=len(ranks),
                 best_bytes=(run_dir/'best.pt').stat().st_size)
     (run_dir/'training_runtime.json').write_text(json.dumps(result,indent=2));models_volume.commit()

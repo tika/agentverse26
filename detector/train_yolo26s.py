@@ -1,4 +1,4 @@
-"""One YOLO26s run, launched with torchrun so callbacks exist on every rank."""
+"""One YOLO26s run; torchrun preserves callbacks for single or distributed training."""
 import argparse
 import json
 import math
@@ -15,12 +15,13 @@ def atomic_json(path,value):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--run-dir',type=Path,required=True)
     p.add_argument('--data',required=True);p.add_argument('--weights',required=True)
+    p.add_argument('--expected-world-size',type=int,required=True)
     a=p.parse_args();rank=int(os.environ['RANK']);world=int(os.environ['WORLD_SIZE'])
     local=int(os.environ['LOCAL_RANK'])
     import torch
     import ultralytics
     from ultralytics import YOLO
-    assert world==8 and torch.cuda.device_count()==8
+    assert world==a.expected_world_size and torch.cuda.device_count()==world
     torch.cuda.set_device(local)
     torch.set_num_threads(2)
     (a.run_dir/'ranks').mkdir(parents=True,exist_ok=True)
@@ -54,8 +55,8 @@ def main():
 
     model.add_callback('on_model_save',on_save)
     model.add_callback('on_fit_epoch_end',on_epoch)
-    # The batch is global across all ranks: eight examples per GPU per full batch.
-    model.train(data=a.data,device=list(range(8)),imgsz=640,batch=64,epochs=40,patience=10,
+    # Batch is global and stays 64 when switching from eight H100s to one RTX.
+    model.train(data=a.data,device=list(range(world)),imgsz=640,batch=64,epochs=40,patience=10,
                 project=str(a.run_dir),name='train',exist_ok=True,pretrained=True,
                 optimizer='AdamW',lr0=.001,lrf=.01,weight_decay=.0005,warmup_epochs=2.,
                 seed=42,deterministic=True,amp=True,workers=0,cache=False,
