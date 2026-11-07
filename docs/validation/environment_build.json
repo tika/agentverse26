@@ -1,0 +1,29 @@
+{
+  "seed": 42,
+  "build_seconds": 2.607,
+  "drum_count": 28,
+  "hall_interior": [
+    20,
+    12,
+    6
+  ],
+  "extra_detail_meshes": 32,
+  "failed_fixture": "Row2_L04",
+  "camera_exposure": {
+    "iso": 400,
+    "f_number": 2.8,
+    "shutter_reciprocal_seconds": 60
+  },
+  "layout": "layout_training.json",
+  "episode_seed": 42,
+  "faulty_drums": 9,
+  "robot": {
+    "root": "/World/Spot",
+    "body": "/World/Spot/Robot/body",
+    "asset": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Robots/BostonDynamics/spot/spot.usd",
+    "mode": "static_pose_camera_validation"
+  },
+  "meshes": 219,
+  "output": "/workspace/sim/scene_environment.usda",
+  "capture_performed": false
+}

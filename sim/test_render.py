@@ -36,10 +36,10 @@ def checks(stage,entries):
 
 if __name__=='__main__':
     from isaacsim import SimulationApp
-    # Confirmed in installed 6.2 launch source. Textured diffuse skips expensive light transport.
+    # Minimal mode was tested but produced black RGB on this runtime; use verified real-time mode.
     import os
-    renderer=os.environ.get('ISAAC_RENDERER','MinimalRendering')
-    app=SimulationApp({'headless':True,'renderer':renderer,'minimal_shading_mode':1,
+    renderer=os.environ.get('ISAAC_RENDERER','RayTracedLighting')
+    app=SimulationApp({'headless':True,'display_options':0,'renderer':renderer,'minimal_shading_mode':1,
                        'extra_args':['--enable','isaacsim.robot.policy.examples']})
     import omni.usd
     import carb
@@ -89,6 +89,7 @@ if __name__=='__main__':
         captures.append(attach_capture(stage,name,path,OUTPUT))
     path=camera(stage,'/World/ReviewCameras/overview',(1.2,1.5,4.6),(12,6,1.5),20,(960,640))
     captures.append(attach_capture(stage,'overview',path,OUTPUT,(960,640)))
+    stage.GetRootLayer().Save()
     report['views']=finish_captures(app,captures)
     for name,id in [('case_a_llw','D10'),('case_b_ilw','D25')]:
         target={b['class'] for b in report['views'][name]['boxes'] if b['drum_id']==id}

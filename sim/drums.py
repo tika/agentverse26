@@ -126,9 +126,16 @@ def set_drum_category(drum_id,category):
     if index is None: raise KeyError(drum_id)
     entry=nominal_entry(entries[index],category)
     stage=get_current_stage()
+    was_labelled=any('LabelsAPI:' in schema for schema in stage.GetPrimAtPath(entry['prim_path']).GetAppliedSchemas())
+    defect_path='/World/Defects/'+drum_id
+    if stage.GetPrimAtPath(defect_path): stage.RemovePrim(defect_path)
     create_drum(stage,entry,drum_materials(stage,entry['scene_seed']))
     entries[index]=entry
     write_inventory(entries)
+    # Category changes reset faults to clean and keep the new root labelled.
+    if was_labelled:
+        from labels import label_drum
+        label_drum(stage,entry)
     return entry
 
 

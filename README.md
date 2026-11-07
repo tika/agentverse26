@@ -1,25 +1,29 @@
 # Agentverse26 — nuclear-store robot inspection
 
 Build the Isaac Sim environment one step at a time, following **MVP v2**.
-Steps 0–2 are verified: Isaac Sim 6.2 rendered the cube, textured
-20 × 12 × 6 m hall and exact 28-drum layout on Modal. The sensor extension
-adds actual RGB/metric-depth frames, simulated dose/swab/environment readings
-and configurable inspection criteria and safety rules.
+The environment now includes the fixed **28-drum hall**, seeded corrosion,
+wet/dry releases, class + package labels, scalar sensors and Spot's body-mounted
+RGB/depth camera. Repeated-seed rebuilds and actual Replicator box exports passed.
+
+Start with [the complete environment handoff](docs/environment_handoff.md) for
+local Isaac and Modal commands, editing, picture-ready settings and video capture.
 
 - [Team quickstart and copy-paste agent prompt](docs/team_quickstart.md)
 - [Run commands, installed APIs and validation](sim/README.md)
 - [Environment build specification](docs/environment_mvp.md)
 - [Sensors, inspection criteria, safety rules and limitations](docs/sensors_and_criteria.md)
+- [Detector/camera API and training start gate](docs/training_handoff.md)
 
 Use Python 3.12+ locally. Review each step through exported screenshots/video,
 as selected by the user; this replaces the specification's interactive-viewer
-instructions. Stop after each step for review. Step 2 and the sensor extension
-are complete; visible fault generation is next. The dog/planner prototypes
-below are separate from the current hall sensor validation.
+instructions. Steps 1–4 and the requested training-label/camera handoff are
+implemented; Step 5 shape faults and full-hall walking/agent integration remain.
+The dog/planner prototypes below are retained as separate team workstreams.
 
 ```sh
-python3 tools/run_drums.py
-python3 tools/run_sensors.py
+python3 tools/run_environment.py       # build/edit the environment, no pictures
+python3 tools/run_training_check.py    # RGB/depth, boxes and YOLO label proof
+python3 tools/run_presentation.py      # final stills + MP4 flythrough
 python3 -m unittest discover -s sim/tests -v
 ```
 

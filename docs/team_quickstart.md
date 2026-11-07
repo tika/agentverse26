@@ -68,12 +68,21 @@ failed to initialize the viewport under Xvfb.
 The worker keeps its GPU between takes and has a 24-hour Modal timeout. Only
 the owner should stop it, using `modal app stop APP_ID`.
 
+## Full environment (new handoff)
+
+Read [environment_handoff.md](environment_handoff.md). The 28-drum scene now has
+Step 3/4 fault meshes and labels, seeded layouts, verified mixed-fault box output
+and a body-mounted Spot camera. Run `python tools/run_environment.py` to build
+without pictures; `python tools/run_training_check.py` checks the detector handoff.
+Use `python tools/run_presentation.py` for final stills and a camera-tour MP4.
+The complete scene is `sim/scene_environment.usda` with relative texture assets.
+
 ## Pick your workstream
 
 | Workstream | Start here | First review artifact |
 | --- | --- | --- |
 | Barrel appearance | Edit `sim/drum_textures.py`, `sim/profiles.py`, and `sim/drums.py`. Run `python tools/run_drums.py`. Keep stable drum IDs and nominal dimensions unless intentionally changing the design. | Drum closeups in `sim/out/step2/`. Review lighting, texture and silhouettes before a larger render. |
-| YOLO and TensorRT | Run `python tools/run_sensors.py` for a verified RGB/depth example. Use `sim/build_hall.py` and `sim/capture_sensors.py` as entry points for eye-level captures. Add visible faults and validate the USD labels and boxes with a small batch before bulk generation. | Raw RGB with label overlays and per-class counts. Keep layout-based train, validation and test splits, and hold the demo layout out. See the [detector handoff](spot_development.md#proposed-tensorrt-response-contract). |
+| YOLO and TensorRT | Run `python tools/run_sensors.py` for a verified RGB/depth example. Use `sim/build_hall.py` and `sim/capture_sensors.py` as entry points for eye-level captures. Run `python tools/run_training_check.py` for labelled fault proofs before bulk generation. | Raw RGB with label overlays and per-class counts. Keep layout-based train, validation and test splits, and hold the demo layout out. See the [detector handoff](spot_development.md#proposed-tensorrt-response-contract). |
 | Perception, paths and scenarios | Start with `scripts/spot_spill.py` and use `sim/aisles.json` for the full hall waypoint graph. Run `modal run isaac_sim_modal.py --script scripts/spot_spill.py --output out/scenario-check`. Use `sim/spot_agent.py --demo` with Python for local planner replay. | Compare dry and spill `score.json`, event logs and annotated frames under `out/scenario-check/spot-spill/`. Preserve the known-good default renderer and record timings. |
 
 The bulk YOLO dataset exporter and trained TensorRT engine are teammate
@@ -85,12 +94,12 @@ overlays. The current spill demo detects a synthetic magenta tracer with rules.
 | Need | Available today | Still to wire up |
 | --- | --- | --- |
 | Bulges | Aligned metric depth on the stationary rig and onboard depth in the Spot prototype. Criteria accept diameter change. | Visible bulge variants and a diameter estimate from segmented depth at multiple viewpoints. |
-| Corrosion and rust | RGB and criteria for visible rust percentage and lifting-feature overlap. | Fault visuals and semantic labels, then detection. Rust area percentage needs a mask or another area estimator in addition to boxes. |
+| Corrosion and rust | Seeded corrosion visuals, class/ID labels, real tight boxes, RGB and inspection criteria. | Train the detector. Rust area percentage needs a mask or another area estimator in addition to boxes. |
 | Radiation | The full-hall Python sensor provides simulated dose rate and cumulative dose, with optional directional bins. | Connect these packets and safety responses to the moving Spot controller. |
 | Perception | The walk demo has an RGB spill mask, depth readout, event log and working detour. | Replace or supplement the tracer with the TensorRT detections and wire the full criteria and safety loop. Cosmos/LoRA is scaffolded and awaits model access. |
 | Depth of field / depth | Metric optical-axis depth and range on the stationary rig, and onboard depth in the prototype. | Depth of field means optical blur, which is separate from metric depth. Use raw depth arrays for distance and geometry. |
 
-The full 28-drum sensor check uses a stationary camera. The walking spill
+The original scalar-sensor check uses a stationary camera; `run_robot_check.py` now proves the body-mounted camera in the complete 28-drum hall. The walking spill
 prototype references the same hall geometry with a smaller fixture and its own
 onboard camera. Simulated swab, temperature and humidity are implemented in
 the full-hall sensor backend. See [sensor details](sensors_and_criteria.md).

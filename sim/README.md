@@ -1,9 +1,17 @@
-# Nuclear-store simulation — Steps 0–2 plus sensors, MVP v2
+# Nuclear-store simulation — full environment and training handoff
 
-Work lives in the `agentverse26` repository. Review each step using exported
-screenshots/video, then explicitly continue to the next step. The hall and all
-28 clean drums are built and checked. RGB/depth and scalar sensor models plus
-inspection criteria are added; visible faults remain a later step.
+Work lives in `agentverse26`. The hall, 28 drums, Step 3/4 corrosion and release
+faults, seeded layouts, class/ID labels and body-mounted camera are implemented.
+Start with [the environment handoff](../docs/environment_handoff.md) and
+[detector handoff](../docs/training_handoff.md). Earlier step checks below remain
+as historical rebuild commands; `scene_environment.usda` is the current scene.
+
+```sh
+python3 tools/run_environment.py
+python3 tools/run_training_check.py
+python3 tools/run_robot_check.py
+python3 tools/run_presentation.py
+```
 
 ## Version and launch
 

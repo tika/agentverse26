@@ -7,7 +7,7 @@ OUTPUT=SIM/'out/robot'
 
 if __name__=='__main__':
     from isaacsim import SimulationApp
-    app=SimulationApp({'headless':True,'renderer':'MinimalRendering','minimal_shading_mode':1})
+    app=SimulationApp({'headless':True,'display_options':0,'renderer':'RayTracedLighting','minimal_shading_mode':1})
     import omni.usd
     from layouts import load_layout
     from robot import load_robot,attach_cameras,capture_frame

@@ -54,6 +54,8 @@ def export_boxes(directory):
     labels=json.loads(labels_path.read_text())
     labels=labels.get('idToLabels',labels)
     image=Image.open(rgb).convert('RGB'); draw=ImageDraw.Draw(image)
+    pixels=np.asarray(image)
+    assert pixels.mean()>3 and np.percentile(pixels,99)>15, 'Black/invalid RGB frame; do not use for training'
     width,height=image.size
     boxes=[]; yolo=[]
     colors={'drum':(60,220,90),'corrosion':(255,120,35),'spill':(70,190,255)}
@@ -62,6 +64,8 @@ def export_boxes(directory):
         cls=semantic.get('class'); drum=semantic.get('drum_id')
         if isinstance(cls,list): cls=cls[0]
         if isinstance(drum,list): drum=drum[0]
+        # Replicator normalises semantic values to lowercase; inventory IDs are uppercase.
+        if isinstance(drum,str): drum=drum.upper()
         assert cls in CLASSES,semantic
         assert drum and drum.startswith('D'),semantic
         x0,y0,x1,y1=[int(row[key]) for key in ('x_min','y_min','x_max','y_max')]

@@ -1,0 +1,1894 @@
+{
+  "build": {
+    "seed": 42,
+    "build_seconds": 2.856,
+    "drum_count": 28,
+    "hall_interior": [
+      20,
+      12,
+      6
+    ],
+    "extra_detail_meshes": 32,
+    "failed_fixture": "Row2_L04",
+    "camera_exposure": {
+      "iso": 400,
+      "f_number": 2.8,
+      "shutter_reciprocal_seconds": 60
+    },
+    "layout": "layout_training.json",
+    "episode_seed": 42,
+    "faulty_drums": 9
+  },
+  "rebuild": {
+    "seed": 42,
+    "build_seconds": 2.573,
+    "drum_count": 28,
+    "hall_interior": [
+      20,
+      12,
+      6
+    ],
+    "extra_detail_meshes": 32,
+    "failed_fixture": "Row2_L04",
+    "camera_exposure": {
+      "iso": 400,
+      "f_number": 2.8,
+      "shutter_reciprocal_seconds": 60
+    },
+    "layout": "layout_training.json",
+    "episode_seed": 42,
+    "faulty_drums": 9
+  },
+  "same_seed_identical_stage_and_inventory": true,
+  "fault_replacement_verified": true,
+  "checks": {
+    "drums": 28,
+    "fixed_layout_preserved": true,
+    "defect_mesh_count": 31,
+    "all_targets_have_class_and_drum_id": true,
+    "all_meshes_have_uvs": true,
+    "background_has_no_classes": true
+  },
+  "renderer": {
+    "name": "RayTracedLighting",
+    "minimal_shading_mode": 1,
+    "active": "RealTimePathTracing"
+  },
+  "views": {
+    "llw_severity1": {
+      "rgb": "rgb_0000.png",
+      "box_count": 24,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D08",
+          "xyxy": [
+            555,
+            169,
+            639,
+            359
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D11",
+          "xyxy": [
+            319,
+            162,
+            375,
+            167
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D13",
+          "xyxy": [
+            86,
+            160,
+            141,
+            233
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D09",
+          "xyxy": [
+            34,
+            161,
+            93,
+            167
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D10",
+          "xyxy": [
+            175,
+            162,
+            231,
+            249
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D12",
+          "xyxy": [
+            460,
+            162,
+            527,
+            253
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D02",
+          "xyxy": [
+            0,
+            366,
+            10,
+            416
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D16",
+          "xyxy": [
+            445,
+            161,
+            499,
+            236
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D06",
+          "xyxy": [
+            0,
+            168,
+            125,
+            344
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D14",
+          "xyxy": [
+            204,
+            161,
+            251,
+            177
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D03",
+          "xyxy": [
+            225,
+            175,
+            414,
+            478
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D07",
+          "xyxy": [
+            278,
+            168,
+            392,
+            176
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D03",
+          "xyxy": [
+            273,
+            185,
+            352,
+            237
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D03",
+          "xyxy": [
+            302,
+            213,
+            322,
+            263
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D06",
+          "xyxy": [
+            121,
+            292,
+            150,
+            310
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D10",
+          "xyxy": [
+            182,
+            199,
+            213,
+            204
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D10",
+          "xyxy": [
+            184,
+            239,
+            204,
+            249
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            191,
+            250,
+            216,
+            259
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            199,
+            167,
+            206,
+            243
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            199,
+            245,
+            211,
+            247
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            469,
+            239,
+            506,
+            253
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            484,
+            247,
+            516,
+            252
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            465,
+            218,
+            502,
+            228
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            478,
+            224,
+            482,
+            234
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "llw_severity2": {
+      "rgb": "rgb_0000.png",
+      "box_count": 14,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D15",
+          "xyxy": [
+            204,
+            161,
+            251,
+            177
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D08",
+          "xyxy": [
+            278,
+            168,
+            392,
+            176
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D11",
+          "xyxy": [
+            175,
+            162,
+            231,
+            249
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D13",
+          "xyxy": [
+            0,
+            160,
+            21,
+            168
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D10",
+          "xyxy": [
+            34,
+            161,
+            93,
+            167
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D04",
+          "xyxy": [
+            225,
+            175,
+            414,
+            478
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D12",
+          "xyxy": [
+            319,
+            162,
+            375,
+            167
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D14",
+          "xyxy": [
+            86,
+            160,
+            141,
+            233
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D03",
+          "xyxy": [
+            0,
+            365,
+            10,
+            416
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D07",
+          "xyxy": [
+            0,
+            168,
+            125,
+            344
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D04",
+          "xyxy": [
+            244,
+            424,
+            352,
+            476
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D04",
+          "xyxy": [
+            268,
+            184,
+            404,
+            206
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D04",
+          "xyxy": [
+            334,
+            197,
+            353,
+            237
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D04",
+          "xyxy": [
+            286,
+            443,
+            384,
+            476
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "llw_severity3": {
+      "rgb": "rgb_0000.png",
+      "box_count": 9,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D15",
+          "xyxy": [
+            0,
+            168,
+            125,
+            344
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D11",
+          "xyxy": [
+            0,
+            365,
+            10,
+            416
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D12",
+          "xyxy": [
+            225,
+            175,
+            414,
+            478
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D16",
+          "xyxy": [
+            278,
+            168,
+            392,
+            176
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            244,
+            424,
+            353,
+            476
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            280,
+            443,
+            391,
+            477
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            325,
+            478,
+            363,
+            492
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            234,
+            358,
+            328,
+            403
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            256,
+            385,
+            268,
+            414
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "ilw_severity1": {
+      "rgb": "rgb_0000.png",
+      "box_count": 10,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D16",
+          "xyxy": [
+            0,
+            139,
+            32,
+            213
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D27",
+          "xyxy": [
+            476,
+            113,
+            534,
+            221
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D23",
+          "xyxy": [
+            308,
+            114,
+            388,
+            118
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D24",
+          "xyxy": [
+            497,
+            114,
+            599,
+            244
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D17",
+          "xyxy": [
+            183,
+            124,
+            455,
+            535
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D20",
+          "xyxy": [
+            254,
+            119,
+            417,
+            124
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D21",
+          "xyxy": [
+            616,
+            239,
+            639,
+            361
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D17",
+          "xyxy": [
+            221,
+            178,
+            315,
+            250
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D17",
+          "xyxy": [
+            322,
+            512,
+            372,
+            531
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D17",
+          "xyxy": [
+            203,
+            141,
+            248,
+            184
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "ilw_severity3": {
+      "rgb": "rgb_0000.png",
+      "box_count": 18,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D22",
+          "xyxy": [
+            616,
+            239,
+            639,
+            361
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D25",
+          "xyxy": [
+            497,
+            114,
+            599,
+            244
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D28",
+          "xyxy": [
+            476,
+            113,
+            534,
+            221
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D23",
+          "xyxy": [
+            111,
+            114,
+            195,
+            238
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D24",
+          "xyxy": [
+            308,
+            114,
+            388,
+            118
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D26",
+          "xyxy": [
+            153,
+            113,
+            218,
+            126
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D18",
+          "xyxy": [
+            183,
+            124,
+            455,
+            535
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D20",
+          "xyxy": [
+            0,
+            118,
+            71,
+            357
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D21",
+          "xyxy": [
+            254,
+            119,
+            417,
+            124
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D18",
+          "xyxy": [
+            223,
+            143,
+            263,
+            181
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D18",
+          "xyxy": [
+            305,
+            144,
+            359,
+            192
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D18",
+          "xyxy": [
+            376,
+            142,
+            427,
+            188
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D20",
+          "xyxy": [
+            64,
+            284,
+            71,
+            297
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            581,
+            118,
+            588,
+            134
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            516,
+            229,
+            528,
+            240
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            555,
+            118,
+            572,
+            125
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D25",
+          "xyxy": [
+            536,
+            245,
+            570,
+            260
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D25",
+          "xyxy": [
+            557,
+            121,
+            571,
+            129
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "llw_leak": {
+      "rgb": "rgb_0000.png",
+      "box_count": 10,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D15",
+          "xyxy": [
+            555,
+            169,
+            639,
+            359
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D13",
+          "xyxy": [
+            0,
+            168,
+            125,
+            344
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D09",
+          "xyxy": [
+            0,
+            366,
+            10,
+            416
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D10",
+          "xyxy": [
+            225,
+            175,
+            414,
+            478
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D14",
+          "xyxy": [
+            278,
+            168,
+            392,
+            176
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D10",
+          "xyxy": [
+            247,
+            314,
+            364,
+            336
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D10",
+          "xyxy": [
+            250,
+            438,
+            326,
+            477
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            291,
+            476,
+            385,
+            618
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            319,
+            199,
+            340,
+            466
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            309,
+            461,
+            350,
+            472
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "ilw_leak": {
+      "rgb": "rgb_0000.png",
+      "box_count": 5,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D18",
+          "xyxy": [
+            0,
+            238,
+            23,
+            361
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D17",
+          "xyxy": [
+            222,
+            119,
+            385,
+            124
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D20",
+          "xyxy": [
+            183,
+            124,
+            456,
+            535
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D20",
+          "xyxy": [
+            305,
+            530,
+            448,
+            639
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D20",
+          "xyxy": [
+            341,
+            149,
+            363,
+            524
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "llw_residue": {
+      "rgb": "rgb_0000.png",
+      "box_count": 7,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D01",
+          "xyxy": [
+            514,
+            168,
+            639,
+            344
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D02",
+          "xyxy": [
+            247,
+            168,
+            361,
+            176
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D06",
+          "xyxy": [
+            225,
+            175,
+            414,
+            478
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D03",
+          "xyxy": [
+            0,
+            169,
+            84,
+            359
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D05",
+          "xyxy": [
+            629,
+            365,
+            639,
+            416
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D06",
+          "xyxy": [
+            253,
+            478,
+            375,
+            639
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D06",
+          "xyxy": [
+            293,
+            204,
+            341,
+            231
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "ilw_residue": {
+      "rgb": "rgb_0000.png",
+      "box_count": 8,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D25",
+          "xyxy": [
+            183,
+            124,
+            456,
+            535
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D27",
+          "xyxy": [
+            0,
+            118,
+            71,
+            357
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D28",
+          "xyxy": [
+            254,
+            119,
+            417,
+            124
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            363,
+            143,
+            397,
+            202
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            230,
+            476,
+            254,
+            511
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            265,
+            144,
+            326,
+            173
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D25",
+          "xyxy": [
+            236,
+            532,
+            341,
+            639
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D25",
+          "xyxy": [
+            272,
+            156,
+            326,
+            187
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "case_a_llw": {
+      "rgb": "rgb_0000.png",
+      "box_count": 10,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D15",
+          "xyxy": [
+            481,
+            200,
+            578,
+            334
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D11",
+          "xyxy": [
+            561,
+            175,
+            639,
+            386
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D13",
+          "xyxy": [
+            61,
+            200,
+            158,
+            334
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D09",
+          "xyxy": [
+            0,
+            175,
+            78,
+            386
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D10",
+          "xyxy": [
+            255,
+            171,
+            384,
+            389
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D10",
+          "xyxy": [
+            272,
+            264,
+            355,
+            279
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D10",
+          "xyxy": [
+            271,
+            361,
+            330,
+            388
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            308,
+            388,
+            379,
+            445
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            324,
+            181,
+            339,
+            377
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            316,
+            376,
+            345,
+            384
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "case_b_ilw": {
+      "rgb": "rgb_0000.png",
+      "box_count": 8,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D25",
+          "xyxy": [
+            226,
+            69,
+            412,
+            398
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D27",
+          "xyxy": [
+            0,
+            144,
+            108,
+            338
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D24",
+          "xyxy": [
+            0,
+            305,
+            8,
+            364
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            357,
+            82,
+            378,
+            124
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            253,
+            358,
+            273,
+            387
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            290,
+            77,
+            332,
+            97
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D25",
+          "xyxy": [
+            262,
+            398,
+            350,
+            481
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D25",
+          "xyxy": [
+            294,
+            85,
+            332,
+            107
+          ]
+        }
+      ],
+      "resolution": [
+        640,
+        640
+      ],
+      "depth_units": "metres"
+    },
+    "overview": {
+      "rgb": "rgb_0000.png",
+      "box_count": 47,
+      "boxes": [
+        {
+          "class": "drum",
+          "drum_id": "D15",
+          "xyxy": [
+            141,
+            431,
+            193,
+            503
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D08",
+          "xyxy": [
+            433,
+            436,
+            472,
+            509
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D22",
+          "xyxy": [
+            566,
+            299,
+            594,
+            340
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D11",
+          "xyxy": [
+            196,
+            444,
+            247,
+            521
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D10",
+          "xyxy": [
+            80,
+            500,
+            152,
+            597
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D04",
+          "xyxy": [
+            504,
+            450,
+            546,
+            528
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D12",
+          "xyxy": [
+            275,
+            405,
+            314,
+            468
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D02",
+          "xyxy": [
+            385,
+            598,
+            451,
+            639
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D16",
+          "xyxy": [
+            225,
+            395,
+            265,
+            455
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D06",
+          "xyxy": [
+            284,
+            565,
+            350,
+            639
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D14",
+          "xyxy": [
+            21,
+            481,
+            87,
+            570
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D03",
+          "xyxy": [
+            458,
+            508,
+            509,
+            607
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D07",
+          "xyxy": [
+            374,
+            488,
+            424,
+            579
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D25",
+          "xyxy": [
+            473,
+            291,
+            499,
+            334
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D27",
+          "xyxy": [
+            409,
+            301,
+            437,
+            323
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D28",
+          "xyxy": [
+            441,
+            289,
+            466,
+            329
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D23",
+          "xyxy": [
+            407,
+            322,
+            440,
+            378
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D24",
+          "xyxy": [
+            444,
+            305,
+            473,
+            354
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D26",
+          "xyxy": [
+            368,
+            318,
+            401,
+            372
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D18",
+          "xyxy": [
+            591,
+            319,
+            624,
+            374
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D17",
+          "xyxy": [
+            570,
+            340,
+            610,
+            405
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D20",
+          "xyxy": [
+            522,
+            335,
+            559,
+            397
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D19",
+          "xyxy": [
+            605,
+            302,
+            634,
+            350
+          ]
+        },
+        {
+          "class": "drum",
+          "drum_id": "D21",
+          "xyxy": [
+            547,
+            315,
+            579,
+            368
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D03",
+          "xyxy": [
+            503,
+            528,
+            509,
+            541
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D04",
+          "xyxy": [
+            529,
+            512,
+            543,
+            524
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D04",
+          "xyxy": [
+            542,
+            456,
+            546,
+            469
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D04",
+          "xyxy": [
+            541,
+            513,
+            544,
+            520
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D06",
+          "xyxy": [
+            259,
+            624,
+            289,
+            639
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D10",
+          "xyxy": [
+            111,
+            542,
+            143,
+            559
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D10",
+          "xyxy": [
+            116,
+            577,
+            142,
+            593
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            140,
+            578,
+            180,
+            594
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            132,
+            523,
+            143,
+            577
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D10",
+          "xyxy": [
+            140,
+            576,
+            147,
+            583
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            295,
+            454,
+            314,
+            466
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            306,
+            455,
+            315,
+            464
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            314,
+            459,
+            319,
+            462
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            288,
+            446,
+            311,
+            454
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D12",
+          "xyxy": [
+            300,
+            452,
+            302,
+            456
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D17",
+          "xyxy": [
+            604,
+            354,
+            609,
+            362
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D17",
+          "xyxy": [
+            602,
+            352,
+            607,
+            356
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D18",
+          "xyxy": [
+            620,
+            327,
+            622,
+            330
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D20",
+          "xyxy": [
+            497,
+            385,
+            521,
+            391
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            491,
+            330,
+            494,
+            333
+          ]
+        },
+        {
+          "class": "corrosion",
+          "drum_id": "D25",
+          "xyxy": [
+            497,
+            296,
+            498,
+            297
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D25",
+          "xyxy": [
+            497,
+            333,
+            515,
+            335
+          ]
+        },
+        {
+          "class": "spill",
+          "drum_id": "D25",
+          "xyxy": [
+            497,
+            297,
+            498,
+            298
+          ]
+        }
+      ],
+      "resolution": [
+        960,
+        640
+      ],
+      "depth_units": "metres"
+    }
+  },
+  "training_start_signal": true,
+  "elapsed_seconds": 104.748,
+  "robot_camera": "Run capture_robot.py for dog-mounted camera proof"
+}

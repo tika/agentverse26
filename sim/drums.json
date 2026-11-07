@@ -70,10 +70,43 @@
     "radius": 0.29,
     "height": 0.88,
     "source_strength": 1,
-    "state": "clean",
-    "faults": [],
-    "corrosion_severity": 0,
-    "defects": [],
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 1,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "stage1",
+        "location": "top",
+        "z": 0.8052305039667834,
+        "angle": -1.571735105622747,
+        "size": [
+          0.2443778253732368,
+          0.14353899206643325
+        ],
+        "variant": 0,
+        "mesh_seed": 1176290586,
+        "severity": 1,
+        "prim_path": "/World/Defects/D03/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "runoff",
+        "location": "top",
+        "z": 0.7357644115568887,
+        "angle": -1.571735105622747,
+        "size": [
+          0.06,
+          0.13893218481978942
+        ],
+        "variant": 0,
+        "mesh_seed": 151227035,
+        "severity": 1,
+        "prim_path": "/World/Defects/D03/Corrosion_1"
+      }
+    ],
     "shape": {
       "max_radius": 0.29,
       "lid_rise": 0.0,
@@ -98,10 +131,73 @@
     "radius": 0.29,
     "height": 0.88,
     "source_strength": 1,
-    "state": "clean",
-    "faults": [],
-    "corrosion_severity": 0,
-    "defects": [],
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 2,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "stage2",
+        "location": "bottom",
+        "z": 0.07407400097749747,
+        "angle": -1.870073598901865,
+        "size": [
+          0.4439810717600817,
+          0.14214800195499494
+        ],
+        "variant": 1,
+        "mesh_seed": 1081530687,
+        "severity": 2,
+        "prim_path": "/World/Defects/D04/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "top",
+        "z": 0.8468767674923433,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.44475606623645964,
+          0.060246465015313326
+        ],
+        "variant": 1,
+        "mesh_seed": 846428920,
+        "severity": 2,
+        "prim_path": "/World/Defects/D04/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "runoff",
+        "location": "top",
+        "z": 0.7918389311965237,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.06,
+          0.1100756725916393
+        ],
+        "variant": 1,
+        "mesh_seed": 1841261663,
+        "severity": 2,
+        "prim_path": "/World/Defects/D04/Corrosion_2"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "bottom",
+        "z": 0.046487035074182316,
+        "angle": -1.2722442464359691,
+        "size": [
+          0.3624383660747275,
+          0.08697407014836463
+        ],
+        "variant": 0,
+        "mesh_seed": 907713895,
+        "severity": 2,
+        "prim_path": "/World/Defects/D04/Corrosion_3"
+      }
+    ],
     "shape": {
       "max_radius": 0.29,
       "lid_rise": 0.0,
@@ -154,10 +250,40 @@
     "radius": 0.29,
     "height": 0.88,
     "source_strength": 1,
-    "state": "clean",
-    "faults": [],
+    "state": "residue",
+    "faults": [
+      "residue"
+    ],
     "corrosion_severity": 0,
-    "defects": [],
+    "defects": [
+      {
+        "type": "spill",
+        "subtype": "dried_residue",
+        "prim_path": "/World/Defects/D06/Spill_2",
+        "centre_xy": [
+          4.553986424247207,
+          5.103692337423566
+        ],
+        "size": [
+          0.32147146494952245,
+          0.6026360384682348
+        ],
+        "z": 0.002,
+        "angle": 1.473600986743596
+      },
+      {
+        "type": "spill",
+        "subtype": "dry_deposit",
+        "prim_path": "/World/Defects/D06/Spill_3",
+        "angle": 1.473600986743596,
+        "z": 0.79,
+        "size": [
+          0.14,
+          0.075
+        ],
+        "mesh_seed": 652926460
+      }
+    ],
     "shape": {
       "max_radius": 0.29,
       "lid_rise": 0.0,
@@ -266,10 +392,83 @@
     "radius": 0.29,
     "height": 0.88,
     "source_strength": 1,
-    "state": "clean",
-    "faults": [],
-    "corrosion_severity": 0,
-    "defects": [],
+    "state": "corrosion+leak",
+    "faults": [
+      "corrosion",
+      "leak"
+    ],
+    "corrosion_severity": 3,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "scrape",
+        "z": 0.49148208801098286,
+        "angle": -1.7030885378385276,
+        "size": [
+          0.4049013869083915,
+          0.065
+        ],
+        "variant": 0,
+        "mesh_seed": 968499809,
+        "severity": 3,
+        "prim_path": "/World/Defects/D10/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "bottom",
+        "z": 0.06257629342566623,
+        "angle": -1.9009287987990053,
+        "size": [
+          0.32254846776950685,
+          0.11915258685133245
+        ],
+        "variant": 1,
+        "mesh_seed": 1889640181,
+        "severity": 3,
+        "prim_path": "/World/Defects/D10/Corrosion_1"
+      },
+      {
+        "type": "spill",
+        "subtype": "wet_puddle",
+        "prim_path": "/World/Defects/D10/Spill_0",
+        "centre_xy": [
+          4.592385246531998,
+          6.925151990316945
+        ],
+        "size": [
+          0.2642296843761458,
+          0.5558338839519824
+        ],
+        "z": 0.002,
+        "angle": -1.3965583694878694
+      },
+      {
+        "type": "spill",
+        "subtype": "wet_trail",
+        "prim_path": "/World/Defects/D10/Spill_1",
+        "angle": -1.3965583694878694,
+        "z": 0.44,
+        "size": [
+          0.065,
+          0.8200000000000001
+        ],
+        "mesh_seed": 245516522
+      },
+      {
+        "type": "spill",
+        "subtype": "wet_base_band",
+        "prim_path": "/World/Defects/D10/Spill_4",
+        "angle": -1.3965583694878694,
+        "z": 0.04,
+        "size": [
+          0.14,
+          0.035
+        ],
+        "mesh_seed": 232882008
+      }
+    ],
     "shape": {
       "max_radius": 0.29,
       "lid_rise": 0.0,
@@ -322,10 +521,88 @@
     "radius": 0.29,
     "height": 0.88,
     "source_strength": 1,
-    "state": "clean",
-    "faults": [],
-    "corrosion_severity": 0,
-    "defects": [],
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 3,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "bottom",
+        "z": 0.07407400097749747,
+        "angle": -1.870073598901865,
+        "size": [
+          0.4439810717600817,
+          0.14214800195499494
+        ],
+        "variant": 1,
+        "mesh_seed": 1081530687,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage4",
+        "location": "bottom",
+        "z": 0.03312323250765666,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.44475606623645964,
+          0.060246465015313326
+        ],
+        "variant": 1,
+        "mesh_seed": 846428920,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "rust_flakes",
+        "location": "bottom",
+        "z": 0.03312323250765666,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.12,
+          0.08
+        ],
+        "variant": 1,
+        "mesh_seed": 1841261663,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_2"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "hoop",
+        "z": 0.29333333333333333,
+        "angle": -2.177135078897793,
+        "size": [
+          0.45895367670496595,
+          0.10873150982241825
+        ],
+        "variant": 0,
+        "mesh_seed": 1033071480,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_3"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "runoff",
+        "location": "hoop",
+        "z": 0.23908538266151388,
+        "angle": -2.177135078897793,
+        "size": [
+          0.06,
+          0.1084959013436389
+        ],
+        "variant": 0,
+        "mesh_seed": 907713895,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_4"
+      }
+    ],
     "shape": {
       "max_radius": 0.29,
       "lid_rise": 0.0,
@@ -462,10 +739,58 @@
     "radius": 0.4,
     "height": 1.2,
     "source_strength": 20,
-    "state": "clean",
-    "faults": [],
-    "corrosion_severity": 0,
-    "defects": [],
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 1,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "tea_stain",
+        "location": "weld",
+        "z": 1.0011552046919878,
+        "angle": -1.870073598901865,
+        "size": [
+          0.28265404784005443,
+          0.1837251310960354
+        ],
+        "variant": 1,
+        "mesh_seed": 1081530687,
+        "severity": 1,
+        "prim_path": "/World/Defects/D17/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "pitting",
+        "location": "bottom",
+        "z": 0.04212323250765666,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.17790242649458385,
+          0.060246465015313326
+        ],
+        "variant": 1,
+        "mesh_seed": 846428920,
+        "severity": 1,
+        "prim_path": "/World/Defects/D17/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "pitting",
+        "location": "weld",
+        "z": 1.120634245088791,
+        "angle": -2.177135078897793,
+        "size": [
+          0.18358147068198635,
+          0.10873150982241825
+        ],
+        "variant": 1,
+        "mesh_seed": 172656924,
+        "severity": 1,
+        "prim_path": "/World/Defects/D17/Corrosion_2"
+      }
+    ],
     "shape": {
       "max_radius": 0.4,
       "lid_rise": 0.0,
@@ -490,10 +815,58 @@
     "radius": 0.4,
     "height": 1.2,
     "source_strength": 20,
-    "state": "clean",
-    "faults": [],
-    "corrosion_severity": 0,
-    "defects": [],
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 3,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "pitting",
+        "location": "weld",
+        "z": 1.1276379183084861,
+        "angle": -2.0115313082750577,
+        "size": [
+          0.13224129453426525,
+          0.09472416338302786
+        ],
+        "variant": 1,
+        "mesh_seed": 1965527187,
+        "severity": 3,
+        "prim_path": "/World/Defects/D18/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "pitting",
+        "location": "weld",
+        "z": 1.1178134365446233,
+        "angle": -1.4260502857462218,
+        "size": [
+          0.1381061370688959,
+          0.11437312691075371
+        ],
+        "variant": 0,
+        "mesh_seed": 335903540,
+        "severity": 3,
+        "prim_path": "/World/Defects/D18/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "crevice",
+        "location": "weld",
+        "z": 1.1175796938329703,
+        "angle": -0.9237035415950271,
+        "size": [
+          0.1851309719722667,
+          0.11484061233405932
+        ],
+        "variant": 0,
+        "mesh_seed": 1045664770,
+        "severity": 3,
+        "prim_path": "/World/Defects/D18/Corrosion_2"
+      }
+    ],
     "shape": {
       "max_radius": 0.4,
       "lid_rise": 0.0,
@@ -546,10 +919,40 @@
     "radius": 0.4,
     "height": 1.2,
     "source_strength": 20,
-    "state": "clean",
-    "faults": [],
+    "state": "leak",
+    "faults": [
+      "leak"
+    ],
     "corrosion_severity": 0,
-    "defects": [],
+    "defects": [
+      {
+        "type": "spill",
+        "subtype": "wet_puddle",
+        "prim_path": "/World/Defects/D20/Spill_0",
+        "centre_xy": [
+          11.891671759786428,
+          5.214211113149707
+        ],
+        "size": [
+          0.37095192575604785,
+          0.6159738637274391
+        ],
+        "z": 0.002,
+        "angle": 1.7324660047745728
+      },
+      {
+        "type": "spill",
+        "subtype": "wet_trail",
+        "prim_path": "/World/Defects/D20/Spill_1",
+        "angle": 1.7324660047745728,
+        "z": 0.6,
+        "size": [
+          0.065,
+          1.14
+        ],
+        "mesh_seed": 1153237677
+      }
+    ],
     "shape": {
       "max_radius": 0.4,
       "lid_rise": 0.0,
@@ -686,10 +1089,86 @@
     "radius": 0.4,
     "height": 1.2,
     "source_strength": 20,
-    "state": "clean",
-    "faults": [],
-    "corrosion_severity": 0,
-    "defects": [],
+    "state": "corrosion+residue",
+    "faults": [
+      "corrosion",
+      "residue"
+    ],
+    "corrosion_severity": 2,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "crevice",
+        "location": "weld",
+        "z": 1.102409039879927,
+        "angle": -1.1089030573832197,
+        "size": [
+          0.10042192679198689,
+          0.1451819202401457
+        ],
+        "variant": 1,
+        "mesh_seed": 1296733791,
+        "severity": 2,
+        "prim_path": "/World/Defects/D25/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "crevice",
+        "location": "bottom",
+        "z": 0.07861475053675408,
+        "angle": -2.217376347080707,
+        "size": [
+          0.12865004156243298,
+          0.13322950107350817
+        ],
+        "variant": 1,
+        "mesh_seed": 1934500994,
+        "severity": 2,
+        "prim_path": "/World/Defects/D25/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "crevice",
+        "location": "weld",
+        "z": 1.139733205243622,
+        "angle": -1.6510322653004488,
+        "size": [
+          0.15989621047024188,
+          0.07053358951275597
+        ],
+        "variant": 0,
+        "mesh_seed": 1954263999,
+        "severity": 2,
+        "prim_path": "/World/Defects/D25/Corrosion_2"
+      },
+      {
+        "type": "spill",
+        "subtype": "dried_residue",
+        "prim_path": "/World/Defects/D25/Spill_2",
+        "centre_xy": [
+          15.960971221724845,
+          6.768370382182713
+        ],
+        "size": [
+          0.2824851842484339,
+          0.6354921184970517
+        ],
+        "z": 0.002,
+        "angle": -1.6279919198621542
+      },
+      {
+        "type": "spill",
+        "subtype": "dry_deposit",
+        "prim_path": "/World/Defects/D25/Spill_3",
+        "angle": -1.6279919198621542,
+        "z": 1.1099999999999999,
+        "size": [
+          0.14,
+          0.075
+        ],
+        "mesh_seed": 1665082143
+      }
+    ],
     "shape": {
       "max_radius": 0.4,
       "lid_rise": 0.0,
