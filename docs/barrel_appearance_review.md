@@ -1,5 +1,8 @@
 # Barrel appearance and two-cue screening study
 
+For implementation, reproduction and full-hall integration, start with the
+[technical barrel design handoff](barrel_design_handoff.md).
+
 This is an isolated design review, not a replacement of the full-hall dataset.
 The source photograph collage is used as a visual reference; no stock image or
 watermark is copied into the procedural textures. The supplied research notes
