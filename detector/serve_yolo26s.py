@@ -8,6 +8,7 @@ import sys
 import modal
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, '/workspace/detector')
 from training_image import image
 
 RUN_ID = os.environ.get('DETECTOR_MODEL_RUN', '')

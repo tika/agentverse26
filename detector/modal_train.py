@@ -13,6 +13,7 @@ import modal
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(Path(__file__).resolve().parent))
+sys.path.insert(0,'/workspace/detector')
 from training_image import image
 
 app=modal.App('agentverse-yolo26s-training')
