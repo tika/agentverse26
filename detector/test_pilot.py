@@ -46,6 +46,10 @@ class PilotTests(unittest.TestCase):
         self.assertEqual(len(d1),2)
         self.assertTrue(any(b['xyxy']==[10,80,18,84] for b in d1))
 
+    def test_camera_clearance_includes_neighbour_behind_camera_centre(self):
+        entries=[dict(id='D01',x=0,y=0),dict(id='D02',x=1.05,y=0)]
+        self.assertFalse(clear_inspection_ray([1.,0,.6],[0,0,.47],entries,'D01'))
+
     def test_reproducible_independent_labels_and_shape_ranges(self):
         self.assertEqual(scene_spec(4),scene_spec(4))
         conditions_by_plate={}
@@ -70,6 +74,16 @@ class PilotTests(unittest.TestCase):
             counts=export_frame(directory,[{'id':'D01','bulge':True}],{})
             self.assertEqual(counts,{'drum':1,'corrosion':1,'bulge':1})
             self.assertEqual({line.split()[0] for line in (directory/'labels.txt').read_text().splitlines()},{'0','1','2'})
+
+    def test_export_cropped_two_pixel_bulged_drum_does_not_invert_preview_box(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory=Path(temp)
+            Image.new('RGB',(640,640),(120,120,100)).save(directory/'rgb_0000.png')
+            dtype=[('semanticId','i4'),('x_min','i4'),('y_min','i4'),('x_max','i4'),('y_max','i4')]
+            np.save(directory/'bounding_box_2d_tight_0000.npy',np.array([(1,638,100,640,500)],dtype=dtype))
+            (directory/'bounding_box_2d_tight_labels_0000.json').write_text(json.dumps({'1':{'class':'drum','drum_id':'d01'}}))
+            counts=export_frame(directory,[{'id':'D01','bulge':True}],{})
+            self.assertEqual(counts,{'drum':1,'corrosion':0,'bulge':1})
 
 
 if __name__=='__main__':unittest.main()

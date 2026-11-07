@@ -11,6 +11,7 @@ def clear_inspection_ray(eye,target,entries,target_id):
     length2=dx*dx+dy*dy
     for entry in entries:
         if entry['id']==target_id:continue
+        if math.hypot(entry['x']-eye[0],entry['y']-eye[1])<.36:return False
         t=((entry['x']-eye[0])*dx+(entry['y']-eye[1])*dy)/length2
         if 0<=t<=1:
             distance=math.hypot(entry['x']-(eye[0]+t*dx),entry['y']-(eye[1]+t*dy))

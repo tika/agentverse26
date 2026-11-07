@@ -102,6 +102,7 @@ def main():
     parser.add_argument('--publish',help='Build and upload this named dataset release after validation')
     parser.add_argument('--resume',type=Path,help='Previous local run with generation.json; retry missing seeds only')
     parser.add_argument('--benchmark-l40s',action='store_true',help='Matched L40S control for first RTX scene')
+    parser.add_argument('--preflight-seed',type=int,help='Run this planned scene first without changing split assignments')
     args=parser.parse_args()
     from detector.dataset_release import check_workspace,validate_seed
     check_workspace(args.workspace)
@@ -143,6 +144,9 @@ def main():
                 # Only archive this run's failed local outputs; completed ones are immutable.
                 folder.rename(output/(folder.name+'_failed_'+uuid.uuid4().hex[:6]))
     pending=[j for j in jobs if j['seed'] not in complete]
+    if args.preflight_seed is not None:
+        if args.preflight_seed not in {j['seed'] for j in jobs}:raise SystemExit('Preflight seed is not in the plan')
+        pending.sort(key=lambda j:j['seed']!=args.preflight_seed)
     summary=dict(run_id=run_id,requested_gpus=workers,target_jobs=len(jobs),gpu_type=args.gpu,
                  target_images=target_images,completed_images=sum(j['frames'] for j in jobs if j['seed'] in complete),
                  state='starting',workers=[],started_utc=datetime.now(timezone.utc).isoformat())

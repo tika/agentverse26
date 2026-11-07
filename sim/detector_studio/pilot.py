@@ -67,7 +67,9 @@ def export_frame(directory, entries, camera_meta):
         x0,y0,x1,y1=b['xyxy']
         lines.append(f"{b['class_id']} {(x0+x1)/1280:.7f} {(y0+y1)/1280:.7f} {(x1-x0)/640:.7f} {(y1-y0)/640:.7f}")
         color=colors[b['class_id']]
-        offset=3 if b['class_id']==2 else 0
+        # A cropped neighbouring drum may be only 2px wide. Never invert a
+        # rectangle while drawing its optional bulge inset; labels stay exact.
+        offset=min(3,max(0,(x1-x0-1)//2),max(0,(y1-y0-1)//2)) if b['class_id']==2 else 0
         draw.rectangle((x0+offset,y0+offset,x1-offset,y1-offset),outline=color,width=1)
         if b['class_name']!='corrosion':
             draw.text((x0+2,y0+2+12*offset),b['class_name']+' '+b['internal_id'],fill=color,stroke_width=1,stroke_fill='black')
