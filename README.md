@@ -162,6 +162,24 @@ See [Isaac development methods](https://docs.isaacsim.omniverse.nvidia.com/6.2.0
 [Isaac performance guidance](https://docs.isaacsim.omniverse.nvidia.com/6.2.0/reference_material/sim_performance_optimization_handbook.html),
 and [Modal Volume reload semantics](https://modal.com/docs/guide/volumes).
 
+### Hot hall worker for development
+
+One Modal GPU keeps the full hall and walking Spot loaded. Each request script
+runs on the live stage, and a walk video comes back in about a minute. A cold
+start takes 3–5 minutes.
+
+```sh
+alias hot='uv run -q --python 3.13 --with modal python tools/hot_hall.py'
+hot up                                  # ~2 min to HOT_READY; stops itself after 4 h
+hot run scripts/hot/walk_aisle.py       # opens out/hot/<id>/*.mp4
+hot down
+```
+
+Request scripts get `walk(route, name)`, `still(eye, target, name)`,
+`stage`, `spot`, `sensor`, `inventory`, `OUT` and a persistent `state` dict.
+See `sim/hot_server.py`. Definitions persist between requests. Restart the
+worker after editing `sim/*.py`.
+
 ### Warm walking-video worker
 
 ```sh
