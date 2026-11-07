@@ -187,8 +187,9 @@ def main():
                 else:
                     (output/'benchmark_failed.log').write_text(result['log']);print('L40S control failed; no speedup claim',flush=True)
             if failures:raise SystemExit(f'Compatibility scene failed. See {output}; remaining jobs were not launched.')
-            for result in configured.starmap([(j['seed'],run_id,j['frames'],args.gpu) for j in pending[1:]],
-                                              order_outputs=False,return_exceptions=True):accept(result)
+            if len(pending)>1:
+                for result in configured.starmap([(j['seed'],run_id,j['frames'],args.gpu) for j in pending[1:]],
+                                                  order_outputs=False,return_exceptions=True):accept(result)
         summary['dispatch_through_download_seconds']=round(time.perf_counter()-batch_started,3)
     summary.update(state='failed' if failures else 'complete',failed_seeds=failures,
                    total_wall_seconds=round(time.perf_counter()-started,3),

@@ -69,6 +69,12 @@ Do not add `--plan` or `--publish` to this check. The JSON speedup after the fir
 frame is null: one frame cannot measure steady-state throughput. Report the
 observed startup/capture times and stop; do not automatically move on below.
 
+The completed check on 7 November measured 106.16 s on RTX PRO 6000 and 166.15 s
+on L40S (36.1% less time for the RTX job). See
+[the recorded measurement](validation/gpu_one_image_benchmark.json). This includes
+scene construction, warm-up, capture, export and worker overhead. It does not
+measure sustained rendering throughput; a full dataset time is still an estimate.
+
 ## Prepared full generation command: only after the user requests it
 
 The checked-in `detector/plans/barrels_1200_v1.json` is the authoritative plan.
