@@ -47,7 +47,7 @@ def build_scene(seed=42, include_drums=True):
         'floor':material(stage,'Floor',(.38,.38,.38),.72),
         'side':material(stage,'SideWall',(.40,.44,.47),.55,.25, textures={'normal':normal_path},uv_scale=(20,6)),
         'end':material(stage,'EndWall',(.40,.44,.47),.55,.25,textures={'normal':normal_path},uv_scale=(12,6)),
-        'ceiling':material(stage,'Ceiling',(.65,.65,.65),.85),
+        'ceiling':material(stage,'Ceiling',(.78,.78,.78),.85,emission=(.08,.08,.08)),
         'steel':material(stage,'Steel',(.23,.27,.28),.43,.65),
         'duct':material(stage,'Duct',(.38,.42,.42),.55,.45),
         'yellow':material(stage,'CraneYellow',(.72,.48,.035),.48,.25),
@@ -73,9 +73,9 @@ def build_scene(seed=42, include_drums=True):
     for side,y in ((-1,3),(1,9)):
         box(stage,root+f'Roof{side+1}',(10,y,5.6),(20.5,6.05,.12),mats['ceiling'],
             rotation=(side * -math.degrees(math.atan2(.8,6)),0,0))
-    skylight = material(stage,'Skylight',(.74,.77,.79),.45,emission=(.5,.5,.5))
+    skylight = material(stage,'Skylight',(.74,.77,.79),.45,emission=(3.,3.,3.))
     for x in (4,10,16):
-        box(stage,root+f'Skylight{x}',(x,4.4,5.79),(1.4,1.8,.025),skylight,
+        box(stage,root+f'Skylight{x}',(x,4.4,5.69),(1.6,2.2,.025),skylight,
             rotation=(math.degrees(math.atan2(.8,6)),0,0))
     def beam(name,a,b,width=.09):
         vector=Gf.Vec3d(*b)-Gf.Vec3d(*a)
@@ -132,12 +132,12 @@ def build_scene(seed=42, include_drums=True):
             light.CreateHeightAttr(.45)
             # Stage-2 F4: neutral white (no colour-temperature tint; the RTX tonemapper is not
             # white-balanced to 4500 K, which produced the rejected warm cast). 11000 overexposed the floor (~225/255); 6500 targets ~110-130.
-            light.CreateIntensityAttr(6500 * (.4 if (row,number)==(2,4) else 1))
+            light.CreateIntensityAttr(10000 * (.4 if (row,number)==(2,4) else 1))
             light.CreateEnableColorTemperatureAttr(False)
             light.CreateColorAttr(Gf.Vec3f(1.0, 1.0, 1.0))
             UsdGeom.Xformable(light).AddTranslateOp().Set(Gf.Vec3d(x,y,4.81))
     ambient = UsdLux.DomeLight.Define(stage,root+'Lights/Ambient')
-    ambient.CreateIntensityAttr(100)
+    ambient.CreateIntensityAttr(180)
     ambient.CreateColorAttr(Gf.Vec3f(1.0, 1.0, 1.0))
     UsdLux.ShadowAPI.Apply(ambient.GetPrim()).CreateShadowEnableAttr(False)
     write_aisles()
