@@ -25,7 +25,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "faded_yellow"
+    "paint_color": "faded_yellow",
+    "display_id": "A01"
   },
   {
     "id": "D02",
@@ -53,7 +54,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "faded_yellow"
+    "paint_color": "faded_yellow",
+    "display_id": "A02"
   },
   {
     "id": "D03",
@@ -114,7 +116,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "faded_yellow"
+    "paint_color": "faded_yellow",
+    "display_id": "A03"
   },
   {
     "id": "D04",
@@ -205,7 +208,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "mid_grey"
+    "paint_color": "mid_grey",
+    "display_id": "A04"
   },
   {
     "id": "D05",
@@ -233,7 +237,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "faded_yellow"
+    "paint_color": "faded_yellow",
+    "display_id": "B01"
   },
   {
     "id": "D06",
@@ -291,7 +296,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "faded_yellow"
+    "paint_color": "faded_yellow",
+    "display_id": "B02"
   },
   {
     "id": "D07",
@@ -319,7 +325,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "faded_yellow"
+    "paint_color": "faded_yellow",
+    "display_id": "B03"
   },
   {
     "id": "D08",
@@ -347,7 +354,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "mid_grey"
+    "paint_color": "mid_grey",
+    "display_id": "B04"
   },
   {
     "id": "D09",
@@ -375,7 +383,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "mid_grey"
+    "paint_color": "mid_grey",
+    "display_id": "C01"
   },
   {
     "id": "D10",
@@ -476,7 +485,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "mid_grey"
+    "paint_color": "mid_grey",
+    "display_id": "C02"
   },
   {
     "id": "D11",
@@ -504,7 +514,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "mid_grey"
+    "paint_color": "mid_grey",
+    "display_id": "C03"
   },
   {
     "id": "D12",
@@ -610,7 +621,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "dark_blue"
+    "paint_color": "dark_blue",
+    "display_id": "C04"
   },
   {
     "id": "D13",
@@ -638,7 +650,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "faded_yellow"
+    "paint_color": "faded_yellow",
+    "display_id": "D01"
   },
   {
     "id": "D14",
@@ -666,7 +679,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "mid_grey"
+    "paint_color": "mid_grey",
+    "display_id": "D02"
   },
   {
     "id": "D15",
@@ -694,7 +708,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "dark_blue"
+    "paint_color": "dark_blue",
+    "display_id": "D03"
   },
   {
     "id": "D16",
@@ -722,7 +737,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": "mid_grey"
+    "paint_color": "mid_grey",
+    "display_id": "D04"
   },
   {
     "id": "D17",
@@ -798,7 +814,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "A05"
   },
   {
     "id": "D18",
@@ -874,7 +891,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "A06"
   },
   {
     "id": "D19",
@@ -902,7 +920,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "A07"
   },
   {
     "id": "D20",
@@ -960,7 +979,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "B05"
   },
   {
     "id": "D21",
@@ -988,7 +1008,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "B06"
   },
   {
     "id": "D22",
@@ -1016,7 +1037,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "B07"
   },
   {
     "id": "D23",
@@ -1044,7 +1066,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "C05"
   },
   {
     "id": "D24",
@@ -1072,7 +1095,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "C06"
   },
   {
     "id": "D25",
@@ -1176,7 +1200,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "C07"
   },
   {
     "id": "D26",
@@ -1204,7 +1229,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "D05"
   },
   {
     "id": "D27",
@@ -1232,7 +1258,8 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "D06"
   },
   {
     "id": "D28",
@@ -1260,6 +1287,7 @@
     },
     "obstructed": false,
     "internal_corrosion": false,
-    "paint_color": null
+    "paint_color": null,
+    "display_id": "D07"
   }
 ]

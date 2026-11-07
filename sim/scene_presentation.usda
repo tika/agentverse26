@@ -1456,7 +1456,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D01_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D01_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D01_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1497,7 +1497,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D02_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D02_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D02_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1538,7 +1538,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D03_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D03_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D03_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1579,7 +1579,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D04_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D04_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D04_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1620,7 +1620,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D05_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D05_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D05_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1661,7 +1661,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D06_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D06_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D06_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1702,7 +1702,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D07_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D07_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D07_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1743,7 +1743,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D08_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D08_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D08_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1784,7 +1784,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D09_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D09_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D09_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1825,7 +1825,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D10_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D10_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D10_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1866,7 +1866,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D11_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D11_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D11_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1907,7 +1907,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D12_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D12_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D12_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1948,7 +1948,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D13_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D13_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D13_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -1989,7 +1989,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D14_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D14_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D14_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2030,7 +2030,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D15_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D15_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D15_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2071,7 +2071,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D16_LLW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D16_LLW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D16_LLW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2112,7 +2112,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D17_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D17_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D17_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2153,7 +2153,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D18_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D18_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D18_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2194,7 +2194,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D19_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D19_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D19_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2235,7 +2235,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D20_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D20_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D20_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2276,7 +2276,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D21_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D21_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D21_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2317,7 +2317,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D22_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D22_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D22_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2358,7 +2358,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D23_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D23_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D23_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2399,7 +2399,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D24_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D24_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D24_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2440,7 +2440,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D25_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D25_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D25_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2481,7 +2481,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D26_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D26_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D26_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2522,7 +2522,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D27_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D27_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D27_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"
@@ -2563,7 +2563,7 @@ def Xform "World"
                 def Shader "diffuseColor"
                 {
                     uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @assets/generated/plate_D28_ILW_v1.png@
+                    asset inputs:file = @assets/generated/plate_D28_ILW_v2.png@
                     token inputs:sourceColorSpace = "sRGB"
                     float2 inputs:st.connect = </World/Hall/Materials/DrumPlate_D28_ILW/TransformUV.outputs:result>
                     token inputs:wrapS = "repeat"

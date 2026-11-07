@@ -24,15 +24,18 @@ def nominal_entry(entry,category):
 def make_inventory(seed=42):
     rng=np.random.default_rng(seed)
     entries=[]
+    first_slot=1
     for category,xs in (('LLW',(3.0,4.5,6.0,7.5)),('ILW',(12.0,14.0,16.0))):
         for row,y,aisle,_ in ROWS:
-            for x in xs:
+            for slot,x in enumerate(xs, start=first_slot):
                 name=f'D{len(entries)+1:02d}'
                 entry={'id':name,'category':category,'zone':'A' if x<10 else 'B','row':row,
+                       'display_id':f'{row}{slot:02d}',
                        'x':x,'y':y,'yaw':float(rng.uniform(0,2*math.pi)),'facing_aisle':aisle,
                        'prim_path':'/World/Drums/'+name,'scene_seed':seed,
                        'appearance_seed':int(rng.integers(2**31))}
                 entries.append(nominal_entry(entry,category))
+        first_slot+=len(xs)
     return entries
 
 

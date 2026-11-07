@@ -55,7 +55,7 @@ def clean_surfaces(seed=42):
 
 
 def plate_texture(entry):
-    path=ASSETS/f'plate_{entry["id"]}_{entry["category"]}_v1.png'
+    path=ASSETS/f'plate_{entry["id"]}_{entry["category"]}_v2.png'
     if path.exists(): return {'diffuseColor':path}
     ASSETS.mkdir(parents=True,exist_ok=True)
     background=(225,190,45)
@@ -65,7 +65,7 @@ def plate_texture(entry):
     for angle in (30,150,270): draw.pieslice((29,28,143,142),angle,angle+60,fill=(22,22,18))
     draw.ellipse((67,66,105,104),fill=background)
     draw.ellipse((78,77,94,93),fill=(22,22,18))
-    for text,y,size in ((entry['category'],30,90),(entry['id'],132,83)):
+    for text,y,size in ((entry['category'],30,90),(entry['display_id'],132,99)):
         label=text_image(text,size,(20,22,18,255))
         label.thumbnail((300,90))
         image.paste(label,(177,y),label)

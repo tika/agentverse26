@@ -242,3 +242,25 @@ dose-rate history and configured thresholds in simulation units, with air
 temperature and humidity alongside. The event log records dose, position,
 accumulated exposure and the veto. This is a simulated gamma survey, and
 the overlay reports dose at the sampled position.
+
+### Read a drum plate with Cosmos
+
+The four drum rows are A to D. Plates use slots 01 to 07 in order of
+increasing hall X. `sim/drums.json` maps the printed `display_id` to the
+stable internal ID used by existing scene layouts and training labels.
+
+On a CUDA machine with a local Cosmos Reason 2 checkpoint, pass a camera
+image with one clearly visible plate. Use `--box` to isolate a drum or plate
+from a larger frame. Coordinates refer to the original image in pixels.
+
+```sh
+python tools/read_drum_plate.py frame.png --model /path/to/cosmos-reason2-2b \
+  --box LEFT TOP RIGHT BOTTOM
+```
+
+Cosmos reads the crop and returns a printed ID or `null` for an unreadable
+or ambiguous plate. The reader receives image pixels without simulator
+inventory. Use the returned ID to associate evidence with an inventory
+record after the read. The reader is separate from the current walking demo.
+
+See [how to integrate the proposed sensor payloads](docs/spot_development.md#adding-sensor-payloads).
