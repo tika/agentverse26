@@ -3,4 +3,3 @@ __pycache__/
 .venv/
 .runtime/
 sim/out/
-sim/assets/generated/

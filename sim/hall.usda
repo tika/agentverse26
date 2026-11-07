@@ -1,0 +1,2021 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    endTimeCode = 1000000
+    metersPerUnit = 1
+    startTimeCode = 0
+    timeCodesPerSecond = 60
+    upAxis = "Z"
+)
+
+def "Render" (
+    hide_in_stage_window = true
+    no_delete = true
+)
+{
+    def "OmniverseKit"
+    {
+        def "HydraTextures" (
+            hide_in_stage_window = true
+            no_delete = true
+        )
+        {
+            def RenderProduct "omni_kit_widget_viewport_ViewportTexture_0" (
+                prepend apiSchemas = ["OmniRtxSettingsCommonAdvancedAPI_1", "OmniRtxSettingsRtAdvancedAPI_1", "OmniRtxSettingsPtAdvancedAPI_1", "OmniRtxSettingsParticleFieldAPI_1", "OmniRtxPostColorGradingAPI_1", "OmniRtxPostChromaticAberrationAPI_1", "OmniRtxPostBloomPhysicalAPI_1", "OmniRtxPostMatteObjectAPI_1", "OmniRtxPostCompositingAPI_1", "OmniRtxPostDofAPI_1", "OmniRtxPostMotionBlurAPI_1", "OmniRtxPostTvNoiseAPI_1", "OmniRtxPostTonemapIrayReinhardAPI_1", "OmniRtxPostDebugSettingsAPI_1", "OmniRtxDebugSettingsAPI_1"]
+                hide_in_stage_window = true
+                no_delete = true
+            )
+            {
+                rel camera = </OmniverseKit_Persp>
+                token omni:rtx:ambientOcclusion:denoiserMode = "none"
+                token omni:rtx:background:source:texture:textureMode = "repeatMirrored"
+                token omni:rtx:background:source:type = "domeLight"
+                bool omni:rtx:debug:view:pixelDebug:enableFixedTextPos = 1
+                token omni:rtx:directLighting:sampledLighting:denoisingTechnique = "None"
+                bool omni:rtx:dlss:frameGeneration = 0
+                bool omni:rtx:indirectDiffuse:denoiser:enabled = 0
+                bool omni:rtx:material:db:syncLoads = 1
+                token omni:rtx:post:dlss:execMode = "performance"
+                bool omni:rtx:post:registeredCompositing:invertColorCorrection = 1
+                bool omni:rtx:post:registeredCompositing:invertToneMap = 1
+                bool omni:rtx:pt:adaptiveSampling:filterError = 0
+                uint omni:rtx:pt:adaptiveSampling:fixedSppIterations = 2
+                int omni:rtx:pt:clampSpp = 64
+                uint omni:rtx:pt:limits:maxBounces = 3
+                uint omni:rtx:pt:limits:maxGlossyBounces = 3
+                uint omni:rtx:pt:maxSamplesPerLaunch = 2073600
+                uint omni:rtx:pt:mgpu:maxPixelsPerRegionExponent = 12
+                int omni:rtx:pt:samplesPerIteration = 64
+                uint omni:rtx:pt:samplesPerPixel = 64
+                bool omni:rtx:reflections:denoiser:enabled = 0
+                token omni:rtx:rendermode = "RealTimePathTracing"
+                color3f omni:rtx:rt:ambientLight:color = (0.1, 0.1, 0.1)
+                bool omni:rtx:rt:demoire = 0
+                bool omni:rtx:rt:ecoMode:enabled
+                bool omni:rtx:rt:lightcache:spatialCache:dontResolveConflicts = 1
+                int omni:rtx:rt:sss:samples = 1
+                uint omni:rtx:rtpt:maxVolumeBounces = 15
+                float omni:rtx:rtpt:modulatingRoughnessThreshold = 0.08
+                bool omni:rtx:scene:hydra:materialSyncLoads = 1
+                bool omni:rtx:scene:hydra:mdlMaterialWarmup = 1
+                int omni:rtx:scene:hydra:subdivision:refinementLevel = 0
+                rel orderedVars = </Render/Vars/LdrColor>
+                custom bool overrideClipRange = 0
+                uniform int2 resolution = (1280, 720)
+            }
+
+            def RenderProduct "Replicator" (
+                prepend apiSchemas = ["OmniRtxSettingsCommonAdvancedAPI_1", "OmniRtxSettingsRtAdvancedAPI_1", "OmniRtxSettingsPtAdvancedAPI_1", "OmniRtxSettingsParticleFieldAPI_1", "OmniRtxPostColorGradingAPI_1", "OmniRtxPostChromaticAberrationAPI_1", "OmniRtxPostBloomPhysicalAPI_1", "OmniRtxPostMatteObjectAPI_1", "OmniRtxPostCompositingAPI_1", "OmniRtxPostDofAPI_1", "OmniRtxPostMotionBlurAPI_1", "OmniRtxPostTvNoiseAPI_1", "OmniRtxPostTonemapIrayReinhardAPI_1", "OmniRtxPostDebugSettingsAPI_1", "OmniRtxDebugSettingsAPI_1"]
+                hide_in_stage_window = true
+                no_delete = true
+            )
+            {
+                rel camera = </World/ReviewCameras/front_overview>
+                custom string ogPostProcessPath = "/Render/OmniverseKit/HydraTextures/Replicator/PostRender"
+                token omni:rtx:ambientOcclusion:denoiserMode = "none"
+                token omni:rtx:background:source:texture:textureMode = "repeatMirrored"
+                token omni:rtx:background:source:type = "domeLight"
+                bool omni:rtx:debug:view:pixelDebug:enableFixedTextPos = 1
+                token omni:rtx:directLighting:sampledLighting:denoisingTechnique = "None"
+                bool omni:rtx:dlss:frameGeneration = 0
+                bool omni:rtx:indirectDiffuse:denoiser:enabled = 0
+                bool omni:rtx:material:db:syncLoads = 1
+                token omni:rtx:post:dlss:execMode = "performance"
+                bool omni:rtx:post:registeredCompositing:invertColorCorrection = 1
+                bool omni:rtx:post:registeredCompositing:invertToneMap = 1
+                bool omni:rtx:pt:adaptiveSampling:filterError = 0
+                uint omni:rtx:pt:adaptiveSampling:fixedSppIterations = 2
+                int omni:rtx:pt:clampSpp = 64
+                uint omni:rtx:pt:limits:maxBounces = 3
+                uint omni:rtx:pt:limits:maxGlossyBounces = 3
+                uint omni:rtx:pt:maxSamplesPerLaunch = 2073600
+                uint omni:rtx:pt:mgpu:maxPixelsPerRegionExponent = 12
+                int omni:rtx:pt:samplesPerIteration = 64
+                uint omni:rtx:pt:samplesPerPixel = 64
+                bool omni:rtx:reflections:denoiser:enabled = 0
+                token omni:rtx:rendermode = "RealTimePathTracing"
+                color3f omni:rtx:rt:ambientLight:color = (0.1, 0.1, 0.1)
+                bool omni:rtx:rt:demoire = 0
+                bool omni:rtx:rt:ecoMode:enabled
+                bool omni:rtx:rt:lightcache:spatialCache:dontResolveConflicts = 1
+                int omni:rtx:rt:sss:samples = 1
+                uint omni:rtx:rtpt:maxVolumeBounces = 15
+                float omni:rtx:rtpt:modulatingRoughnessThreshold = 0.08
+                bool omni:rtx:scene:hydra:materialSyncLoads = 1
+                bool omni:rtx:scene:hydra:mdlMaterialWarmup = 1
+                int omni:rtx:scene:hydra:subdivision:refinementLevel = 0
+                rel orderedVars = [
+                    </Render/Vars/LdrColorSD>,
+                    </Render/Vars/LdrColor>,
+                ]
+                custom bool overrideClipRange = 0
+                uniform int2 resolution = (1024, 640)
+            }
+
+            def RenderProduct "Replicator_01" (
+                prepend apiSchemas = ["OmniRtxSettingsCommonAdvancedAPI_1", "OmniRtxSettingsRtAdvancedAPI_1", "OmniRtxSettingsPtAdvancedAPI_1", "OmniRtxSettingsParticleFieldAPI_1", "OmniRtxPostColorGradingAPI_1", "OmniRtxPostChromaticAberrationAPI_1", "OmniRtxPostBloomPhysicalAPI_1", "OmniRtxPostMatteObjectAPI_1", "OmniRtxPostCompositingAPI_1", "OmniRtxPostDofAPI_1", "OmniRtxPostMotionBlurAPI_1", "OmniRtxPostTvNoiseAPI_1", "OmniRtxPostTonemapIrayReinhardAPI_1", "OmniRtxPostDebugSettingsAPI_1", "OmniRtxDebugSettingsAPI_1"]
+                hide_in_stage_window = true
+                no_delete = true
+            )
+            {
+                rel camera = </World/ReviewCameras/rear_overview>
+                custom string ogPostProcessPath = "/Render/OmniverseKit/HydraTextures/Replicator_01/PostRender"
+                token omni:rtx:ambientOcclusion:denoiserMode = "none"
+                token omni:rtx:background:source:texture:textureMode = "repeatMirrored"
+                token omni:rtx:background:source:type = "domeLight"
+                bool omni:rtx:debug:view:pixelDebug:enableFixedTextPos = 1
+                token omni:rtx:directLighting:sampledLighting:denoisingTechnique = "None"
+                bool omni:rtx:dlss:frameGeneration = 0
+                bool omni:rtx:indirectDiffuse:denoiser:enabled = 0
+                bool omni:rtx:material:db:syncLoads = 1
+                token omni:rtx:post:dlss:execMode = "performance"
+                bool omni:rtx:post:registeredCompositing:invertColorCorrection = 1
+                bool omni:rtx:post:registeredCompositing:invertToneMap = 1
+                bool omni:rtx:pt:adaptiveSampling:filterError = 0
+                uint omni:rtx:pt:adaptiveSampling:fixedSppIterations = 2
+                int omni:rtx:pt:clampSpp = 64
+                uint omni:rtx:pt:limits:maxBounces = 3
+                uint omni:rtx:pt:limits:maxGlossyBounces = 3
+                uint omni:rtx:pt:maxSamplesPerLaunch = 2073600
+                uint omni:rtx:pt:mgpu:maxPixelsPerRegionExponent = 12
+                int omni:rtx:pt:samplesPerIteration = 64
+                uint omni:rtx:pt:samplesPerPixel = 64
+                bool omni:rtx:reflections:denoiser:enabled = 0
+                token omni:rtx:rendermode = "RealTimePathTracing"
+                color3f omni:rtx:rt:ambientLight:color = (0.1, 0.1, 0.1)
+                bool omni:rtx:rt:demoire = 0
+                bool omni:rtx:rt:ecoMode:enabled
+                bool omni:rtx:rt:lightcache:spatialCache:dontResolveConflicts = 1
+                int omni:rtx:rt:sss:samples = 1
+                uint omni:rtx:rtpt:maxVolumeBounces = 15
+                float omni:rtx:rtpt:modulatingRoughnessThreshold = 0.08
+                bool omni:rtx:scene:hydra:materialSyncLoads = 1
+                bool omni:rtx:scene:hydra:mdlMaterialWarmup = 1
+                int omni:rtx:scene:hydra:subdivision:refinementLevel = 0
+                rel orderedVars = [
+                    </Render/Vars/LdrColorSD>,
+                    </Render/Vars/LdrColor>,
+                ]
+                custom bool overrideClipRange = 0
+                uniform int2 resolution = (1024, 640)
+            }
+
+            def RenderProduct "Replicator_02" (
+                prepend apiSchemas = ["OmniRtxSettingsCommonAdvancedAPI_1", "OmniRtxSettingsRtAdvancedAPI_1", "OmniRtxSettingsPtAdvancedAPI_1", "OmniRtxSettingsParticleFieldAPI_1", "OmniRtxPostColorGradingAPI_1", "OmniRtxPostChromaticAberrationAPI_1", "OmniRtxPostBloomPhysicalAPI_1", "OmniRtxPostMatteObjectAPI_1", "OmniRtxPostCompositingAPI_1", "OmniRtxPostDofAPI_1", "OmniRtxPostMotionBlurAPI_1", "OmniRtxPostTvNoiseAPI_1", "OmniRtxPostTonemapIrayReinhardAPI_1", "OmniRtxPostDebugSettingsAPI_1", "OmniRtxDebugSettingsAPI_1"]
+                hide_in_stage_window = true
+                no_delete = true
+            )
+            {
+                rel camera = </World/ReviewCameras/entrance_detail>
+                custom string ogPostProcessPath = "/Render/OmniverseKit/HydraTextures/Replicator_02/PostRender"
+                token omni:rtx:ambientOcclusion:denoiserMode = "none"
+                token omni:rtx:background:source:texture:textureMode = "repeatMirrored"
+                token omni:rtx:background:source:type = "domeLight"
+                bool omni:rtx:debug:view:pixelDebug:enableFixedTextPos = 1
+                token omni:rtx:directLighting:sampledLighting:denoisingTechnique = "None"
+                bool omni:rtx:dlss:frameGeneration = 0
+                bool omni:rtx:indirectDiffuse:denoiser:enabled = 0
+                bool omni:rtx:material:db:syncLoads = 1
+                token omni:rtx:post:dlss:execMode = "performance"
+                bool omni:rtx:post:registeredCompositing:invertColorCorrection = 1
+                bool omni:rtx:post:registeredCompositing:invertToneMap = 1
+                bool omni:rtx:pt:adaptiveSampling:filterError = 0
+                uint omni:rtx:pt:adaptiveSampling:fixedSppIterations = 2
+                int omni:rtx:pt:clampSpp = 64
+                uint omni:rtx:pt:limits:maxBounces = 3
+                uint omni:rtx:pt:limits:maxGlossyBounces = 3
+                uint omni:rtx:pt:maxSamplesPerLaunch = 2073600
+                uint omni:rtx:pt:mgpu:maxPixelsPerRegionExponent = 12
+                int omni:rtx:pt:samplesPerIteration = 64
+                uint omni:rtx:pt:samplesPerPixel = 64
+                bool omni:rtx:reflections:denoiser:enabled = 0
+                token omni:rtx:rendermode = "RealTimePathTracing"
+                color3f omni:rtx:rt:ambientLight:color = (0.1, 0.1, 0.1)
+                bool omni:rtx:rt:demoire = 0
+                bool omni:rtx:rt:ecoMode:enabled
+                bool omni:rtx:rt:lightcache:spatialCache:dontResolveConflicts = 1
+                int omni:rtx:rt:sss:samples = 1
+                uint omni:rtx:rtpt:maxVolumeBounces = 15
+                float omni:rtx:rtpt:modulatingRoughnessThreshold = 0.08
+                bool omni:rtx:scene:hydra:materialSyncLoads = 1
+                bool omni:rtx:scene:hydra:mdlMaterialWarmup = 1
+                int omni:rtx:scene:hydra:subdivision:refinementLevel = 0
+                rel orderedVars = [
+                    </Render/Vars/LdrColorSD>,
+                    </Render/Vars/LdrColor>,
+                ]
+                custom bool overrideClipRange = 0
+                uniform int2 resolution = (1024, 640)
+            }
+
+            def RenderProduct "Replicator_03" (
+                prepend apiSchemas = ["OmniRtxSettingsCommonAdvancedAPI_1", "OmniRtxSettingsRtAdvancedAPI_1", "OmniRtxSettingsPtAdvancedAPI_1", "OmniRtxSettingsParticleFieldAPI_1", "OmniRtxPostColorGradingAPI_1", "OmniRtxPostChromaticAberrationAPI_1", "OmniRtxPostBloomPhysicalAPI_1", "OmniRtxPostMatteObjectAPI_1", "OmniRtxPostCompositingAPI_1", "OmniRtxPostDofAPI_1", "OmniRtxPostMotionBlurAPI_1", "OmniRtxPostTvNoiseAPI_1", "OmniRtxPostTonemapIrayReinhardAPI_1", "OmniRtxPostDebugSettingsAPI_1", "OmniRtxDebugSettingsAPI_1"]
+                hide_in_stage_window = true
+                no_delete = true
+            )
+            {
+                rel camera = </World/ReviewCameras/aisle2>
+                custom string ogPostProcessPath = "/Render/OmniverseKit/HydraTextures/Replicator_03/PostRender"
+                token omni:rtx:ambientOcclusion:denoiserMode = "none"
+                token omni:rtx:background:source:texture:textureMode = "repeatMirrored"
+                token omni:rtx:background:source:type = "domeLight"
+                bool omni:rtx:debug:view:pixelDebug:enableFixedTextPos = 1
+                token omni:rtx:directLighting:sampledLighting:denoisingTechnique = "None"
+                bool omni:rtx:dlss:frameGeneration = 0
+                bool omni:rtx:indirectDiffuse:denoiser:enabled = 0
+                bool omni:rtx:material:db:syncLoads = 1
+                token omni:rtx:post:dlss:execMode = "performance"
+                bool omni:rtx:post:registeredCompositing:invertColorCorrection = 1
+                bool omni:rtx:post:registeredCompositing:invertToneMap = 1
+                bool omni:rtx:pt:adaptiveSampling:filterError = 0
+                uint omni:rtx:pt:adaptiveSampling:fixedSppIterations = 2
+                int omni:rtx:pt:clampSpp = 64
+                uint omni:rtx:pt:limits:maxBounces = 3
+                uint omni:rtx:pt:limits:maxGlossyBounces = 3
+                uint omni:rtx:pt:maxSamplesPerLaunch = 2073600
+                uint omni:rtx:pt:mgpu:maxPixelsPerRegionExponent = 12
+                int omni:rtx:pt:samplesPerIteration = 64
+                uint omni:rtx:pt:samplesPerPixel = 64
+                bool omni:rtx:reflections:denoiser:enabled = 0
+                token omni:rtx:rendermode = "RealTimePathTracing"
+                color3f omni:rtx:rt:ambientLight:color = (0.1, 0.1, 0.1)
+                bool omni:rtx:rt:demoire = 0
+                bool omni:rtx:rt:ecoMode:enabled
+                bool omni:rtx:rt:lightcache:spatialCache:dontResolveConflicts = 1
+                int omni:rtx:rt:sss:samples = 1
+                uint omni:rtx:rtpt:maxVolumeBounces = 15
+                float omni:rtx:rtpt:modulatingRoughnessThreshold = 0.08
+                bool omni:rtx:scene:hydra:materialSyncLoads = 1
+                bool omni:rtx:scene:hydra:mdlMaterialWarmup = 1
+                int omni:rtx:scene:hydra:subdivision:refinementLevel = 0
+                rel orderedVars = [
+                    </Render/Vars/LdrColorSD>,
+                    </Render/Vars/LdrColor>,
+                ]
+                custom bool overrideClipRange = 0
+                uniform int2 resolution = (1024, 640)
+            }
+        }
+    }
+
+    def RenderSettings "OmniverseGlobalRenderSettings" (
+        prepend apiSchemas = ["OmniRtxSettingsGlobalRtAdvancedAPI_1", "OmniRtxSettingsGlobalPtAdvancedAPI_1"]
+        no_delete = true
+    )
+    {
+        rel products = [
+            </Render/OmniverseKit/HydraTextures/omni_kit_widget_viewport_ViewportTexture_0>,
+            </Render/OmniverseKit/HydraTextures/Replicator>,
+            </Render/OmniverseKit/HydraTextures/Replicator_01>,
+            </Render/OmniverseKit/HydraTextures/Replicator_02>,
+            </Render/OmniverseKit/HydraTextures/Replicator_03>,
+        ]
+    }
+
+    def "Vars" (
+        hide_in_stage_window = true
+        no_delete = true
+    )
+    {
+        def RenderVar "LdrColor" (
+            hide_in_stage_window = true
+            no_delete = true
+        )
+        {
+            uniform string sourceName = "LdrColor"
+            uniform token sourceType = "raw"
+        }
+    }
+}
+
+over "OmniverseKit_Persp" (
+    prepend apiSchemas = ["OmniRtxCameraAutoExposureAPI_1", "OmniRtxCameraExposureAPI_1"]
+)
+{
+    float exposure:fStop = 5
+    float exposure:iso = 400
+    float exposure:responsivity = 1.1026709
+    float exposure:time = 0.02
+}
+
+def Xform "World"
+{
+    def Xform "Hall"
+    {
+        def Scope "Materials"
+        {
+            def Material "Floor"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/Floor/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.6, 0.6, 0.6)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/Floor/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    normal3f inputs:normal.connect = </World/Hall/Materials/Floor/normal.outputs:rgb>
+                    float inputs:roughness = 0.6
+                    float inputs:roughness.connect = </World/Hall/Materials/Floor/roughness.outputs:r>
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/Floor/UV.outputs:result>
+                    float2 inputs:scale = (1, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/floor_s42_v2_diffuseColor.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/Floor/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+
+                def Shader "roughness"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/floor_s42_v2_roughness.png@
+                    token inputs:sourceColorSpace = "raw"
+                    float2 inputs:st.connect = </World/Hall/Materials/Floor/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    float outputs:r
+                }
+
+                def Shader "normal"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    float4 inputs:bias = (-1, -1, -1, 0)
+                    asset inputs:file = @assets/generated/floor_s42_v2_normal.png@
+                    float4 inputs:scale = (2, 2, 2, 1)
+                    token inputs:sourceColorSpace = "raw"
+                    float2 inputs:st.connect = </World/Hall/Materials/Floor/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    normal3f outputs:rgb
+                }
+            }
+
+            def Material "SideWall"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/SideWall/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.6, 0.6, 0.6)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/SideWall/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    normal3f inputs:normal.connect = </World/Hall/Materials/SideWall/normal.outputs:rgb>
+                    float inputs:roughness = 0.6
+                    float inputs:roughness.connect = </World/Hall/Materials/SideWall/roughness.outputs:r>
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/SideWall/UV.outputs:result>
+                    float2 inputs:scale = (4.1666665, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/wall_s42_v2_diffuseColor.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/SideWall/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+
+                def Shader "roughness"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/wall_s42_v2_roughness.png@
+                    token inputs:sourceColorSpace = "raw"
+                    float2 inputs:st.connect = </World/Hall/Materials/SideWall/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    float outputs:r
+                }
+
+                def Shader "normal"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    float4 inputs:bias = (-1, -1, -1, 0)
+                    asset inputs:file = @assets/generated/wall_s42_v2_normal.png@
+                    float4 inputs:scale = (2, 2, 2, 1)
+                    token inputs:sourceColorSpace = "raw"
+                    float2 inputs:st.connect = </World/Hall/Materials/SideWall/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    normal3f outputs:rgb
+                }
+            }
+
+            def Material "EndWall"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/EndWall/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.6, 0.6, 0.6)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/EndWall/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    normal3f inputs:normal.connect = </World/Hall/Materials/EndWall/normal.outputs:rgb>
+                    float inputs:roughness = 0.6
+                    float inputs:roughness.connect = </World/Hall/Materials/EndWall/roughness.outputs:r>
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/EndWall/UV.outputs:result>
+                    float2 inputs:scale = (2.7083333, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/wall_s42_v2_diffuseColor.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/EndWall/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+
+                def Shader "roughness"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/wall_s42_v2_roughness.png@
+                    token inputs:sourceColorSpace = "raw"
+                    float2 inputs:st.connect = </World/Hall/Materials/EndWall/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    float outputs:r
+                }
+
+                def Shader "normal"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    float4 inputs:bias = (-1, -1, -1, 0)
+                    asset inputs:file = @assets/generated/wall_s42_v2_normal.png@
+                    float4 inputs:scale = (2, 2, 2, 1)
+                    token inputs:sourceColorSpace = "raw"
+                    float2 inputs:st.connect = </World/Hall/Materials/EndWall/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    normal3f outputs:rgb
+                }
+            }
+
+            def Material "Ceiling"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/Ceiling/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.5, 0.52, 0.48)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 0.85
+                    token outputs:surface
+                }
+            }
+
+            def Material "Steel"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/Steel/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.23, 0.27, 0.28)
+                    float inputs:metallic = 0.65
+                    float inputs:roughness = 0.43
+                    token outputs:surface
+                }
+            }
+
+            def Material "Duct"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/Duct/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.38, 0.42, 0.42)
+                    float inputs:metallic = 0.45
+                    float inputs:roughness = 0.55
+                    token outputs:surface
+                }
+            }
+
+            def Material "CraneYellow"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/CraneYellow/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.72, 0.48, 0.035)
+                    float inputs:metallic = 0.25
+                    float inputs:roughness = 0.48
+                    token outputs:surface
+                }
+            }
+
+            def Material "PersonnelDoor"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/PersonnelDoor/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.17, 0.28, 0.24)
+                    float inputs:metallic = 0.2
+                    float inputs:roughness = 0.5
+                    token outputs:surface
+                }
+            }
+
+            def Material "DarkGlass"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/DarkGlass/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.025, 0.055, 0.065)
+                    float inputs:metallic = 0.1
+                    float inputs:roughness = 0.16
+                    token outputs:surface
+                }
+            }
+
+            def Material "MonitorHousing"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/MonitorHousing/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.42, 0.45, 0.43)
+                    float inputs:metallic = 0.1
+                    float inputs:roughness = 0.6
+                    token outputs:surface
+                }
+            }
+
+            def Material "Amber"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/Amber/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.85, 0.32, 0.025)
+                    color3f inputs:emissiveColor = (0.6, 0.15, 0.01)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 0.3
+                    token outputs:surface
+                }
+            }
+
+            def Material "FireRed"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/FireRed/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.6, 0.035, 0.02)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 0.45
+                    token outputs:surface
+                }
+            }
+
+            def Material "Fixture"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/Fixture/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.58, 0.61, 0.6)
+                    color3f inputs:emissiveColor = (0.8, 0.85, 1)
+                    float inputs:metallic = 0.35
+                    float inputs:roughness = 0.4
+                    token outputs:surface
+                }
+            }
+
+            def Material "RollerShutter"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/RollerShutter/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.5, 0.5, 0.5)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/RollerShutter/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0.35
+                    float inputs:roughness = 0.48
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/RollerShutter/UV.outputs:result>
+                    float2 inputs:scale = (1, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/roller_v1.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/RollerShutter/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+            }
+
+            def Material "radiation"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/radiation/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (1, 1, 1)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/radiation/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    float inputs:roughness = 0.65
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/radiation/UV.outputs:result>
+                    float2 inputs:scale = (1, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/radiation_v1.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/radiation/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+            }
+
+            def Material "llw"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/llw/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (1, 1, 1)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/llw/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    float inputs:roughness = 0.65
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/llw/UV.outputs:result>
+                    float2 inputs:scale = (1, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/zone_llw_v1.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/llw/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+            }
+
+            def Material "ilw"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/ilw/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (1, 1, 1)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/ilw/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    float inputs:roughness = 0.65
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/ilw/UV.outputs:result>
+                    float2 inputs:scale = (1, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/zone_ilw_v1.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/ilw/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+            }
+
+            def Material "fire"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/fire/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (1, 1, 1)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/fire/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    float inputs:roughness = 0.65
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/fire/UV.outputs:result>
+                    float2 inputs:scale = (1, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/fire_v1.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/fire/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+            }
+
+            def Material "floor_llw"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/floor_llw/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (1, 1, 1)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/floor_llw/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    float inputs:opacity.connect = </World/Hall/Materials/floor_llw/opacity.outputs:a>
+                    float inputs:opacityThreshold = 0.2
+                    float inputs:roughness = 0.65
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/floor_llw/UV.outputs:result>
+                    float2 inputs:scale = (1, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/floor_llw_v3.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/floor_llw/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+
+                def Shader "opacity"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/floor_llw_v3.png@
+                    token inputs:sourceColorSpace = "raw"
+                    float2 inputs:st.connect = </World/Hall/Materials/floor_llw/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    float outputs:a
+                }
+            }
+
+            def Material "floor_ilw"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/floor_ilw/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (1, 1, 1)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/floor_ilw/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    float inputs:opacity.connect = </World/Hall/Materials/floor_ilw/opacity.outputs:a>
+                    float inputs:opacityThreshold = 0.2
+                    float inputs:roughness = 0.65
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/floor_ilw/UV.outputs:result>
+                    float2 inputs:scale = (1, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/floor_ilw_v3.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/floor_ilw/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+
+                def Shader "opacity"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/floor_ilw_v3.png@
+                    token inputs:sourceColorSpace = "raw"
+                    float2 inputs:st.connect = </World/Hall/Materials/floor_ilw/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    float outputs:a
+                }
+            }
+
+            def Material "drain"
+            {
+                token outputs:surface.connect = </World/Hall/Materials/drain/Surface.outputs:surface>
+
+                def Shader "Surface"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (1, 1, 1)
+                    color3f inputs:diffuseColor.connect = </World/Hall/Materials/drain/diffuseColor.outputs:rgb>
+                    float inputs:metallic = 0
+                    float inputs:roughness = 0.65
+                    token outputs:surface
+                }
+
+                def Shader "UV"
+                {
+                    uniform token info:id = "UsdPrimvarReader_float2"
+                    token inputs:varname = "st"
+                    float2 outputs:result
+                }
+
+                def Shader "TransformUV"
+                {
+                    uniform token info:id = "UsdTransform2d"
+                    float2 inputs:in.connect = </World/Hall/Materials/drain/UV.outputs:result>
+                    float2 inputs:scale = (1, 1)
+                    float2 outputs:result
+                }
+
+                def Shader "diffuseColor"
+                {
+                    uniform token info:id = "UsdUVTexture"
+                    asset inputs:file = @assets/generated/drain_v2.png@
+                    token inputs:sourceColorSpace = "sRGB"
+                    float2 inputs:st.connect = </World/Hall/Materials/drain/TransformUV.outputs:result>
+                    token inputs:wrapS = "repeat"
+                    token inputs:wrapT = "repeat"
+                    color3f outputs:rgb
+                }
+            }
+        }
+
+        def Scope "Details"
+        {
+            def Mesh "RollerShutter" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/RollerShutter>
+                point3f[] points = [(-0.03, -1.5, -2.05), (0.03, -1.5, -2.05), (0.03, 1.5, -2.05), (-0.03, 1.5, -2.05), (-0.03, -1.5, 2.05), (0.03, -1.5, 2.05), (0.03, 1.5, 2.05), (-0.03, 1.5, 2.05)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (0.035, 6, 2.05)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "ShutterRailLeft" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Steel>
+                point3f[] points = [(-0.085, -0.06, -2.08), (0.085, -0.06, -2.08), (0.085, 0.06, -2.08), (-0.085, 0.06, -2.08), (-0.085, -0.06, 2.08), (0.085, -0.06, 2.08), (0.085, 0.06, 2.08), (-0.085, 0.06, 2.08)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (0.1, 4.42, 2.08)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "ShutterRailRight" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Steel>
+                point3f[] points = [(-0.085, -0.06, -2.08), (0.085, -0.06, -2.08), (0.085, 0.06, -2.08), (-0.085, 0.06, -2.08), (-0.085, -0.06, 2.08), (0.085, -0.06, 2.08), (0.085, 0.06, 2.08), (-0.085, 0.06, 2.08)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (0.1, 7.58, 2.08)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "PersonnelDoor" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/PersonnelDoor>
+                point3f[] points = [(-0.04, -0.5, -1.1), (0.04, -0.5, -1.1), (0.04, 0.5, -1.1), (-0.04, 0.5, -1.1), (-0.04, -0.5, 1.1), (0.04, -0.5, 1.1), (0.04, 0.5, 1.1), (-0.04, 0.5, 1.1)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (0.045, 2.5, 1.1)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "DoorWindow" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/DarkGlass>
+                point3f[] points = [(-0.009, -0.21, -0.26), (0.009, -0.21, -0.26), (0.009, 0.21, -0.26), (-0.009, 0.21, -0.26), (-0.009, -0.21, 0.26), (0.009, -0.21, 0.26), (0.009, 0.21, 0.26), (-0.009, 0.21, 0.26)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (0.091, 2.5, 1.62)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "DoorHandle" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Steel>
+                point3f[] points = [(-0.03, -0.02, -0.11), (0.03, -0.02, -0.11), (0.03, 0.02, -0.11), (-0.03, 0.02, -0.11), (-0.03, -0.02, 0.11), (0.03, -0.02, 0.11), (0.03, 0.02, 0.11), (-0.03, 0.02, 0.11)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (0.12, 2.14, 1.05)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "RadiationSign" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4]
+                int[] faceVertexIndices = [0, 1, 2, 3]
+                rel material:binding = </World/Hall/Materials/radiation>
+                point3f[] points = [(-0, -0.4, -0.4), (0, 0.4, -0.4), (0, 0.4, 0.4), (0, -0.4, 0.4)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (0.11, 3.55, 1.95)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "CraneRailSouth" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Steel>
+                point3f[] points = [(-10, -0.06, -0.09), (10, -0.06, -0.09), (10, 0.06, -0.09), (-10, 0.06, -0.09), (-10, -0.06, 0.09), (10, -0.06, 0.09), (10, 0.06, 0.09), (-10, 0.06, 0.09)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (10, 0.35, 5.15)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "CraneRailNorth" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Steel>
+                point3f[] points = [(-10, -0.06, -0.09), (10, -0.06, -0.09), (10, 0.06, -0.09), (-10, 0.06, -0.09), (-10, -0.06, 0.09), (10, -0.06, 0.09), (10, 0.06, 0.09), (-10, 0.06, 0.09)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (10, 11.65, 5.15)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "CraneBridge" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/CraneYellow>
+                point3f[] points = [(-0.25, -5.7, -0.225), (0.25, -5.7, -0.225), (0.25, 5.7, -0.225), (-0.25, 5.7, -0.225), (-0.25, -5.7, 0.225), (0.25, -5.7, 0.225), (0.25, 5.7, 0.225), (-0.25, 5.7, 0.225)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (18.5, 6, 5.15)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "CraneHoist" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/CraneYellow>
+                point3f[] points = [(-0.36, -0.5, -0.25), (0.36, -0.5, -0.25), (0.36, 0.5, -0.25), (-0.36, 0.5, -0.25), (-0.36, -0.5, 0.25), (0.36, -0.5, 0.25), (0.36, 0.5, 0.25), (-0.36, 0.5, 0.25)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (18.5, 6, 4.76)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "VentilationDuct" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Duct>
+                point3f[] points = [(-9.5, -0.35, -0.2), (9.5, -0.35, -0.2), (9.5, 0.35, -0.2), (-9.5, 0.35, -0.2), (-9.5, -0.35, 0.2), (9.5, -0.35, 0.2), (9.5, 0.35, 0.2), (-9.5, 0.35, 0.2)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (10, 6, 5.73)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "CableTraySouth" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Steel>
+                point3f[] points = [(-9.5, -0.11, -0.06), (9.5, -0.11, -0.06), (9.5, 0.11, -0.06), (-9.5, 0.11, -0.06), (-9.5, -0.11, 0.06), (9.5, -0.11, 0.06), (9.5, 0.11, 0.06), (-9.5, 0.11, 0.06)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (10, 0.12, 3.05)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "GammaMonitorSouth1" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/MonitorHousing>
+                point3f[] points = [(-0.19, -0.11, -0.21), (0.19, -0.11, -0.21), (0.19, 0.11, -0.21), (-0.19, 0.11, -0.21), (-0.19, -0.11, 0.21), (0.19, -0.11, 0.21), (0.19, 0.11, 0.21), (-0.19, 0.11, 0.21)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (6, 0.12, 1.95)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "GammaBeaconSouth1" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 20]
+                int[] faceVertexIndices = [0, 1, 21, 20, 1, 2, 22, 21, 2, 3, 23, 22, 3, 4, 24, 23, 4, 5, 25, 24, 5, 6, 26, 25, 6, 7, 27, 26, 7, 8, 28, 27, 8, 9, 29, 28, 9, 10, 30, 29, 10, 11, 31, 30, 11, 12, 32, 31, 12, 13, 33, 32, 13, 14, 34, 33, 14, 15, 35, 34, 15, 16, 36, 35, 16, 17, 37, 36, 17, 18, 38, 37, 18, 19, 39, 38, 19, 0, 20, 39, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+                rel material:binding = </World/Hall/Materials/Amber>
+                point3f[] points = [(0.06, 0, -0.07), (0.05706339, 0.01854102, -0.07), (0.04854102, 0.035267115, -0.07), (0.035267115, 0.04854102, -0.07), (0.01854102, 0.05706339, -0.07), (3.6739405e-18, 0.06, -0.07), (-0.01854102, 0.05706339, -0.07), (-0.035267115, 0.04854102, -0.07), (-0.04854102, 0.035267115, -0.07), (-0.05706339, 0.01854102, -0.07), (-0.06, 7.347881e-18, -0.07), (-0.05706339, -0.01854102, -0.07), (-0.04854102, -0.035267115, -0.07), (-0.035267115, -0.04854102, -0.07), (-0.01854102, -0.05706339, -0.07), (-1.1021821e-17, -0.06, -0.07), (0.01854102, -0.05706339, -0.07), (0.035267115, -0.04854102, -0.07), (0.04854102, -0.035267115, -0.07), (0.05706339, -0.01854102, -0.07), (0.06, 0, 0.07), (0.05706339, 0.01854102, 0.07), (0.04854102, 0.035267115, 0.07), (0.035267115, 0.04854102, 0.07), (0.01854102, 0.05706339, 0.07), (3.6739405e-18, 0.06, 0.07), (-0.01854102, 0.05706339, 0.07), (-0.035267115, 0.04854102, 0.07), (-0.04854102, 0.035267115, 0.07), (-0.05706339, 0.01854102, 0.07), (-0.06, 7.347881e-18, 0.07), (-0.05706339, -0.01854102, 0.07), (-0.04854102, -0.035267115, 0.07), (-0.035267115, -0.04854102, 0.07), (-0.01854102, -0.05706339, 0.07), (-1.1021821e-17, -0.06, 0.07), (0.01854102, -0.05706339, 0.07), (0.035267115, -0.04854102, 0.07), (0.04854102, -0.035267115, 0.07), (0.05706339, -0.01854102, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (0.05, 0), (0.05, 1), (0, 1), (0.05, 0), (0.1, 0), (0.1, 1), (0.05, 1), (0.1, 0), (0.15, 0), (0.15, 1), (0.1, 1), (0.15, 0), (0.2, 0), (0.2, 1), (0.15, 1), (0.2, 0), (0.25, 0), (0.25, 1), (0.2, 1), (0.25, 0), (0.3, 0), (0.3, 1), (0.25, 1), (0.3, 0), (0.35, 0), (0.35, 1), (0.3, 1), (0.35, 0), (0.4, 0), (0.4, 1), (0.35, 1), (0.4, 0), (0.45, 0), (0.45, 1), (0.4, 1), (0.45, 0), (0.5, 0), (0.5, 1), (0.45, 1), (0.5, 0), (0.55, 0), (0.55, 1), (0.5, 1), (0.55, 0), (0.6, 0), (0.6, 1), (0.55, 1), (0.6, 0), (0.65, 0), (0.65, 1), (0.6, 1), (0.65, 0), (0.7, 0), (0.7, 1), (0.65, 1), (0.7, 0), (0.75, 0), (0.75, 1), (0.7, 1), (0.75, 0), (0.8, 0), (0.8, 1), (0.75, 1), (0.8, 0), (0.85, 0), (0.85, 1), (0.8, 1), (0.85, 0), (0.9, 0), (0.9, 1), (0.85, 1), (0.9, 0), (0.95, 0), (0.95, 1), (0.9, 1), (0.95, 0), (1, 0), (1, 1), (0.95, 1), (0.97552824, 0.3454915), (0.9045085, 0.20610738), (0.7938926, 0.095491506), (0.6545085, 0.024471741), (0.5, 0), (0.3454915, 0.024471741), (0.20610738, 0.095491506), (0.095491506, 0.20610738), (0.024471741, 0.3454915), (0, 0.5), (0.024471741, 0.6545085), (0.095491506, 0.7938926), (0.20610738, 0.9045085), (0.3454915, 0.97552824), (0.5, 1), (0.6545085, 0.97552824), (0.7938926, 0.9045085), (0.9045085, 0.7938926), (0.97552824, 0.6545085), (1, 0.5), (1, 0.5), (0.97552824, 0.6545085), (0.9045085, 0.7938926), (0.7938926, 0.9045085), (0.6545085, 0.97552824), (0.5, 1), (0.3454915, 0.97552824), (0.20610738, 0.9045085), (0.095491506, 0.7938926), (0.024471741, 0.6545085), (0, 0.5), (0.024471741, 0.3454915), (0.095491506, 0.20610738), (0.20610738, 0.095491506), (0.3454915, 0.024471741), (0.5, 0), (0.6545085, 0.024471741), (0.7938926, 0.095491506), (0.9045085, 0.20610738), (0.97552824, 0.3454915)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (6, 0.12, 2.26)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "GammaMonitorSouth2" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/MonitorHousing>
+                point3f[] points = [(-0.19, -0.11, -0.21), (0.19, -0.11, -0.21), (0.19, 0.11, -0.21), (-0.19, 0.11, -0.21), (-0.19, -0.11, 0.21), (0.19, -0.11, 0.21), (0.19, 0.11, 0.21), (-0.19, 0.11, 0.21)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (15, 0.12, 1.95)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "GammaBeaconSouth2" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 20]
+                int[] faceVertexIndices = [0, 1, 21, 20, 1, 2, 22, 21, 2, 3, 23, 22, 3, 4, 24, 23, 4, 5, 25, 24, 5, 6, 26, 25, 6, 7, 27, 26, 7, 8, 28, 27, 8, 9, 29, 28, 9, 10, 30, 29, 10, 11, 31, 30, 11, 12, 32, 31, 12, 13, 33, 32, 13, 14, 34, 33, 14, 15, 35, 34, 15, 16, 36, 35, 16, 17, 37, 36, 17, 18, 38, 37, 18, 19, 39, 38, 19, 0, 20, 39, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+                rel material:binding = </World/Hall/Materials/Amber>
+                point3f[] points = [(0.06, 0, -0.07), (0.05706339, 0.01854102, -0.07), (0.04854102, 0.035267115, -0.07), (0.035267115, 0.04854102, -0.07), (0.01854102, 0.05706339, -0.07), (3.6739405e-18, 0.06, -0.07), (-0.01854102, 0.05706339, -0.07), (-0.035267115, 0.04854102, -0.07), (-0.04854102, 0.035267115, -0.07), (-0.05706339, 0.01854102, -0.07), (-0.06, 7.347881e-18, -0.07), (-0.05706339, -0.01854102, -0.07), (-0.04854102, -0.035267115, -0.07), (-0.035267115, -0.04854102, -0.07), (-0.01854102, -0.05706339, -0.07), (-1.1021821e-17, -0.06, -0.07), (0.01854102, -0.05706339, -0.07), (0.035267115, -0.04854102, -0.07), (0.04854102, -0.035267115, -0.07), (0.05706339, -0.01854102, -0.07), (0.06, 0, 0.07), (0.05706339, 0.01854102, 0.07), (0.04854102, 0.035267115, 0.07), (0.035267115, 0.04854102, 0.07), (0.01854102, 0.05706339, 0.07), (3.6739405e-18, 0.06, 0.07), (-0.01854102, 0.05706339, 0.07), (-0.035267115, 0.04854102, 0.07), (-0.04854102, 0.035267115, 0.07), (-0.05706339, 0.01854102, 0.07), (-0.06, 7.347881e-18, 0.07), (-0.05706339, -0.01854102, 0.07), (-0.04854102, -0.035267115, 0.07), (-0.035267115, -0.04854102, 0.07), (-0.01854102, -0.05706339, 0.07), (-1.1021821e-17, -0.06, 0.07), (0.01854102, -0.05706339, 0.07), (0.035267115, -0.04854102, 0.07), (0.04854102, -0.035267115, 0.07), (0.05706339, -0.01854102, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (0.05, 0), (0.05, 1), (0, 1), (0.05, 0), (0.1, 0), (0.1, 1), (0.05, 1), (0.1, 0), (0.15, 0), (0.15, 1), (0.1, 1), (0.15, 0), (0.2, 0), (0.2, 1), (0.15, 1), (0.2, 0), (0.25, 0), (0.25, 1), (0.2, 1), (0.25, 0), (0.3, 0), (0.3, 1), (0.25, 1), (0.3, 0), (0.35, 0), (0.35, 1), (0.3, 1), (0.35, 0), (0.4, 0), (0.4, 1), (0.35, 1), (0.4, 0), (0.45, 0), (0.45, 1), (0.4, 1), (0.45, 0), (0.5, 0), (0.5, 1), (0.45, 1), (0.5, 0), (0.55, 0), (0.55, 1), (0.5, 1), (0.55, 0), (0.6, 0), (0.6, 1), (0.55, 1), (0.6, 0), (0.65, 0), (0.65, 1), (0.6, 1), (0.65, 0), (0.7, 0), (0.7, 1), (0.65, 1), (0.7, 0), (0.75, 0), (0.75, 1), (0.7, 1), (0.75, 0), (0.8, 0), (0.8, 1), (0.75, 1), (0.8, 0), (0.85, 0), (0.85, 1), (0.8, 1), (0.85, 0), (0.9, 0), (0.9, 1), (0.85, 1), (0.9, 0), (0.95, 0), (0.95, 1), (0.9, 1), (0.95, 0), (1, 0), (1, 1), (0.95, 1), (0.97552824, 0.3454915), (0.9045085, 0.20610738), (0.7938926, 0.095491506), (0.6545085, 0.024471741), (0.5, 0), (0.3454915, 0.024471741), (0.20610738, 0.095491506), (0.095491506, 0.20610738), (0.024471741, 0.3454915), (0, 0.5), (0.024471741, 0.6545085), (0.095491506, 0.7938926), (0.20610738, 0.9045085), (0.3454915, 0.97552824), (0.5, 1), (0.6545085, 0.97552824), (0.7938926, 0.9045085), (0.9045085, 0.7938926), (0.97552824, 0.6545085), (1, 0.5), (1, 0.5), (0.97552824, 0.6545085), (0.9045085, 0.7938926), (0.7938926, 0.9045085), (0.6545085, 0.97552824), (0.5, 1), (0.3454915, 0.97552824), (0.20610738, 0.9045085), (0.095491506, 0.7938926), (0.024471741, 0.6545085), (0, 0.5), (0.024471741, 0.3454915), (0.095491506, 0.20610738), (0.20610738, 0.095491506), (0.3454915, 0.024471741), (0.5, 0), (0.6545085, 0.024471741), (0.7938926, 0.095491506), (0.9045085, 0.20610738), (0.97552824, 0.3454915)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (15, 0.12, 2.26)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "CableTrayNorth" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Steel>
+                point3f[] points = [(-9.5, -0.11, -0.06), (9.5, -0.11, -0.06), (9.5, 0.11, -0.06), (-9.5, 0.11, -0.06), (-9.5, -0.11, 0.06), (9.5, -0.11, 0.06), (9.5, 0.11, 0.06), (-9.5, 0.11, 0.06)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (10, 11.88, 3.05)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "GammaMonitorNorth1" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/MonitorHousing>
+                point3f[] points = [(-0.19, -0.11, -0.21), (0.19, -0.11, -0.21), (0.19, 0.11, -0.21), (-0.19, 0.11, -0.21), (-0.19, -0.11, 0.21), (0.19, -0.11, 0.21), (0.19, 0.11, 0.21), (-0.19, 0.11, 0.21)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (6, 11.88, 1.95)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "GammaBeaconNorth1" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 20]
+                int[] faceVertexIndices = [0, 1, 21, 20, 1, 2, 22, 21, 2, 3, 23, 22, 3, 4, 24, 23, 4, 5, 25, 24, 5, 6, 26, 25, 6, 7, 27, 26, 7, 8, 28, 27, 8, 9, 29, 28, 9, 10, 30, 29, 10, 11, 31, 30, 11, 12, 32, 31, 12, 13, 33, 32, 13, 14, 34, 33, 14, 15, 35, 34, 15, 16, 36, 35, 16, 17, 37, 36, 17, 18, 38, 37, 18, 19, 39, 38, 19, 0, 20, 39, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+                rel material:binding = </World/Hall/Materials/Amber>
+                point3f[] points = [(0.06, 0, -0.07), (0.05706339, 0.01854102, -0.07), (0.04854102, 0.035267115, -0.07), (0.035267115, 0.04854102, -0.07), (0.01854102, 0.05706339, -0.07), (3.6739405e-18, 0.06, -0.07), (-0.01854102, 0.05706339, -0.07), (-0.035267115, 0.04854102, -0.07), (-0.04854102, 0.035267115, -0.07), (-0.05706339, 0.01854102, -0.07), (-0.06, 7.347881e-18, -0.07), (-0.05706339, -0.01854102, -0.07), (-0.04854102, -0.035267115, -0.07), (-0.035267115, -0.04854102, -0.07), (-0.01854102, -0.05706339, -0.07), (-1.1021821e-17, -0.06, -0.07), (0.01854102, -0.05706339, -0.07), (0.035267115, -0.04854102, -0.07), (0.04854102, -0.035267115, -0.07), (0.05706339, -0.01854102, -0.07), (0.06, 0, 0.07), (0.05706339, 0.01854102, 0.07), (0.04854102, 0.035267115, 0.07), (0.035267115, 0.04854102, 0.07), (0.01854102, 0.05706339, 0.07), (3.6739405e-18, 0.06, 0.07), (-0.01854102, 0.05706339, 0.07), (-0.035267115, 0.04854102, 0.07), (-0.04854102, 0.035267115, 0.07), (-0.05706339, 0.01854102, 0.07), (-0.06, 7.347881e-18, 0.07), (-0.05706339, -0.01854102, 0.07), (-0.04854102, -0.035267115, 0.07), (-0.035267115, -0.04854102, 0.07), (-0.01854102, -0.05706339, 0.07), (-1.1021821e-17, -0.06, 0.07), (0.01854102, -0.05706339, 0.07), (0.035267115, -0.04854102, 0.07), (0.04854102, -0.035267115, 0.07), (0.05706339, -0.01854102, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (0.05, 0), (0.05, 1), (0, 1), (0.05, 0), (0.1, 0), (0.1, 1), (0.05, 1), (0.1, 0), (0.15, 0), (0.15, 1), (0.1, 1), (0.15, 0), (0.2, 0), (0.2, 1), (0.15, 1), (0.2, 0), (0.25, 0), (0.25, 1), (0.2, 1), (0.25, 0), (0.3, 0), (0.3, 1), (0.25, 1), (0.3, 0), (0.35, 0), (0.35, 1), (0.3, 1), (0.35, 0), (0.4, 0), (0.4, 1), (0.35, 1), (0.4, 0), (0.45, 0), (0.45, 1), (0.4, 1), (0.45, 0), (0.5, 0), (0.5, 1), (0.45, 1), (0.5, 0), (0.55, 0), (0.55, 1), (0.5, 1), (0.55, 0), (0.6, 0), (0.6, 1), (0.55, 1), (0.6, 0), (0.65, 0), (0.65, 1), (0.6, 1), (0.65, 0), (0.7, 0), (0.7, 1), (0.65, 1), (0.7, 0), (0.75, 0), (0.75, 1), (0.7, 1), (0.75, 0), (0.8, 0), (0.8, 1), (0.75, 1), (0.8, 0), (0.85, 0), (0.85, 1), (0.8, 1), (0.85, 0), (0.9, 0), (0.9, 1), (0.85, 1), (0.9, 0), (0.95, 0), (0.95, 1), (0.9, 1), (0.95, 0), (1, 0), (1, 1), (0.95, 1), (0.97552824, 0.3454915), (0.9045085, 0.20610738), (0.7938926, 0.095491506), (0.6545085, 0.024471741), (0.5, 0), (0.3454915, 0.024471741), (0.20610738, 0.095491506), (0.095491506, 0.20610738), (0.024471741, 0.3454915), (0, 0.5), (0.024471741, 0.6545085), (0.095491506, 0.7938926), (0.20610738, 0.9045085), (0.3454915, 0.97552824), (0.5, 1), (0.6545085, 0.97552824), (0.7938926, 0.9045085), (0.9045085, 0.7938926), (0.97552824, 0.6545085), (1, 0.5), (1, 0.5), (0.97552824, 0.6545085), (0.9045085, 0.7938926), (0.7938926, 0.9045085), (0.6545085, 0.97552824), (0.5, 1), (0.3454915, 0.97552824), (0.20610738, 0.9045085), (0.095491506, 0.7938926), (0.024471741, 0.6545085), (0, 0.5), (0.024471741, 0.3454915), (0.095491506, 0.20610738), (0.20610738, 0.095491506), (0.3454915, 0.024471741), (0.5, 0), (0.6545085, 0.024471741), (0.7938926, 0.095491506), (0.9045085, 0.20610738), (0.97552824, 0.3454915)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (6, 11.88, 2.26)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "GammaMonitorNorth2" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/MonitorHousing>
+                point3f[] points = [(-0.19, -0.11, -0.21), (0.19, -0.11, -0.21), (0.19, 0.11, -0.21), (-0.19, 0.11, -0.21), (-0.19, -0.11, 0.21), (0.19, -0.11, 0.21), (0.19, 0.11, 0.21), (-0.19, 0.11, 0.21)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (15, 11.88, 1.95)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "GammaBeaconNorth2" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 20]
+                int[] faceVertexIndices = [0, 1, 21, 20, 1, 2, 22, 21, 2, 3, 23, 22, 3, 4, 24, 23, 4, 5, 25, 24, 5, 6, 26, 25, 6, 7, 27, 26, 7, 8, 28, 27, 8, 9, 29, 28, 9, 10, 30, 29, 10, 11, 31, 30, 11, 12, 32, 31, 12, 13, 33, 32, 13, 14, 34, 33, 14, 15, 35, 34, 15, 16, 36, 35, 16, 17, 37, 36, 17, 18, 38, 37, 18, 19, 39, 38, 19, 0, 20, 39, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+                rel material:binding = </World/Hall/Materials/Amber>
+                point3f[] points = [(0.06, 0, -0.07), (0.05706339, 0.01854102, -0.07), (0.04854102, 0.035267115, -0.07), (0.035267115, 0.04854102, -0.07), (0.01854102, 0.05706339, -0.07), (3.6739405e-18, 0.06, -0.07), (-0.01854102, 0.05706339, -0.07), (-0.035267115, 0.04854102, -0.07), (-0.04854102, 0.035267115, -0.07), (-0.05706339, 0.01854102, -0.07), (-0.06, 7.347881e-18, -0.07), (-0.05706339, -0.01854102, -0.07), (-0.04854102, -0.035267115, -0.07), (-0.035267115, -0.04854102, -0.07), (-0.01854102, -0.05706339, -0.07), (-1.1021821e-17, -0.06, -0.07), (0.01854102, -0.05706339, -0.07), (0.035267115, -0.04854102, -0.07), (0.04854102, -0.035267115, -0.07), (0.05706339, -0.01854102, -0.07), (0.06, 0, 0.07), (0.05706339, 0.01854102, 0.07), (0.04854102, 0.035267115, 0.07), (0.035267115, 0.04854102, 0.07), (0.01854102, 0.05706339, 0.07), (3.6739405e-18, 0.06, 0.07), (-0.01854102, 0.05706339, 0.07), (-0.035267115, 0.04854102, 0.07), (-0.04854102, 0.035267115, 0.07), (-0.05706339, 0.01854102, 0.07), (-0.06, 7.347881e-18, 0.07), (-0.05706339, -0.01854102, 0.07), (-0.04854102, -0.035267115, 0.07), (-0.035267115, -0.04854102, 0.07), (-0.01854102, -0.05706339, 0.07), (-1.1021821e-17, -0.06, 0.07), (0.01854102, -0.05706339, 0.07), (0.035267115, -0.04854102, 0.07), (0.04854102, -0.035267115, 0.07), (0.05706339, -0.01854102, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (0.05, 0), (0.05, 1), (0, 1), (0.05, 0), (0.1, 0), (0.1, 1), (0.05, 1), (0.1, 0), (0.15, 0), (0.15, 1), (0.1, 1), (0.15, 0), (0.2, 0), (0.2, 1), (0.15, 1), (0.2, 0), (0.25, 0), (0.25, 1), (0.2, 1), (0.25, 0), (0.3, 0), (0.3, 1), (0.25, 1), (0.3, 0), (0.35, 0), (0.35, 1), (0.3, 1), (0.35, 0), (0.4, 0), (0.4, 1), (0.35, 1), (0.4, 0), (0.45, 0), (0.45, 1), (0.4, 1), (0.45, 0), (0.5, 0), (0.5, 1), (0.45, 1), (0.5, 0), (0.55, 0), (0.55, 1), (0.5, 1), (0.55, 0), (0.6, 0), (0.6, 1), (0.55, 1), (0.6, 0), (0.65, 0), (0.65, 1), (0.6, 1), (0.65, 0), (0.7, 0), (0.7, 1), (0.65, 1), (0.7, 0), (0.75, 0), (0.75, 1), (0.7, 1), (0.75, 0), (0.8, 0), (0.8, 1), (0.75, 1), (0.8, 0), (0.85, 0), (0.85, 1), (0.8, 1), (0.85, 0), (0.9, 0), (0.9, 1), (0.85, 1), (0.9, 0), (0.95, 0), (0.95, 1), (0.9, 1), (0.95, 0), (1, 0), (1, 1), (0.95, 1), (0.97552824, 0.3454915), (0.9045085, 0.20610738), (0.7938926, 0.095491506), (0.6545085, 0.024471741), (0.5, 0), (0.3454915, 0.024471741), (0.20610738, 0.095491506), (0.095491506, 0.20610738), (0.024471741, 0.3454915), (0, 0.5), (0.024471741, 0.6545085), (0.095491506, 0.7938926), (0.20610738, 0.9045085), (0.3454915, 0.97552824), (0.5, 1), (0.6545085, 0.97552824), (0.7938926, 0.9045085), (0.9045085, 0.7938926), (0.97552824, 0.6545085), (1, 0.5), (1, 0.5), (0.97552824, 0.6545085), (0.9045085, 0.7938926), (0.7938926, 0.9045085), (0.6545085, 0.97552824), (0.5, 1), (0.3454915, 0.97552824), (0.20610738, 0.9045085), (0.095491506, 0.7938926), (0.024471741, 0.6545085), (0, 0.5), (0.024471741, 0.3454915), (0.095491506, 0.20610738), (0.20610738, 0.095491506), (0.3454915, 0.024471741), (0.5, 0), (0.6545085, 0.024471741), (0.7938926, 0.095491506), (0.9045085, 0.20610738), (0.97552824, 0.3454915)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (15, 11.88, 2.26)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "CCTV1Body" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/MonitorHousing>
+                point3f[] points = [(-0.2, -0.1, -0.09), (0.2, -0.1, -0.09), (0.2, 0.1, -0.09), (-0.2, 0.1, -0.09), (-0.2, -0.1, 0.09), (0.2, -0.1, 0.09), (0.2, 0.1, 0.09), (-0.2, 0.1, 0.09)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (1, 0.25, 3.6)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "CCTV1Lens" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 20]
+                int[] faceVertexIndices = [0, 1, 21, 20, 1, 2, 22, 21, 2, 3, 23, 22, 3, 4, 24, 23, 4, 5, 25, 24, 5, 6, 26, 25, 6, 7, 27, 26, 7, 8, 28, 27, 8, 9, 29, 28, 9, 10, 30, 29, 10, 11, 31, 30, 11, 12, 32, 31, 12, 13, 33, 32, 13, 14, 34, 33, 14, 15, 35, 34, 15, 16, 36, 35, 16, 17, 37, 36, 17, 18, 38, 37, 18, 19, 39, 38, 19, 0, 20, 39, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+                rel material:binding = </World/Hall/Materials/DarkGlass>
+                point3f[] points = [(0.065, 0, -0.04), (0.061818674, 0.020086104, -0.04), (0.052586105, 0.03820604, -0.04), (0.03820604, 0.052586105, -0.04), (0.020086104, 0.061818674, -0.04), (3.980102e-18, 0.065, -0.04), (-0.020086104, 0.061818674, -0.04), (-0.03820604, 0.052586105, -0.04), (-0.052586105, 0.03820604, -0.04), (-0.061818674, 0.020086104, -0.04), (-0.065, 7.960204e-18, -0.04), (-0.061818674, -0.020086104, -0.04), (-0.052586105, -0.03820604, -0.04), (-0.03820604, -0.052586105, -0.04), (-0.020086104, -0.061818674, -0.04), (-1.1940307e-17, -0.065, -0.04), (0.020086104, -0.061818674, -0.04), (0.03820604, -0.052586105, -0.04), (0.052586105, -0.03820604, -0.04), (0.061818674, -0.020086104, -0.04), (0.065, 0, 0.04), (0.061818674, 0.020086104, 0.04), (0.052586105, 0.03820604, 0.04), (0.03820604, 0.052586105, 0.04), (0.020086104, 0.061818674, 0.04), (3.980102e-18, 0.065, 0.04), (-0.020086104, 0.061818674, 0.04), (-0.03820604, 0.052586105, 0.04), (-0.052586105, 0.03820604, 0.04), (-0.061818674, 0.020086104, 0.04), (-0.065, 7.960204e-18, 0.04), (-0.061818674, -0.020086104, 0.04), (-0.052586105, -0.03820604, 0.04), (-0.03820604, -0.052586105, 0.04), (-0.020086104, -0.061818674, 0.04), (-1.1940307e-17, -0.065, 0.04), (0.020086104, -0.061818674, 0.04), (0.03820604, -0.052586105, 0.04), (0.052586105, -0.03820604, 0.04), (0.061818674, -0.020086104, 0.04)]
+                texCoord2f[] primvars:st = [(0, 0), (0.05, 0), (0.05, 1), (0, 1), (0.05, 0), (0.1, 0), (0.1, 1), (0.05, 1), (0.1, 0), (0.15, 0), (0.15, 1), (0.1, 1), (0.15, 0), (0.2, 0), (0.2, 1), (0.15, 1), (0.2, 0), (0.25, 0), (0.25, 1), (0.2, 1), (0.25, 0), (0.3, 0), (0.3, 1), (0.25, 1), (0.3, 0), (0.35, 0), (0.35, 1), (0.3, 1), (0.35, 0), (0.4, 0), (0.4, 1), (0.35, 1), (0.4, 0), (0.45, 0), (0.45, 1), (0.4, 1), (0.45, 0), (0.5, 0), (0.5, 1), (0.45, 1), (0.5, 0), (0.55, 0), (0.55, 1), (0.5, 1), (0.55, 0), (0.6, 0), (0.6, 1), (0.55, 1), (0.6, 0), (0.65, 0), (0.65, 1), (0.6, 1), (0.65, 0), (0.7, 0), (0.7, 1), (0.65, 1), (0.7, 0), (0.75, 0), (0.75, 1), (0.7, 1), (0.75, 0), (0.8, 0), (0.8, 1), (0.75, 1), (0.8, 0), (0.85, 0), (0.85, 1), (0.8, 1), (0.85, 0), (0.9, 0), (0.9, 1), (0.85, 1), (0.9, 0), (0.95, 0), (0.95, 1), (0.9, 1), (0.95, 0), (1, 0), (1, 1), (0.95, 1), (0.97552824, 0.3454915), (0.9045085, 0.20610738), (0.7938926, 0.095491506), (0.6545085, 0.024471741), (0.5, 0), (0.3454915, 0.024471741), (0.20610738, 0.095491506), (0.095491506, 0.20610738), (0.024471741, 0.3454915), (0, 0.5), (0.024471741, 0.6545085), (0.095491506, 0.7938926), (0.20610738, 0.9045085), (0.3454915, 0.97552824), (0.5, 1), (0.6545085, 0.97552824), (0.7938926, 0.9045085), (0.9045085, 0.7938926), (0.97552824, 0.6545085), (1, 0.5), (1, 0.5), (0.97552824, 0.6545085), (0.9045085, 0.7938926), (0.7938926, 0.9045085), (0.6545085, 0.97552824), (0.5, 1), (0.3454915, 0.97552824), (0.20610738, 0.9045085), (0.095491506, 0.7938926), (0.024471741, 0.6545085), (0, 0.5), (0.024471741, 0.3454915), (0.095491506, 0.20610738), (0.20610738, 0.095491506), (0.3454915, 0.024471741), (0.5, 0), (0.6545085, 0.024471741), (0.7938926, 0.095491506), (0.9045085, 0.20610738), (0.97552824, 0.3454915)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                float3 xformOp:rotateXYZ = (0, 90, 0)
+                double3 xformOp:translate = (1.23, 0.25, 3.6)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+
+            def Mesh "CCTV2Body" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/MonitorHousing>
+                point3f[] points = [(-0.2, -0.1, -0.09), (0.2, -0.1, -0.09), (0.2, 0.1, -0.09), (-0.2, 0.1, -0.09), (-0.2, -0.1, 0.09), (0.2, -0.1, 0.09), (0.2, 0.1, 0.09), (-0.2, 0.1, 0.09)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (19, 11.75, 3.6)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "CCTV2Lens" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 20]
+                int[] faceVertexIndices = [0, 1, 21, 20, 1, 2, 22, 21, 2, 3, 23, 22, 3, 4, 24, 23, 4, 5, 25, 24, 5, 6, 26, 25, 6, 7, 27, 26, 7, 8, 28, 27, 8, 9, 29, 28, 9, 10, 30, 29, 10, 11, 31, 30, 11, 12, 32, 31, 12, 13, 33, 32, 13, 14, 34, 33, 14, 15, 35, 34, 15, 16, 36, 35, 16, 17, 37, 36, 17, 18, 38, 37, 18, 19, 39, 38, 19, 0, 20, 39, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+                rel material:binding = </World/Hall/Materials/DarkGlass>
+                point3f[] points = [(0.065, 0, -0.04), (0.061818674, 0.020086104, -0.04), (0.052586105, 0.03820604, -0.04), (0.03820604, 0.052586105, -0.04), (0.020086104, 0.061818674, -0.04), (3.980102e-18, 0.065, -0.04), (-0.020086104, 0.061818674, -0.04), (-0.03820604, 0.052586105, -0.04), (-0.052586105, 0.03820604, -0.04), (-0.061818674, 0.020086104, -0.04), (-0.065, 7.960204e-18, -0.04), (-0.061818674, -0.020086104, -0.04), (-0.052586105, -0.03820604, -0.04), (-0.03820604, -0.052586105, -0.04), (-0.020086104, -0.061818674, -0.04), (-1.1940307e-17, -0.065, -0.04), (0.020086104, -0.061818674, -0.04), (0.03820604, -0.052586105, -0.04), (0.052586105, -0.03820604, -0.04), (0.061818674, -0.020086104, -0.04), (0.065, 0, 0.04), (0.061818674, 0.020086104, 0.04), (0.052586105, 0.03820604, 0.04), (0.03820604, 0.052586105, 0.04), (0.020086104, 0.061818674, 0.04), (3.980102e-18, 0.065, 0.04), (-0.020086104, 0.061818674, 0.04), (-0.03820604, 0.052586105, 0.04), (-0.052586105, 0.03820604, 0.04), (-0.061818674, 0.020086104, 0.04), (-0.065, 7.960204e-18, 0.04), (-0.061818674, -0.020086104, 0.04), (-0.052586105, -0.03820604, 0.04), (-0.03820604, -0.052586105, 0.04), (-0.020086104, -0.061818674, 0.04), (-1.1940307e-17, -0.065, 0.04), (0.020086104, -0.061818674, 0.04), (0.03820604, -0.052586105, 0.04), (0.052586105, -0.03820604, 0.04), (0.061818674, -0.020086104, 0.04)]
+                texCoord2f[] primvars:st = [(0, 0), (0.05, 0), (0.05, 1), (0, 1), (0.05, 0), (0.1, 0), (0.1, 1), (0.05, 1), (0.1, 0), (0.15, 0), (0.15, 1), (0.1, 1), (0.15, 0), (0.2, 0), (0.2, 1), (0.15, 1), (0.2, 0), (0.25, 0), (0.25, 1), (0.2, 1), (0.25, 0), (0.3, 0), (0.3, 1), (0.25, 1), (0.3, 0), (0.35, 0), (0.35, 1), (0.3, 1), (0.35, 0), (0.4, 0), (0.4, 1), (0.35, 1), (0.4, 0), (0.45, 0), (0.45, 1), (0.4, 1), (0.45, 0), (0.5, 0), (0.5, 1), (0.45, 1), (0.5, 0), (0.55, 0), (0.55, 1), (0.5, 1), (0.55, 0), (0.6, 0), (0.6, 1), (0.55, 1), (0.6, 0), (0.65, 0), (0.65, 1), (0.6, 1), (0.65, 0), (0.7, 0), (0.7, 1), (0.65, 1), (0.7, 0), (0.75, 0), (0.75, 1), (0.7, 1), (0.75, 0), (0.8, 0), (0.8, 1), (0.75, 1), (0.8, 0), (0.85, 0), (0.85, 1), (0.8, 1), (0.85, 0), (0.9, 0), (0.9, 1), (0.85, 1), (0.9, 0), (0.95, 0), (0.95, 1), (0.9, 1), (0.95, 0), (1, 0), (1, 1), (0.95, 1), (0.97552824, 0.3454915), (0.9045085, 0.20610738), (0.7938926, 0.095491506), (0.6545085, 0.024471741), (0.5, 0), (0.3454915, 0.024471741), (0.20610738, 0.095491506), (0.095491506, 0.20610738), (0.024471741, 0.3454915), (0, 0.5), (0.024471741, 0.6545085), (0.095491506, 0.7938926), (0.20610738, 0.9045085), (0.3454915, 0.97552824), (0.5, 1), (0.6545085, 0.97552824), (0.7938926, 0.9045085), (0.9045085, 0.7938926), (0.97552824, 0.6545085), (1, 0.5), (1, 0.5), (0.97552824, 0.6545085), (0.9045085, 0.7938926), (0.7938926, 0.9045085), (0.6545085, 0.97552824), (0.5, 1), (0.3454915, 0.97552824), (0.20610738, 0.9045085), (0.095491506, 0.7938926), (0.024471741, 0.6545085), (0, 0.5), (0.024471741, 0.3454915), (0.095491506, 0.20610738), (0.20610738, 0.095491506), (0.3454915, 0.024471741), (0.5, 0), (0.6545085, 0.024471741), (0.7938926, 0.095491506), (0.9045085, 0.20610738), (0.97552824, 0.3454915)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                float3 xformOp:rotateXYZ = (0, 90, 0)
+                double3 xformOp:translate = (18.77, 11.75, 3.6)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+
+            def Mesh "LLWZoneSign" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4]
+                int[] faceVertexIndices = [0, 1, 2, 3]
+                rel material:binding = </World/Hall/Materials/llw>
+                point3f[] points = [(-0.675, -0, -0.525), (0.675, 0, -0.525), (0.675, 0, 0.525), (-0.675, 0, 0.525)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (4.8, 11.985, 2.35)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "ILWZoneSign" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4]
+                int[] faceVertexIndices = [0, 1, 2, 3]
+                rel material:binding = </World/Hall/Materials/ilw>
+                point3f[] points = [(-0.675, -0, -0.525), (0.675, 0, -0.525), (0.675, 0, 0.525), (-0.675, 0, 0.525)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (13.8, 11.985, 2.35)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "FirePoint" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/fire>
+                point3f[] points = [(-0.08, -0.4, -0.525), (0.08, -0.4, -0.525), (0.08, 0.4, -0.525), (-0.08, 0.4, -0.525), (-0.08, -0.4, 0.525), (0.08, -0.4, 0.525), (0.08, 0.4, 0.525), (-0.08, 0.4, 0.525)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (0.13, 9.65, 1.35)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "Extinguisher" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 20]
+                int[] faceVertexIndices = [0, 1, 21, 20, 1, 2, 22, 21, 2, 3, 23, 22, 3, 4, 24, 23, 4, 5, 25, 24, 5, 6, 26, 25, 6, 7, 27, 26, 7, 8, 28, 27, 8, 9, 29, 28, 9, 10, 30, 29, 10, 11, 31, 30, 11, 12, 32, 31, 12, 13, 33, 32, 13, 14, 34, 33, 14, 15, 35, 34, 15, 16, 36, 35, 16, 17, 37, 36, 17, 18, 38, 37, 18, 19, 39, 38, 19, 0, 20, 39, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+                rel material:binding = </World/Hall/Materials/FireRed>
+                point3f[] points = [(0.11, 0, -0.31), (0.10461622, 0.03399187, -0.31), (0.08899187, 0.06465638, -0.31), (0.06465638, 0.08899187, -0.31), (0.03399187, 0.10461622, -0.31), (6.735557e-18, 0.11, -0.31), (-0.03399187, 0.10461622, -0.31), (-0.06465638, 0.08899187, -0.31), (-0.08899187, 0.06465638, -0.31), (-0.10461622, 0.03399187, -0.31), (-0.11, 1.3471114e-17, -0.31), (-0.10461622, -0.03399187, -0.31), (-0.08899187, -0.06465638, -0.31), (-0.06465638, -0.08899187, -0.31), (-0.03399187, -0.10461622, -0.31), (-2.0206672e-17, -0.11, -0.31), (0.03399187, -0.10461622, -0.31), (0.06465638, -0.08899187, -0.31), (0.08899187, -0.06465638, -0.31), (0.10461622, -0.03399187, -0.31), (0.11, 0, 0.31), (0.10461622, 0.03399187, 0.31), (0.08899187, 0.06465638, 0.31), (0.06465638, 0.08899187, 0.31), (0.03399187, 0.10461622, 0.31), (6.735557e-18, 0.11, 0.31), (-0.03399187, 0.10461622, 0.31), (-0.06465638, 0.08899187, 0.31), (-0.08899187, 0.06465638, 0.31), (-0.10461622, 0.03399187, 0.31), (-0.11, 1.3471114e-17, 0.31), (-0.10461622, -0.03399187, 0.31), (-0.08899187, -0.06465638, 0.31), (-0.06465638, -0.08899187, 0.31), (-0.03399187, -0.10461622, 0.31), (-2.0206672e-17, -0.11, 0.31), (0.03399187, -0.10461622, 0.31), (0.06465638, -0.08899187, 0.31), (0.08899187, -0.06465638, 0.31), (0.10461622, -0.03399187, 0.31)]
+                texCoord2f[] primvars:st = [(0, 0), (0.05, 0), (0.05, 1), (0, 1), (0.05, 0), (0.1, 0), (0.1, 1), (0.05, 1), (0.1, 0), (0.15, 0), (0.15, 1), (0.1, 1), (0.15, 0), (0.2, 0), (0.2, 1), (0.15, 1), (0.2, 0), (0.25, 0), (0.25, 1), (0.2, 1), (0.25, 0), (0.3, 0), (0.3, 1), (0.25, 1), (0.3, 0), (0.35, 0), (0.35, 1), (0.3, 1), (0.35, 0), (0.4, 0), (0.4, 1), (0.35, 1), (0.4, 0), (0.45, 0), (0.45, 1), (0.4, 1), (0.45, 0), (0.5, 0), (0.5, 1), (0.45, 1), (0.5, 0), (0.55, 0), (0.55, 1), (0.5, 1), (0.55, 0), (0.6, 0), (0.6, 1), (0.55, 1), (0.6, 0), (0.65, 0), (0.65, 1), (0.6, 1), (0.65, 0), (0.7, 0), (0.7, 1), (0.65, 1), (0.7, 0), (0.75, 0), (0.75, 1), (0.7, 1), (0.75, 0), (0.8, 0), (0.8, 1), (0.75, 1), (0.8, 0), (0.85, 0), (0.85, 1), (0.8, 1), (0.85, 0), (0.9, 0), (0.9, 1), (0.85, 1), (0.9, 0), (0.95, 0), (0.95, 1), (0.9, 1), (0.95, 0), (1, 0), (1, 1), (0.95, 1), (0.97552824, 0.3454915), (0.9045085, 0.20610738), (0.7938926, 0.095491506), (0.6545085, 0.024471741), (0.5, 0), (0.3454915, 0.024471741), (0.20610738, 0.095491506), (0.095491506, 0.20610738), (0.024471741, 0.3454915), (0, 0.5), (0.024471741, 0.6545085), (0.095491506, 0.7938926), (0.20610738, 0.9045085), (0.3454915, 0.97552824), (0.5, 1), (0.6545085, 0.97552824), (0.7938926, 0.9045085), (0.9045085, 0.7938926), (0.97552824, 0.6545085), (1, 0.5), (1, 0.5), (0.97552824, 0.6545085), (0.9045085, 0.7938926), (0.7938926, 0.9045085), (0.6545085, 0.97552824), (0.5, 1), (0.3454915, 0.97552824), (0.20610738, 0.9045085), (0.095491506, 0.7938926), (0.024471741, 0.6545085), (0, 0.5), (0.024471741, 0.3454915), (0.095491506, 0.20610738), (0.20610738, 0.095491506), (0.3454915, 0.024471741), (0.5, 0), (0.6545085, 0.024471741), (0.7938926, 0.095491506), (0.9045085, 0.20610738), (0.97552824, 0.3454915)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (0.34, 10.35, 0.9)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "DrainSouth" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/drain>
+                point3f[] points = [(-0.25, -0.25, -0.003), (0.25, -0.25, -0.003), (0.25, 0.25, -0.003), (-0.25, 0.25, -0.003), (-0.25, -0.25, 0.003), (0.25, -0.25, 0.003), (0.25, 0.25, 0.003), (-0.25, 0.25, 0.003)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (10, 0.5, 0.003)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "DrainNorth" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/drain>
+                point3f[] points = [(-0.25, -0.25, -0.003), (0.25, -0.25, -0.003), (0.25, 0.25, -0.003), (-0.25, 0.25, -0.003), (-0.25, -0.25, 0.003), (0.25, -0.25, 0.003), (0.25, 0.25, 0.003), (-0.25, 0.25, 0.003)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (10, 11.5, 0.003)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+        }
+
+        def Scope "Lights"
+        {
+            def Mesh "Row1_L01_Housing" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Fixture>
+                point3f[] points = [(-0.8, -0.325, -0.07), (0.8, -0.325, -0.07), (0.8, 0.325, -0.07), (-0.8, 0.325, -0.07), (-0.8, -0.325, 0.07), (0.8, -0.325, 0.07), (0.8, 0.325, 0.07), (-0.8, 0.325, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (3.8, 4, 5.56)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def RectLight "Row1_L01"
+            {
+                float inputs:colorTemperature = 5000
+                bool inputs:enableColorTemperature = 1
+                float inputs:height = 0.45
+                float inputs:intensity = 4500
+                float inputs:width = 1.4
+                double3 xformOp:translate = (3.8, 4, 5.48)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "Row1_L02_Housing" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Fixture>
+                point3f[] points = [(-0.8, -0.325, -0.07), (0.8, -0.325, -0.07), (0.8, 0.325, -0.07), (-0.8, 0.325, -0.07), (-0.8, -0.325, 0.07), (0.8, -0.325, 0.07), (0.8, 0.325, 0.07), (-0.8, 0.325, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (7.8, 4, 5.56)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def RectLight "Row1_L02"
+            {
+                float inputs:colorTemperature = 5000
+                bool inputs:enableColorTemperature = 1
+                float inputs:height = 0.45
+                float inputs:intensity = 4500
+                float inputs:width = 1.4
+                double3 xformOp:translate = (7.8, 4, 5.48)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "Row1_L03_Housing" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Fixture>
+                point3f[] points = [(-0.8, -0.325, -0.07), (0.8, -0.325, -0.07), (0.8, 0.325, -0.07), (-0.8, 0.325, -0.07), (-0.8, -0.325, 0.07), (0.8, -0.325, 0.07), (0.8, 0.325, 0.07), (-0.8, 0.325, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (12.3, 4, 5.56)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def RectLight "Row1_L03"
+            {
+                float inputs:colorTemperature = 5000
+                bool inputs:enableColorTemperature = 1
+                float inputs:height = 0.45
+                float inputs:intensity = 4500
+                float inputs:width = 1.4
+                double3 xformOp:translate = (12.3, 4, 5.48)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "Row1_L04_Housing" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Fixture>
+                point3f[] points = [(-0.8, -0.325, -0.07), (0.8, -0.325, -0.07), (0.8, 0.325, -0.07), (-0.8, 0.325, -0.07), (-0.8, -0.325, 0.07), (0.8, -0.325, 0.07), (0.8, 0.325, 0.07), (-0.8, 0.325, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (16.3, 4, 5.56)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def RectLight "Row1_L04"
+            {
+                float inputs:colorTemperature = 5000
+                bool inputs:enableColorTemperature = 1
+                float inputs:height = 0.45
+                float inputs:intensity = 4500
+                float inputs:width = 1.4
+                double3 xformOp:translate = (16.3, 4, 5.48)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "Row2_L01_Housing" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Fixture>
+                point3f[] points = [(-0.8, -0.325, -0.07), (0.8, -0.325, -0.07), (0.8, 0.325, -0.07), (-0.8, 0.325, -0.07), (-0.8, -0.325, 0.07), (0.8, -0.325, 0.07), (0.8, 0.325, 0.07), (-0.8, 0.325, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (3.8, 8, 5.56)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def RectLight "Row2_L01"
+            {
+                float inputs:colorTemperature = 5000
+                bool inputs:enableColorTemperature = 1
+                float inputs:height = 0.45
+                float inputs:intensity = 4500
+                float inputs:width = 1.4
+                double3 xformOp:translate = (3.8, 8, 5.48)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "Row2_L02_Housing" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Fixture>
+                point3f[] points = [(-0.8, -0.325, -0.07), (0.8, -0.325, -0.07), (0.8, 0.325, -0.07), (-0.8, 0.325, -0.07), (-0.8, -0.325, 0.07), (0.8, -0.325, 0.07), (0.8, 0.325, 0.07), (-0.8, 0.325, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (7.8, 8, 5.56)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def RectLight "Row2_L02"
+            {
+                float inputs:colorTemperature = 5000
+                bool inputs:enableColorTemperature = 1
+                float inputs:height = 0.45
+                float inputs:intensity = 4500
+                float inputs:width = 1.4
+                double3 xformOp:translate = (7.8, 8, 5.48)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "Row2_L03_Housing" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Fixture>
+                point3f[] points = [(-0.8, -0.325, -0.07), (0.8, -0.325, -0.07), (0.8, 0.325, -0.07), (-0.8, 0.325, -0.07), (-0.8, -0.325, 0.07), (0.8, -0.325, 0.07), (0.8, 0.325, 0.07), (-0.8, 0.325, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (12.3, 8, 5.56)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def RectLight "Row2_L03"
+            {
+                float inputs:colorTemperature = 5000
+                bool inputs:enableColorTemperature = 1
+                float inputs:height = 0.45
+                float inputs:intensity = 4500
+                float inputs:width = 1.4
+                double3 xformOp:translate = (12.3, 8, 5.48)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "Row2_L04_Housing" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+                rel material:binding = </World/Hall/Materials/Fixture>
+                point3f[] points = [(-0.8, -0.325, -0.07), (0.8, -0.325, -0.07), (0.8, 0.325, -0.07), (-0.8, 0.325, -0.07), (-0.8, -0.325, 0.07), (0.8, -0.325, 0.07), (0.8, 0.325, 0.07), (-0.8, 0.325, 0.07)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (16.3, 8, 5.56)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def RectLight "Row2_L04"
+            {
+                float inputs:colorTemperature = 5000
+                bool inputs:enableColorTemperature = 1
+                float inputs:height = 0.45
+                float inputs:intensity = 1800
+                float inputs:width = 1.4
+                double3 xformOp:translate = (16.3, 8, 5.48)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def DomeLight "Ambient" (
+                prepend apiSchemas = ["ShadowAPI"]
+            )
+            {
+                float inputs:intensity = 90
+                bool inputs:shadow:enable = 0
+            }
+        }
+
+        def Scope "Markings"
+        {
+            def Mesh "LLW" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4]
+                int[] faceVertexIndices = [0, 1, 2, 3]
+                rel material:binding = </World/Hall/Materials/floor_llw>
+                point3f[] points = [(-0.3, 2.5, 0), (-0.3, -2.5, 0), (0.3, -2.5, 0), (0.3, 2.5, 0)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (1.5, 6, 0.0015)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+
+            def Mesh "ILW" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                int[] faceVertexCounts = [4]
+                int[] faceVertexIndices = [0, 1, 2, 3]
+                rel material:binding = </World/Hall/Materials/floor_ilw>
+                point3f[] points = [(-0.3, 2.5, 0), (-0.3, -2.5, 0), (0.3, -2.5, 0), (0.3, 2.5, 0)]
+                texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (
+                    interpolation = "faceVarying"
+                )
+                uniform token subdivisionScheme = "none"
+                double3 xformOp:translate = (10.8, 6, 0.0015)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+        }
+
+        def Mesh "Floor" (
+            prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI"]
+        )
+        {
+            uniform bool doubleSided = 1
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+            rel material:binding = </World/Hall/Materials/Floor>
+            point3f[] points = [(-10, -6, -0.15), (10, -6, -0.15), (10, 6, -0.15), (-10, 6, -0.15), (-10, -6, 0.15), (10, -6, 0.15), (10, 6, 0.15), (-10, 6, 0.15)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "faceVarying"
+            )
+            uniform token subdivisionScheme = "none"
+            double3 xformOp:translate = (10, 6, -0.15)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Mesh "WallSouth" (
+            prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI"]
+        )
+        {
+            uniform bool doubleSided = 1
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+            rel material:binding = </World/Hall/Materials/SideWall>
+            point3f[] points = [(-10, -0.25, -3), (10, -0.25, -3), (10, 0.25, -3), (-10, 0.25, -3), (-10, -0.25, 3), (10, -0.25, 3), (10, 0.25, 3), (-10, 0.25, 3)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "faceVarying"
+            )
+            uniform token subdivisionScheme = "none"
+            double3 xformOp:translate = (10, -0.25, 3)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Mesh "WallNorth" (
+            prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI"]
+        )
+        {
+            uniform bool doubleSided = 1
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+            rel material:binding = </World/Hall/Materials/SideWall>
+            point3f[] points = [(-10, -0.25, -3), (10, -0.25, -3), (10, 0.25, -3), (-10, 0.25, -3), (-10, -0.25, 3), (10, -0.25, 3), (10, 0.25, 3), (-10, 0.25, 3)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "faceVarying"
+            )
+            uniform token subdivisionScheme = "none"
+            double3 xformOp:translate = (10, 12.25, 3)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Mesh "WallFront" (
+            prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI"]
+        )
+        {
+            uniform bool doubleSided = 1
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+            rel material:binding = </World/Hall/Materials/EndWall>
+            point3f[] points = [(-0.25, -6.5, -3), (0.25, -6.5, -3), (0.25, 6.5, -3), (-0.25, 6.5, -3), (-0.25, -6.5, 3), (0.25, -6.5, 3), (0.25, 6.5, 3), (-0.25, 6.5, 3)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "faceVarying"
+            )
+            uniform token subdivisionScheme = "none"
+            double3 xformOp:translate = (-0.25, 6, 3)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Mesh "WallBack" (
+            prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI"]
+        )
+        {
+            uniform bool doubleSided = 1
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+            rel material:binding = </World/Hall/Materials/EndWall>
+            point3f[] points = [(-0.25, -6.5, -3), (0.25, -6.5, -3), (0.25, 6.5, -3), (-0.25, 6.5, -3), (-0.25, -6.5, 3), (0.25, -6.5, 3), (0.25, 6.5, 3), (-0.25, 6.5, 3)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "faceVarying"
+            )
+            uniform token subdivisionScheme = "none"
+            double3 xformOp:translate = (20.25, 6, 3)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Mesh "Ceiling" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            uniform bool doubleSided = 1
+            int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+            int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+            rel material:binding = </World/Hall/Materials/Ceiling>
+            point3f[] points = [(-10.5, -6.5, -0.15), (10.5, -6.5, -0.15), (10.5, 6.5, -0.15), (-10.5, 6.5, -0.15), (-10.5, -6.5, 0.15), (10.5, -6.5, 0.15), (10.5, 6.5, 0.15), (-10.5, 6.5, 0.15)]
+            texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1), (0, 0), (1, 0), (1, 1), (0, 1)] (
+                interpolation = "faceVarying"
+            )
+            uniform token subdivisionScheme = "none"
+            double3 xformOp:translate = (10, 6, 6.15)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Xform "Drums"
+    {
+    }
+
+    def Xform "Defects"
+    {
+    }
+
+    def Xform "Obstructions"
+    {
+    }
+
+    def "ReviewCameras"
+    {
+        def Camera "front_overview" (
+            prepend apiSchemas = ["OmniRtxCameraAutoExposureAPI_1", "OmniRtxCameraExposureAPI_1"]
+        )
+        {
+            float exposure:fStop = 2.8
+            float exposure:iso = 400
+            float exposure:responsivity = 1.1026709
+            float exposure:time = 0.016666668
+            float focalLength = 20
+            float horizontalAperture = 36
+            float verticalAperture = 22.5
+            matrix4d xformOp:transform = ( (0.3846153846153845, -0.923076923076923, 0, 0), (0.21484074219350638, 0.089516975913961, 0.972538002608105, 0), (-0.8977273870228661, -0.37405307792619424, 0.2327441373762986, 0), (1.2, 1.4999999999999996, 4.6, 0.9999999999999998) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+        }
+
+        def Camera "rear_overview" (
+            prepend apiSchemas = ["OmniRtxCameraAutoExposureAPI_1", "OmniRtxCameraExposureAPI_1"]
+        )
+        {
+            float exposure:fStop = 2.8
+            float exposure:iso = 400
+            float exposure:responsivity = 1.1026709
+            float exposure:time = 0.016666668
+            float focalLength = 20
+            float horizontalAperture = 36
+            float verticalAperture = 22.5
+            matrix4d xformOp:transform = ( (-0.3223945836063324, 0.9466053731419972, 0, 0), (-0.11599678159334004, -0.03950615025280422, 0.9924636067645958, 0), (0.9394713828112524, 0.31996489124731065, 0.12253974558407639, -0), (18.799999999999997, 10.5, 3.7999999999999994, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+        }
+
+        def Camera "entrance_detail" (
+            prepend apiSchemas = ["OmniRtxCameraAutoExposureAPI_1", "OmniRtxCameraExposureAPI_1"]
+        )
+        {
+            float exposure:fStop = 2.8
+            float exposure:iso = 400
+            float exposure:responsivity = 1.1026709
+            float exposure:time = 0.016666668
+            float focalLength = 23
+            float horizontalAperture = 36
+            float verticalAperture = 22.5
+            matrix4d xformOp:transform = ( (-0.48564293117863205, 0.8741572761215377, 0, 0), (-0.05648547925793721, -0.03138082180996511, 0.9979101335568911, 0), (0.8723304041641718, 0.4846280023134288, 0.06461706697512382, -0), (5.5, 7.8, 2.4, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+        }
+
+        def Camera "aisle2" (
+            prepend apiSchemas = ["OmniRtxCameraAutoExposureAPI_1", "OmniRtxCameraExposureAPI_1"]
+        )
+        {
+            float exposure:fStop = 2.8
+            float exposure:iso = 400
+            float exposure:responsivity = 1.1026709
+            float exposure:time = 0.016666668
+            float focalLength = 21
+            float horizontalAperture = 36
+            float verticalAperture = 22.5
+            matrix4d xformOp:transform = ( (0, -1, 0, 0), (-0, 0, 1, 0), (-1, 0, 0, 0), (1, 6, 1.2, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+        }
+    }
+}
+
+def Scope "Replicator"
+{
+    def OmniGraph "SDGPipeline"
+    {
+        token evaluationMode = "Automatic"
+        token evaluator:type = "execution"
+        token fabricCacheBacking = "StageWithoutHistory"
+        int2 fileFormatVersion = (1, 9)
+        custom int64 graph:variable:globalSeed (
+            customData = {
+                token scope = "private"
+            }
+            displayName = "globalSeed"
+        )
+        token pipelineStage = "pipelineStageSimulation"
+    }
+}
