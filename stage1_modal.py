@@ -10,7 +10,7 @@ import time
 import modal
 from isaac_sim_modal import CACHE_DIR, cache, base_image, mount_scene, _prepare_cache
 
-app = modal.App("agentverse-stage1-rtx", image=mount_scene(base_image.pip_install("imageio-ffmpeg")))
+app = modal.App("agentverse-stage1-rtx", image=mount_scene(base_image.pip_install("imageio-ffmpeg")).add_local_python_source("isaac_sim_modal"))
 
 
 @app.function(gpu="RTX-PRO-6000", volumes={CACHE_DIR: cache},
