@@ -1,9 +1,11 @@
 # Barrel detector pilot
 
-For the current **single-workspace 1,200-image / 10 RTX PRO 6000** run, start with
+For the prepared **single-workspace 1,200-image / 10 RTX PRO 6000** run, start with
 [the complete agent handoff](../docs/dataset_generation_handoff.md). It includes
 the frozen plan, generation, GPU comparison, validation, recovery and publication
-to the owner's Modal Volume. The following commands describe the smaller pilot.
+to the owner's Modal Volume. **Current instruction is only a one-image-per-GPU
+timing check, then stop; no full dataset or training until requested.** The
+following commands describe the earlier smaller pilot.
 
 The default isolated pilot renders 40 images: eight independent Modal L40S containers,
 five 640×640 views each. This is asset/annotation validation, not a trained model

@@ -31,6 +31,14 @@ def fixture(root):
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_single_image_gpu_comparison_has_no_steady_state_claim(self):
+        from detector.benchmark import compare
+        report=dict(seed=1001,images=1,frames=[{'elapsed_seconds':50}],build_seconds=30,
+                    capture_and_export_seconds=50)
+        result=compare(report,report,{'worker_seconds':100},{'worker_seconds':120})
+        self.assertEqual(result['whole_job_speedup'],1.2)
+        self.assertIsNone(result['after_first_frame_speedup'])
+
     def test_1200_plan_is_frozen_900_150_150_with_ten_workers(self):
         p=validate_plan(make_plan(1200,workers=10))
         counts=Counter()

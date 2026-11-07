@@ -2,12 +2,12 @@
 
 ## Objective and current authorization
 
-Generate **1,200 images in the `paramsachdeva07` Modal workspace**, with a cap of
-**10 independent RTX PRO 6000 workers**, one GPU each. Use the checked-in frozen
-plan. First compare one production scene with an L40S control, then generate the
-remaining scenes. Assemble, validate and upload one dataset into the same
-workspace's `detector-data` Volume. No second account or cross-account workflow
-is involved. Do not train a detector as part of this task.
+**Current user instruction: save/time one image on RTX PRO 6000 and one matching
+image on L40S, then stop. Do not launch full dataset creation or training until
+the user explicitly requests it.** The prepared future plan is 1,200 images in
+`paramsachdeva07`, with up to 10 independent RTX PRO 6000 workers. The full plan
+and publication commands below are for that later instruction. No second account
+or cross-account workflow is involved.
 
 Code branch: **`detector-training`** in `https://github.com/tika/agentverse26`.
 This branch includes the latest merged main at the time of publication. Preserve
@@ -54,7 +54,22 @@ run ID in the launch log or Volume and monitor it instead of launching a duplica
 A missing release directory is expected before the first run. Do not stop other
 apps to free GPUs. Actual concurrency depends on workspace limits/availability.
 
-## Exact generation command
+## Current task: one-image timing check, then stop
+
+```sh
+mkdir -p out/logs
+python detector/modal_pilot.py \
+  --seeds 1 --seed-start 1001 --frames-per-seed 1 --workers 1 \
+  --gpu RTX-PRO-6000 --workspace paramsachdeva07 --benchmark-l40s \
+  > out/logs/barrel_gpu_benchmark.log 2>&1
+```
+
+This saves one image per GPU (two total), compares cold job time and stops.
+Do not add `--plan` or `--publish` to this check. The JSON speedup after the first
+frame is null: one frame cannot measure steady-state throughput. Report the
+observed startup/capture times and stop; do not automatically move on below.
+
+## Prepared full generation command: only after the user requests it
 
 The checked-in `detector/plans/barrels_1200_v1.json` is the authoritative plan.
 It assigns 61 unique seeds starting at 1001, separate from the inspected pilot
@@ -205,11 +220,11 @@ force-overwrite or delete an existing release to make a check pass.
 
 ## Paste this into a new agent
 
-> Work in agentverse26 on detector-training. Read
-> docs/dataset_generation_handoff.md completely. The task is the single-workspace
-> 1,200-image dataset on paramsachdeva07, up to 10 RTX PRO 6000 workers. First check
-> whether the run/release already exists; monitor or resume it rather than launching
-> duplicates. Follow the exact frozen plan and commands. Preserve team changes and
-> all completed captures. Report the matched GPU benchmark, validate all 1,200 images,
-> publish to detector-data:/releases/barrels_v2_1200, and report remote hash verification.
-> Do not train a model, change the barrel design or stop other people's apps.
+> Work in agentverse26 on detector-training. Read docs/dataset_generation_handoff.md
+> completely. Current authorization is only one saved image on RTX PRO 6000 and one
+> matching L40S image for timing, then stop. First check whether that benchmark is
+> already running or complete; monitor/report it instead of launching duplicates.
+> Do not run full dataset creation or training until the user explicitly requests
+> it. The future single-workspace 1,200-image / 10-GPU plan and publication commands
+> are prepared in the handoff. Preserve team changes and all captures. Do not change
+> the barrel design or stop other people's apps.

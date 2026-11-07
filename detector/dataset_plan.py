@@ -46,7 +46,7 @@ def validate_plan(plan):
     if plan.get('schema')!=1 or plan.get('classes')!=CLASSES or plan.get('camera')!=CAMERA:
         raise ValueError('Unsupported plan schema/classes/camera')
     jobs=plan['jobs']
-    if len({j['seed'] for j in jobs})!=len(jobs) or any(j['seed']<1 or not 5<=j['frames']<=50 for j in jobs):
+    if len({j['seed'] for j in jobs})!=len(jobs) or any(j['seed']<1 or not 1<=j['frames']<=50 for j in jobs):
         raise ValueError('Duplicate seeds or invalid frame counts')
     if sum(j['frames'] for j in jobs)!=plan['images'] or not 1<=plan['workers']<=16:
         raise ValueError('Plan totals or worker count invalid')

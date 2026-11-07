@@ -110,8 +110,8 @@ def main():
     elif args.resume:
         plan=validate_plan(json.loads((args.resume/'generation.json').read_text())['plan'])
     else:
-        if not 1<=args.seeds<=16 or not 5<=args.frames_per_seed<=50 or args.seed_start<1:
-            raise SystemExit('Use 1–16 seeds, positive starting seed and 5–50 frames per seed')
+        if not 1<=args.seeds<=16 or not 1<=args.frames_per_seed<=50 or args.seed_start<1:
+            raise SystemExit('Use 1–16 seeds, positive starting seed and 1–50 frames per seed')
         plan=dict(schema=1,images=args.seeds*args.frames_per_seed,workers=args.workers or args.seeds,
                   classes=CLASSES,camera=CAMERA,jobs=[dict(seed=s,frames=args.frames_per_seed,split='pilot')
                   for s in range(args.seed_start,args.seed_start+args.seeds)])
