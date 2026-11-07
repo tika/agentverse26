@@ -1,0 +1,162 @@
+"""Hot hall worker on Modal: build the hall and walking Spot once, then run edits in seconds.
+
+    python tools/hot_hall.py up                    # start (about 4 min to HOT_READY), stays up 4 h
+    python tools/hot_hall.py run scripts/hot/walk_aisle.py   # exec on the live stage, fetch mp4s
+    python tools/hot_hall.py run lib.py scenario.py          # several files run as one request
+    python tools/hot_hall.py down
+
+Request scripts run inside sim/hot_server.py; see its docstring for the helpers they get.
+Changes to sim/*.py need `down` and `up`, because the image copies sim/ at start.
+"""
+import io
+import json
+import os
+from pathlib import Path
+import queue
+import subprocess
+import sys
+import tarfile
+import threading
+import time
+import uuid
+import modal
+
+ROOT = Path(__file__).resolve().parents[1]
+STATE = ROOT / '.runtime/hot.json'
+OUT = ROOT / 'out/hot'
+# Same image recipe as tools/run_hall.py, which renders hall textures correctly.
+image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
+                                   add_python='3.13', setup_dockerfile_commands=['USER root'])
+         .entrypoint([])
+         .pip_install('imageio[ffmpeg]')
+         .env({'ACCEPT_EULA': 'Y', 'PRIVACY_CONSENT': 'N', 'NVIDIA_DRIVER_CAPABILITIES': 'all'})
+         .add_local_dir(ROOT / 'sim', '/workspace/sim', copy=True,
+                        ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc', '*.usda']))
+app = modal.App('agentverse-hot-hall')
+requests = modal.Queue.from_name('agentverse-hot-requests', create_if_missing=True)
+results = modal.Dict.from_name('agentverse-hot-results', create_if_missing=True)
+
+
+def _encode(folder):
+    import imageio.v2 as imageio
+    for frames in sorted(folder.rglob('frames')):
+        images = sorted(frames.glob('*.jpg'))
+        if images:
+            with imageio.get_writer(frames.parent.with_suffix('.mp4'), fps=12, codec='libx264',
+                                    quality=8, macro_block_size=1) as writer:
+                for path in images:
+                    writer.append_data(imageio.imread(path))
+        for path in images:
+            path.unlink()
+        frames.rmdir()
+
+
+@app.function(image=image, gpu=['L40S', 'L4', 'A10G'], cpu=8, memory=32768, timeout=4 * 60 * 60)
+def serve():
+    hot = Path('/tmp/hot')
+    log = open('/tmp/hot.log', 'w')
+    process = subprocess.Popen(['/isaac-sim/python.sh', '/workspace/sim/hot_server.py', '--allow-root'],
+                               cwd='/workspace/sim', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+    def pump():
+        for line in process.stdout:
+            log.write(line)
+            log.flush()
+            if 'HOT_READY' in line or '[hot]' in line or 'Traceback' in line:
+                print(line, end='', flush=True)
+            if 'HOT_READY' in line:
+                results['_status'] = {'ready': True, 'line': line.strip(), 'time': time.time()}
+    threading.Thread(target=pump, daemon=True).start()
+    results['_status'] = {'ready': False, 'time': time.time()}
+    while process.poll() is None:
+        try:
+            request = requests.get(timeout=5)
+        except queue.Empty:
+            continue
+        if request is None:
+            continue
+        rid = request['id']
+        (hot / 'req').mkdir(parents=True, exist_ok=True)
+        staged = hot / 'req' / f'{rid}.tmp'
+        staged.write_text(request['source'])
+        staged.rename(staged.with_suffix('.py'))
+        done = hot / 'out' / rid / 'done'
+        while not done.exists() and process.poll() is None:
+            time.sleep(0.2)
+        folder = hot / 'out' / rid
+        if folder.exists():
+            _encode(folder)
+        buffer = io.BytesIO()
+        with tarfile.open(fileobj=buffer, mode='w:gz') as archive:
+            if folder.exists():
+                archive.add(folder, arcname=rid)
+        tail = Path('/tmp/hot.log').read_text(errors='replace')[-6000:]
+        results[rid] = {'archive': buffer.getvalue(), 'alive': process.poll() is None, 'log_tail': tail}
+    results['_status'] = {'ready': False, 'exited': process.returncode,
+                          'log_tail': Path('/tmp/hot.log').read_text(errors='replace')[-9000:]}
+
+
+def up():
+    with modal.enable_output():
+        with app.run(detach=True):
+            call = serve.spawn()
+    STATE.parent.mkdir(exist_ok=True)
+    STATE.write_text(json.dumps({'call_id': call.object_id, 'started': time.time()}))
+    print('Starting hot worker', call.object_id, '- waiting for HOT_READY', flush=True)
+    while True:
+        status = results.get('_status') or {}
+        if status.get('ready'):
+            print(status['line'], flush=True)
+            return
+        if 'exited' in status:
+            print(status.get('log_tail', ''))
+            raise SystemExit('Hot worker exited during startup')
+        time.sleep(10)
+
+
+def run(*scripts, timeout_s=1800):
+    rid = time.strftime('%H%M%S-') + Path(scripts[-1]).stem + '-' + uuid.uuid4().hex[:4]
+    status = results.get('_status') or {}
+    if not status.get('ready'):
+        raise SystemExit('Hot worker is not ready; run `python tools/hot_hall.py up`')
+    started = time.perf_counter()
+    requests.put({'id': rid, 'source': '\n'.join(Path(script).read_text() for script in scripts)})
+    while (result := results.get(rid)) is None:
+        if time.perf_counter() - started > timeout_s:
+            raise SystemExit(f'No result for {rid} after {timeout_s}s')
+        time.sleep(1)
+    results.pop(rid)
+    OUT.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(fileobj=io.BytesIO(result['archive'])) as archive:
+        archive.extractall(OUT, **({'filter': 'data'} if sys.version_info >= (3, 12) else {}))
+    folder = OUT / rid
+    print(f'{rid}: {time.perf_counter() - started:.1f}s round trip -> {folder}')
+    error = folder / 'error.txt'
+    if error.exists():
+        print(error.read_text())
+        print(result['log_tail'][-3000:])
+        raise SystemExit(1)
+    videos = sorted(folder.glob('*.mp4'))
+    for video in videos:
+        print('  video', video)
+    if videos and sys.platform == 'darwin' and not os.environ.get('HOT_NO_OPEN'):
+        subprocess.run(['open', *map(str, videos)])
+
+
+def down():
+    call_id = json.loads(STATE.read_text())['call_id']
+    modal.FunctionCall.from_id(call_id).cancel()
+    results['_status'] = {'ready': False, 'stopped': time.time()}
+    print('Stopped', call_id)
+
+
+if __name__ == '__main__':
+    command = sys.argv[1] if len(sys.argv) > 1 else ''
+    if command == 'up':
+        up()
+    elif command == 'run' and len(sys.argv) > 2:
+        run(*sys.argv[2:])
+    elif command == 'down':
+        down()
+    else:
+        raise SystemExit(__doc__)
