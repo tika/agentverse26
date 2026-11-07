@@ -1,15 +1,26 @@
 # Agentverse26 — nuclear-store robot inspection
 
 Build the Isaac Sim environment one step at a time, following **MVP v2**.
-Steps 0 and 1 are verified: Isaac Sim 6.2 rendered the cube and the empty,
-textured 20 × 12 × 6 m hall on Modal and returned real camera screenshots.
+Steps 0–2 are verified: Isaac Sim 6.2 rendered the cube, textured
+20 × 12 × 6 m hall and exact 28-drum layout on Modal. The sensor extension
+adds actual RGB/metric-depth frames, simulated dose/swab/environment readings
+and configurable inspection criteria and safety rules.
 
 - [Run commands, installed APIs and validation](sim/README.md)
 - [Environment build specification](docs/environment_mvp.md)
+- [Sensors, inspection criteria, safety rules and limitations](docs/sensors_and_criteria.md)
 
 Use Python 3.12+ locally. Review each step through exported screenshots/video,
 as selected by the user; this replaces the specification's interactive-viewer
-instructions. Stop after each step for review. Step 2, barrels, has not started.
+instructions. Stop after each step for review. Step 2 and the sensor extension
+are complete; visible fault generation is next. The dog/planner prototypes
+below are separate from the current hall sensor validation.
+
+```sh
+python3 tools/run_drums.py
+python3 tools/run_sensors.py
+python3 -m unittest discover -s sim/tests -v
+```
 
 All new project work belongs in this repository. Rendered outputs are stored
 locally under `sim/out/` and ignored by Git. No credentials belong in the repo.
