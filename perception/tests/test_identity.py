@@ -139,7 +139,7 @@ class DenseLayoutIdentity(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        scene_sim = Path("/Users/levi/Desktop/agentverse/worktrees/claude-s2-scene/sim")
+        scene_sim = ROOT / "sim"  # repo-relative (was a local worktree path)
         if not (scene_sim / "stacking.py").exists():
             raise unittest.SkipTest("scene worktree not available")
         sys.path.insert(0, str(scene_sim))
