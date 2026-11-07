@@ -104,12 +104,15 @@ def build_scene(seed=42, include_drums=True):
             light = UsdLux.RectLight.Define(stage,root+'Lights/'+name)
             light.CreateWidthAttr(1.4)
             light.CreateHeightAttr(.45)
-            light.CreateIntensityAttr(4500 * (.4 if (row,number)==(2,4) else 1))
-            light.CreateEnableColorTemperatureAttr(True)
-            light.CreateColorTemperatureAttr(4500)
+            # Stage-2 F4: neutral white (no colour-temperature tint; the RTX tonemapper is not
+            # white-balanced to 4500 K, which produced the rejected warm cast) and ~2.5x brighter.
+            light.CreateIntensityAttr(11000 * (.4 if (row,number)==(2,4) else 1))
+            light.CreateEnableColorTemperatureAttr(False)
+            light.CreateColorAttr(Gf.Vec3f(1.0, 1.0, 1.0))
             UsdGeom.Xformable(light).AddTranslateOp().Set(Gf.Vec3d(x,y,5.48))
     ambient = UsdLux.DomeLight.Define(stage,root+'Lights/Ambient')
-    ambient.CreateIntensityAttr(90)
+    ambient.CreateIntensityAttr(150)
+    ambient.CreateColorAttr(Gf.Vec3f(1.0, 1.0, 1.0))
     UsdLux.ShadowAPI.Apply(ambient.GetPrim()).CreateShadowEnableAttr(False)
     write_aisles()
     if include_drums:
