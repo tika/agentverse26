@@ -16,7 +16,8 @@ KINDS = {
     "visual_corrosion": {
         "source": "camera+detector (YOLO class 1)", "scope": "drum",
         "supports": ["external_corrosion"],
-        "cannot_establish": ["remaining wall thickness", "internal corrosion", "leak", "radioactivity"]},
+        "cannot_establish": ["remaining wall thickness", "internal corrosion", "hydrogen generation",
+                             "failure timing", "leak", "radioactivity"]},
     # Levi guidance 22:20: clear wet spots/condensation are maintenance observations (NDA WPS/630:
     # dense packing can promote stagnant-air condensation; roof leaks/flooding are possible water
     # entry). A suspected radioactive release is rare and needs an independent contact swab.

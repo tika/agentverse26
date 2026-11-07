@@ -170,6 +170,14 @@ def main():
                              f"actions: {', '.join(a.replace('_', ' ') for a in rep['actions'])}")
                 cols.append(red if "stand_off_and_alert" in rep["actions"] or
                             "mark_area_avoid_tracking_and_alert" in rep["actions"] else amber if rep["findings"] else green)
+                limits = []
+                for e in rep["evidence"]:
+                    for item in e.get("cannot_establish", []):
+                        if item not in limits:
+                            limits.append(item)
+                if limits:
+                    lines.append("CANNOT ESTABLISH from this evidence: " + ", ".join(limits[:6]))
+                    cols.append(grey)
                 pr = rep["priority"]
                 lines.append(f"PRIORITY {pr['index']:.0f}/100 (ranking, not a probability): {pr['explanation']}")
                 cols.append(white)
