@@ -1,7 +1,5 @@
-# Hot-worker scenario engine: 1920x1080 frames with third-person, first-person (+thermal)
-# and bird's-eye views, navigation from simulated LiDAR/IMU/odometry, and a stats strip.
-# Send together with a scenario file:
-#   python tools/hot_hall.py run scripts/hot/scenario_lib.py scripts/hot/scenario_1_patrol.py
+# Hot-worker frame toolkit: cameras, thermal rendering, perception stand-ins and the 1920x1080 layout
+# (third-person, first-person + thermal, bird's-eye, stats strip). Load after sensing.py, before agent.py.
 import copy
 import json
 import math
@@ -9,7 +7,7 @@ import omni.replicator.core as rep
 from PIL import Image, ImageDraw, ImageFont
 from pxr import Gf, UsdGeom
 from isaacsim.sensors.camera import Camera
-from inspection_payloads import microphone_window, thermal_image
+from inspection_payloads import microphone_window
 from sensors import SensorWorld, load_config
 
 W, H = 1920, 1080
@@ -75,124 +73,141 @@ def wrap(angle):
     return (angle + math.pi) % (2 * math.pi) - math.pi
 
 
-def lidar_scan(origin, yaw):
-    """Simulated 2D LiDAR: analytic rays against drum cylinders and hall walls, 1 cm noise."""
-    angles = yaw + np.linspace(-math.pi, math.pi, LIDAR_BEAMS, endpoint=False)
-    dirs = np.stack([np.cos(angles), np.sin(angles)], 1)
-    ranges = np.full(LIDAR_BEAMS, LIDAR_RANGE)
-    ox, oy = origin[0], origin[1]
-    with np.errstate(divide='ignore', invalid='ignore'):
-        for bound, axis in ((HALL[0], 0), (HALL[1], 0), (HALL[2], 1), (HALL[3], 1)):
-            t = (bound - origin[axis]) / dirs[:, axis]
-            ranges = np.where((t > 0) & (t < ranges), t, ranges)
-    hit_id = np.full(LIDAR_BEAMS, '', dtype=object)
-    for drum in inventory:
-        cx, cy, r = drum['x'] - ox, drum['y'] - oy, drum['radius']
-        if math.hypot(cx, cy) - r > LIDAR_RANGE:
-            continue
-        b = dirs[:, 0] * cx + dirs[:, 1] * cy
-        disc = b * b - (cx * cx + cy * cy - r * r)
-        t = b - np.sqrt(np.maximum(disc, 0))
-        closer = (disc > 0) & (t > 0) & (t < ranges)
-        ranges = np.where(closer, t, ranges)
-        hit_id = np.where(closer, drum['id'], hit_id)
-    ranges = ranges + rng.normal(0, 0.01, LIDAR_BEAMS)
-    return angles - yaw, ranges
+EMISSIVITY = {'ILW': 0.30, 'LLW': 0.90, 'floor': 0.95, 'wall': 0.92}  # Bare stainless vs painted steel/concrete.
+LWIR_RES = (160, 90)        # Microbolometer-class resolution, upscaled for display.
+NETD_C = 0.05               # Sensor noise (noise-equivalent temperature difference).
 
 
-class Nav:
-    """Leg odometry + IMU dead reckoning, corrected by LiDAR drum landmarks (simple complementary fix)."""
+def _apparent(true_c, emissivity, reflected_c):
+    """Radiometric mix: emitted part plus reflected surroundings (grey body, Stefan-Boltzmann)."""
+    t, r = np.asarray(true_c) + 273.15, np.asarray(reflected_c) + 273.15
+    return (emissivity * t ** 4 + (1 - emissivity) * r ** 4) ** 0.25 - 273.15
 
-    def __init__(self, p, yaw):
-        self.truth_prev = (p[:2].copy(), yaw)
-        self.odom = np.array([p[0], p[1], yaw], dtype=float)
-        self.fused = self.odom.copy()
-        self.gyro_bias = 0.006
-        self.landmarks = 0
-        self.hits_world = np.zeros((0, 2))
-        self.gyro = 0.0
-        self.speed = 0.0
 
-    def update(self, p, yaw, dt):
-        prev_xy, prev_yaw = self.truth_prev
-        dyaw_true = wrap(yaw - prev_yaw)
-        delta = p[:2] - prev_xy
-        body = np.array([math.cos(prev_yaw) * delta[0] + math.sin(prev_yaw) * delta[1],
-                         -math.sin(prev_yaw) * delta[0] + math.cos(prev_yaw) * delta[1]])
-        self.truth_prev = (p[:2].copy(), yaw)
-        self.speed = float(np.linalg.norm(delta) / dt)
-        self.gyro = dyaw_true / dt + self.gyro_bias + rng.normal(0, 0.01)
-        legs = body * 1.05 + rng.normal(0, 0.004, 2)  # 5% leg-odometry scale error + slip noise
-        for estimate in (self.odom, self.fused):
-            estimate[2] = wrap(estimate[2] + self.gyro * dt)
-            c, s = math.cos(estimate[2]), math.sin(estimate[2])
-            estimate[0] += c * legs[0] - s * legs[1]
-            estimate[1] += s * legs[0] + c * legs[1]
-        bearings, ranges = lidar_scan(p, yaw)
-        world_angles = self.fused[2] + bearings
-        hits = self.fused[:2] + ranges[:, None] * np.stack([np.cos(world_angles), np.sin(world_angles)], 1)
-        valid = ranges < LIDAR_RANGE - 0.05
-        self.hits_world = hits[valid]
-        residuals, bearing_errors = [], []
-        for drum in inventory:
-            centre = np.array([drum['x'], drum['y']])
-            near = np.linalg.norm(hits[valid] - centre, axis=1) < drum['radius'] + 0.12
-            if near.sum() < 3:
-                continue
-            idx = np.nonzero(valid)[0][near]
-            estimated_centres = hits[idx] + drum['radius'] * np.stack([np.cos(world_angles[idx]), np.sin(world_angles[idx])], 1)
-            observed = estimated_centres.mean(0)
-            residuals.append(centre - observed)
-            rel_map = centre - self.fused[:2]
-            rel_obs = observed - self.fused[:2]
-            bearing_errors.append(wrap(math.atan2(rel_map[1], rel_map[0]) - math.atan2(rel_obs[1], rel_obs[0])))
-        self.landmarks = len(residuals)
-        if self.landmarks >= 2:
-            self.fused[:2] += 0.5 * np.mean(residuals, 0)
-            self.fused[2] = wrap(self.fused[2] + 0.5 * float(np.median(bearing_errors)))
+def correct_emissivity(apparent_c, emissivity, reflected_c):
+    """What a thermographer does once the material is known: undo the reflected component."""
+    a, r = apparent_c + 273.15, reflected_c + 273.15
+    return float(max((a ** 4 - (1 - emissivity) * r ** 4) / emissivity, 1.0) ** 0.25 - 273.15)
 
-    def errors(self, p, yaw):
-        return (float(np.linalg.norm(self.odom[:2] - p[:2])), float(np.linalg.norm(self.fused[:2] - p[:2])),
-                math.degrees(abs(wrap(self.fused[2] - yaw))))
+
+def _pixel_world(depth, camera):
+    """World xyz of each pixel from the camera's (physical) pose, intrinsics and depth."""
+    k = camera.get_intrinsics_matrix()
+    h, w = depth.shape
+    sx, sy = 640 / w, 360 / h
+    vs, us = np.mgrid[0:h, 0:w]
+    u, v = (us + 0.5) * sx, (vs + 0.5) * sy
+    position, quat = camera.get_world_pose(camera_axes='world')
+    qw, qx, qy, qz = quat
+    rot = np.array([[1 - 2 * (qy * qy + qz * qz), 2 * (qx * qy - qz * qw), 2 * (qx * qz + qy * qw)],
+                    [2 * (qx * qy + qz * qw), 1 - 2 * (qx * qx + qz * qz), 2 * (qy * qz - qx * qw)],
+                    [2 * (qx * qz - qy * qw), 2 * (qy * qz + qx * qw), 1 - 2 * (qx * qx + qy * qy)]])
+    local = np.stack([depth, -(u - k[0, 2]) * depth / k[0, 0], -(v - k[1, 2]) * depth / k[1, 1]], -1)
+    return local @ rot.T + position
 
 
 def perceive(scene):
-    """Ground-truth segmentation stands in for the detector; thermal is synthetic from the same mask."""
+    """Segmentation masks (stand-in detector) plus a physically shaped synthetic LWIR frame."""
     data = SEG.get_data()
-    ids = np.asarray(data['data'])
-    by_drum, corrosion, temps = {}, {}, {}
+    ids_full = np.asarray(data['data'])
+    labels = data['info']['idToLabels']
+    by_drum, corrosion, drum_keys = {}, {}, {}
     ambient = scene['ambient_c']
-    for key, label in data['info']['idToLabels'].items():
+    for key, label in labels.items():
         drum_id = label.get('drum_id', '').upper()
         if not drum_id:
             continue
-        count = int((ids == int(key)).sum())
+        count = int((ids_full == int(key)).sum())
         if label.get('class') == 'drum':
             by_drum[drum_id] = count
-            temps[int(key)] = ambient + scene['drum_offsets_c'].get(drum_id, 1.2 if DRUMS[drum_id]['category'] == 'ILW' else 0.3)
+            drum_keys[int(key)] = drum_id
         elif label.get('class') == 'corrosion':
             corrosion[drum_id] = corrosion.get(drum_id, 0) + count
-    thermal = thermal_image(ids, temps, ambient - 0.5)
-    thermal = thermal + rng.normal(0, 0.15, thermal.shape).astype(np.float32)
-    drum_temps = {d: float(np.median(thermal[np.isin(ids, [int(k) for k, l in data['info']['idToLabels'].items()
-                                                         if l.get('drum_id', '').upper() == d and l.get('class') == 'drum'])]))
-                  for d, n in by_drum.items() if n >= 60}
-    return {'drum_px': by_drum, 'corrosion_px': corrosion, 'thermal': thermal, 'drum_temps': drum_temps}
+    # Render at sensor resolution: nearest-neighbour ids and depth.
+    h, w = LWIR_RES[1], LWIR_RES[0]
+    rows = (np.arange(h) * ids_full.shape[0] / h).astype(int)
+    cols = (np.arange(w) * ids_full.shape[1] / w).astype(int)
+    ids = ids_full[np.ix_(rows, cols)]
+    depth_full = onboard.get_depth()
+    depth = np.nan_to_num(depth_full[np.ix_(rows, cols)], nan=20.0, posinf=20.0) if depth_full is not None else np.full((h, w), 20.0)
+    xyz = _pixel_world(np.clip(depth, 0.05, 40.0), onboard)
+    # Background: floor (warmed near hot drums) and walls (mild vertical stratification).
+    true = ambient - 0.6 + 0.35 * np.clip(xyz[..., 2], 0, 6)
+    emiss = np.where(xyz[..., 2] < 0.05, EMISSIVITY['floor'], EMISSIVITY['wall'])
+    for drum_id, offset in scene['drum_offsets_c'].items():
+        d = DRUMS[drum_id]
+        gap = np.hypot(xyz[..., 0] - d['x'], xyz[..., 1] - d['y']) - d['radius']
+        true = true + np.where(xyz[..., 2] < 0.05, 0.22 * offset * np.exp(-np.clip(gap, 0, None) / 0.35), 0.0)
+    # Drums: per-material emissivity, vertical gradient around the fill height, angular fall-off at the rim.
+    for key, drum_id in drum_keys.items():
+        mask = ids == key
+        if not mask.any():
+            continue
+        d = DRUMS[drum_id]
+        offset = scene['drum_offsets_c'].get(drum_id, 1.2 if d['category'] == 'ILW' else 0.3)
+        z = np.clip(xyz[..., 2] / d['height'], 0, 1)
+        profile = 0.55 + 0.45 * np.exp(-((z - 0.4) / 0.32) ** 2)       # Hottest near the waste mid-height.
+        rel = np.stack([xyz[..., 0] - d['x'], xyz[..., 1] - d['y']], -1)
+        normal = rel / np.maximum(np.linalg.norm(rel, axis=-1, keepdims=True), 1e-6)
+        to_cam = onboard.get_world_pose(camera_axes='world')[0][:2] - np.stack([xyz[..., 0], xyz[..., 1]], -1)
+        to_cam /= np.maximum(np.linalg.norm(to_cam, axis=-1, keepdims=True), 1e-6)
+        cos_view = np.clip((normal * to_cam).sum(-1), 0, 1)
+        eps = EMISSIVITY[d['category']] * (0.35 + 0.65 * cos_view ** 0.5)  # Emissivity drops at grazing angles.
+        true = np.where(mask, ambient + offset * profile, true)
+        emiss = np.where(mask, eps, emiss)
+    apparent = _apparent(true, emiss, ambient)
+    noise = rng.normal(0, NETD_C, apparent.shape) + rng.normal(0, NETD_C, (1, w))  # Pixel + column pattern noise.
+    small = (apparent + noise).astype(np.float32)
+    big = np.asarray(Image.fromarray(small, mode='F').resize((ids_full.shape[1], ids_full.shape[0]), Image.BICUBIC))
+    drum_temps = {}
+    for drum_id, n in by_drum.items():
+        keys = [k for k, dd in drum_keys.items() if dd == drum_id]
+        if n >= 60:
+            drum_temps[drum_id] = float(np.median(big[np.isin(ids_full, keys)]))
+    return {'drum_px': by_drum, 'corrosion_px': corrosion, 'thermal': big, 'thermal_small': small,
+            'drum_temps': drum_temps}
+
+
+IRONBOW = np.array([[0, 0, 10], [32, 0, 96], [110, 0, 140], [184, 30, 110], [230, 90, 40], [250, 170, 20],
+                    [255, 230, 110], [255, 255, 235]])
 
 
 def thermal_rgb(thermal, lo, hi):
     x = np.clip((thermal - lo) / max(hi - lo, 1e-3), 0, 1)
-    stops = np.array([0, .25, .5, .75, 1.0])
-    palette = np.array([[0, 0, 4], [87, 16, 110], [188, 55, 84], [249, 142, 9], [252, 255, 164]])
-    return np.stack([np.interp(x, stops, palette[:, c]) for c in range(3)], -1).astype(np.uint8)
+    stops = np.linspace(0, 1, len(IRONBOW))
+    return np.stack([np.interp(x, stops, IRONBOW[:, c]) for c in range(3)], -1).astype(np.uint8)
 
 
-def place_cameras(p, cam_yaw, scene):
+def thermal_inset(perception, size=(256, 144)):
+    """Camera-style display: ironbow, auto range, colour bar and a crosshair on the hottest spot."""
+    small = perception['thermal_small']
+    lo, hi = float(np.percentile(small, 1)), float(max(np.percentile(small, 99.8), np.percentile(small, 1) + 4))
+    image = Image.fromarray(thermal_rgb(small, lo, hi)).resize(size, Image.BILINEAR)
+    draw = ImageDraw.Draw(image)
+    j, i = np.unravel_index(np.argmax(small), small.shape)
+    cx, cy = (i + 0.5) * size[0] / small.shape[1], (j + 0.5) * size[1] / small.shape[0]
+    draw.line((cx - 7, cy, cx + 7, cy), fill='white', width=1)
+    draw.line((cx, cy - 7, cx, cy + 7), fill='white', width=1)
+    draw.text((min(cx + 6, size[0] - 52), max(cy - 16, 0)), f'{small.max():.1f}', font=FONT[14], fill='white')
+    bar = np.linspace(1, 0, size[1])[:, None].repeat(8, 1)
+    image.paste(Image.fromarray(thermal_rgb(lo + bar * (hi - lo), lo, hi)), (size[0] - 10, 0))
+    return image, lo, hi
+
+
+def place_cameras(p, cam_yaw, scene, onboard_yaw=None):
     heading = np.array([math.cos(cam_yaw), math.sin(cam_yaw), 0.0])
     _aim(THIRD, p - 2.9 * heading + [0, 0, 1.75], p + 1.6 * heading + [0, 0, 0.2])
-    eye = p + 0.62 * heading + [0, 0, 0.30]  # Ahead of Spot's nose so close looks stay clear of the body.
+    if onboard_yaw is not None:
+        heading = np.array([math.cos(onboard_yaw), math.sin(onboard_yaw), 0.0])
+    if onboard_yaw is not None:
+        # Match the elevated PTZ mount and leave clearance from the drum at standoff.
+        eye = p + 0.35 * heading + [0, 0, 0.45]
+    else:
+        eye = p + 0.62 * heading + [0, 0, 0.30]
     look = scene.get('look')
     target = np.array([*look, 0.5]) if look is not None else eye + heading + [0, 0, -0.32]
+    if onboard_yaw is not None and np.dot(target[:2] - eye[:2], heading[:2]) <= 0.1:
+        target = eye + heading + [0, 0, -0.32]
     _aim(onboard, eye, target)
     _aim(BIRD, (p[0], p[1], 5.5), (p[0], p[1], 0.0), up=(0, 1, 0))
     return eye
@@ -211,11 +226,12 @@ def spark(draw, box, values, limit, color, label):
     draw.rectangle(box, outline='#2a3644')
     draw.text((x0 + 6, y0 + 4), label, font=FONT[14], fill='#9fb2c4')
     if len(values) > 1:
-        top = max(limit * 1.3, max(values) * 1.1, 1e-6)
+        top = max((limit or 0) * 1.3, max(values) * 1.1, 1e-6)
         n = min(len(values), 120)
         pts = [(x0 + 4 + (x1 - x0 - 8) * i / 119, y1 - 4 - (y1 - y0 - 26) * v / top) for i, v in enumerate(values[-n:])]
-        ly = y1 - 4 - (y1 - y0 - 26) * limit / top
-        draw.line([(x0 + 2, ly), (x1 - 2, ly)], fill='#ff6767')
+        if limit:
+            ly = y1 - 4 - (y1 - y0 - 26) * limit / top
+            draw.line([(x0 + 2, ly), (x1 - 2, ly)], fill='#ff6767')
         draw.line(pts, fill=color, width=2)
 
 
@@ -223,9 +239,7 @@ def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
     canvas = Image.new('RGB', (W, H), '#0d131b')
     canvas.paste(Image.fromarray(frames['third']), (0, 0))
     first = Image.fromarray(frames['first'])
-    hottest_c = max(perception['drum_temps'].values(), default=m.scene['ambient_c'])
-    lo, hi = m.scene['ambient_c'] - 4, max(m.scene['ambient_c'] + 6, hottest_c + 2)
-    inset = Image.fromarray(thermal_rgb(perception['thermal'], lo, hi)).resize((256, 144))
+    inset, lo, hi = thermal_inset(perception)
     first.paste(inset, (640 - 262, 360 - 150))
     canvas.paste(first, (1280, 0))
     bird = Image.fromarray(frames['bird'])
@@ -254,10 +268,10 @@ def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
                        (1290, 368, "BIRD'S EYE  |  LiDAR hits (cyan), route, trail, estimate (amber)")):
         draw.rectangle((x - 6, y - 4, x + 9 * len(text) + 4, y + 22), fill='#0d131bcc')
         draw.text((x, y), text, font=FONT[16], fill='white')
-    draw.text((1290 + 640 - 262, 360 - 172), f'THERMAL (synthetic LWIR)  {lo:.0f}-{hi:.0f} C', font=FONT[14], fill='white')
+    draw.text((1290 + 640 - 262, 360 - 172), f'LWIR 160x90 (synthetic)  {lo:.0f}-{hi:.0f} C', font=FONT[14], fill='white')
     # Title banner
     draw.rectangle((0, 668, 1280, 720), fill='#0d131bdd')
-    draw.text((14, 674), f'{m.number}/3  {m.title}', font=FONT[34], fill='white')
+    draw.text((14, 674), m.title, font=FONT[34], fill='white')
     draw.text((1120, 680), f't = {t:4.1f} s', font=FONT[28], fill='#9fb2c4')
     # Stats strip
     y0 = 728
@@ -283,14 +297,15 @@ def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
                      else 'Thermal  no drum in view'),
                     f"Air {reading['temperature_c']:4.1f} C   RH {reading['relative_humidity_pct']:3.0f}%   "
                     f"dew pt {'n/a' if dew is None else f'{dew:4.1f} C'}",
-                    f"Mic  {m.mic_db:5.1f} dBFS  {'HISS' if m.mic_db > -38 else 'quiet'}",
+                    f"Mic  {m.mic_db:5.1f} dBFS  {'HISS' if getattr(m, 'hiss', {}).get('hiss_score', 0) > 0.5 else 'quiet'}",
                     f"Swab  {m.swab_text}"]
     for i, line in enumerate(sensor_lines):
         draw.text((col[1], y0 + 40 + 26 * i), line, font=FONT[18], fill='white')
     spark(draw, (col[2], y0 + 10, col[2] + 460, y0 + 158), m.history['gamma'], m.scene.get('gamma_limit', 100.0),
           '#ffc55e', f"Gamma uSv/h  (limit {m.scene.get('gamma_limit', 100.0):g})")
-    spark(draw, (col[2], y0 + 168, col[2] + 460, y0 + 316), m.history['h2'], m.scene.get('h2_limit', 100.0),
-          '#33e0ff', f"H2 ppm  (demo alert {m.scene.get('h2_limit', 100.0):g})")
+    spark(draw, (col[2], y0 + 168, col[2] + 460, y0 + 316), m.history['h2'], m.scene.get('h2_limit'),
+          '#33e0ff', 'H2 ppm  (no alarm setpoint: evidence only)' if m.scene.get('h2_limit') is None
+          else f"H2 ppm  (demo alert {m.scene['h2_limit']:g})")
     draw.text((col[3], y0 + 8), 'DECISION', font=FONT[18], fill='#9fb2c4')
     draw.rectangle((col[3], y0 + 34, W - 16, y0 + 78), fill=status_color)
     draw.text((col[3] + 10, y0 + 40), m.status, font=FONT[28], fill='#0d131b')
@@ -306,116 +321,9 @@ def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
     return canvas
 
 
-class Mission:
-    def __init__(self, number, title, scene, route):
-        self.number, self.title, self.scene, self.route = number, title, scene, [np.array(w, float) for w in route]
-        self.status, self.message = 'PATROL', 'Patrolling centre aisle'
-        self.events, self.flagged, self.ids_read = [], [], {}
-        self.history = {'gamma': [], 'h2': []}
-        self.trail, self.swab_contact, self.swab_text = [], None, 'idle'
-        self.mic_db, self.nearest = -60.0, ('-', 0.0)
-        self.look, self.speed, self.hold, self.face = None, 0.75, False, None
-        self.data = {}
-
-    def event(self, t, text):
-        self.events.append((t, text))
-        print(f'[hot] {self.number} {t:4.1f}s {text}', flush=True)
-
-
-def read_plates(m, perception, p, t):
-    for drum_id, px in perception['drum_px'].items():
-        d = DRUMS[drum_id]
-        if drum_id in m.ids_read or px < 2500:
-            continue
-        facing = ROW_FACING[d['row']]
-        if facing * (p[1] - d['y']) <= 0 or math.dist(p[:2], (d['x'], d['y'])) > 3.2:
-            continue
-        record = m.scene['records'].get(drum_id)
-        plate = f"{d['display_id']} {d['category']}"
-        m.ids_read[drum_id] = plate
-        if record is None:
-            m.event(t, f"ID {d['display_id']}: no inventory record!")
-            m.flagged.append(drum_id)
-        elif record != plate:
-            m.event(t, f"ID {d['display_id']}: plate {d['category']}, record {record.split()[1]}!")
-            m.flagged.append(drum_id)
-        else:
-            m.event(t, f"ID {d['display_id']} {d['category']} matches record")
-
-
-def run_mission(m, step, name, duration=20.0, setup=None):
-    zero = np.zeros(3, dtype=np.float32)
-    show_spills(False)
-    config = copy.deepcopy(load_config())
-    config['robot']['swab_duration_s'] = m.scene.get('swab_duration_s', 4.0)
-    if m.scene.get('gas_vents'):
-        config['gas_vents'] = m.scene['gas_vents']
-    m.sensor = SensorWorld(inventory, config)
-    if setup:
-        setup(m)
-    spot.restart_from_default_state(zero)
-    world.step(render=False)
-    p, yaw, _, _ = full_pose()
-    m.nav = Nav(p, yaw)
-    frames_dir = OUT / name / 'frames'
-    frames_dir.mkdir(parents=True, exist_ok=True)
-    dt = spot.physics_dt
-    stride = max(1, round(1 / (FPS * dt)))
-    frame_dt = stride * dt
-    cam_yaw = yaw
-    log = []
-    for index in range(int(duration * FPS)):
-        t = index * frame_dt
-        p, yaw, roll, pitch = full_pose()
-        m.trail.append(tuple(p[:2]))
-        if index:
-            m.nav.update(p, yaw, frame_dt)
-        cam_yaw += 0.25 * wrap(yaw - cam_yaw)
-        m.scene['look'] = m.look
-        eye = place_cameras(p, cam_yaw, m.scene)
-        world.render()
-        world.render()
-        frames = {'third': _rgb(THIRD), 'first': _rgb(onboard), 'bird': _rgb(BIRD)}
-        reading = m.sensor.sample(np.array([p[0], p[1], 0.6]), t)
-        m.scene['ambient_c'] = reading['temperature_c']
-        perception = perceive(m.scene)
-        audio = microphone_window(tuple(p[:2]) + (0.6,), t, m.scene.get('acoustic', []), duration_s=frame_dt)
-        m.mic_db = 20 * math.log10(max(float(np.sqrt(np.mean(audio ** 2))), 1e-6))
-        m.history['gamma'].append(reading['dose_rate_uSv_h'])
-        m.history['h2'].append(reading.get('hydrogen_ppm', 0.0))
-        nearest = min(inventory, key=lambda d: math.dist(p[:2], (d['x'], d['y'])))
-        m.nearest = (nearest['display_id'], math.dist(p[:2], (nearest['x'], nearest['y'])))
-        read_plates(m, perception, p, t)
-        step(m, t, p, yaw, perception, reading)
-        compose(m, frames, perception, reading, m.nav.errors(p, yaw), p, yaw, roll, pitch, t).save(
-            frames_dir / f'{index:05d}.jpg', quality=90)
-        log.append({'t': t, 'truth': p.tolist(), 'estimate': m.nav.fused.tolist(), 'status': m.status,
-                    **{k: v for k, v in reading.items() if isinstance(v, (int, float))}})
-        command = zero
-        if not m.hold:
-            if m.route and np.linalg.norm(p[:2] - m.route[0]) < 0.22:
-                m.route.pop(0)
-            vx = vy = 0.0
-            if m.route:
-                delta = m.route[0] - p[:2]
-                velocity = delta * min(1.4, m.speed / max(np.linalg.norm(delta), 0.01))
-                c, s = math.cos(yaw), math.sin(yaw)
-                vx, vy = c * velocity[0] + s * velocity[1], -s * velocity[0] + c * velocity[1]
-            face = m.face if m.face is not None else (p[:2] + [1.0, 0.0])
-            wz = float(np.clip(1.6 * wrap(math.atan2(face[1] - p[1], face[0] - p[0]) - yaw), -0.9, 0.9))
-            command = np.array([vx, vy, wz], dtype=np.float32)
-        for _ in range(stride):
-            spot.step(dt, command)
-            world.step(render=False)
-    (OUT / name / 'log.jsonl').write_text(''.join(json.dumps(r) + '\n' for r in log))
-    (OUT / name / 'events.json').write_text(json.dumps({'events': m.events, 'ids_read': m.ids_read,
-                                                        'flagged': m.flagged, 'final_status': m.status}, indent=2))
-    print(f'[hot] scenario {name} done: {m.status}', flush=True)
-
-
 rng = np.random.default_rng(7)
 RECORDS = {d['id']: f"{d['display_id']} {d['category']}" for d in inventory}
 # Solid waste: the layout's authored spill/leak decals are always hidden in these scenarios.
 BASE_SCENE = {'records': RECORDS, 'drum_offsets_c': {}, 'ambient_c': 18.0,
-              'gamma_limit': 100.0, 'h2_limit': 100.0}
+              'gamma_limit': 100.0, 'h2_limit': None}
 print('[hot] scenario lib loaded', flush=True)

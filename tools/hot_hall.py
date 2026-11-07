@@ -51,12 +51,16 @@ def _encode(folder):
         frames.rmdir()
 
 
-@app.function(image=image, gpu=['L40S', 'L4', 'A10G'], cpu=8, memory=32768, timeout=4 * 60 * 60)
+@app.function(image=image, gpu=['L40S', 'L4', 'A10G'], cpu=8, memory=32768, timeout=4 * 60 * 60,
+              secrets=[modal.Secret.from_name('cosmos-vllm', required_keys=['VLLM_API_KEY'])])
 def serve():
     hot = Path('/tmp/hot')
     log = open('/tmp/hot.log', 'w')
+    # Isaac calls Cosmos (vLLM, tools/cosmos_vllm.py) over HTTPS with the shared API key.
+    cosmos_url = modal.Function.from_name('agentverse-cosmos-vllm', 'serve').get_web_url()
     process = subprocess.Popen(['/isaac-sim/python.sh', '/workspace/sim/hot_server.py', '--allow-root'],
-                               cwd='/workspace/sim', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                               cwd='/workspace/sim', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                               env={**os.environ, 'COSMOS_URL': cosmos_url})
 
     def pump():
         for line in process.stdout:

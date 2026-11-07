@@ -4,3 +4,4 @@ __pycache__/
 .runtime/
 sim/out/
 /out/
+.claude/settings.local.json

@@ -182,6 +182,15 @@ Request scripts get `walk(route, name)`, `still(eye, target, name)`,
 See `sim/hot_server.py`. Definitions persist between requests. Restart the
 worker after editing `sim/*.py`.
 
+The demo job is a Cosmos-driven inspection round that ends in a report. It
+needs the `cosmos-vllm` secret and `modal deploy tools/cosmos_vllm.py`:
+
+```sh
+hot run scripts/hot/sensing.py scripts/hot/scenario_lib.py scripts/hot/agent.py scripts/hot/agent_ilw_round.py
+```
+
+See [how the system fits together](docs/system_architecture.md).
+
 ### Warm walking-video worker
 
 ```sh
