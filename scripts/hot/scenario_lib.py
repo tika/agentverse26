@@ -41,7 +41,7 @@ if 'scenario_cams' not in state:
     third.initialize()
     bird.initialize()
     third.prim.GetAttribute('focalLength').Set(16.0)
-    bird.prim.GetAttribute('focalLength').Set(11.0)
+    bird.prim.GetAttribute('focalLength').Set(16.0)
     for camera in (third, bird):
         camera.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(0.05, 60))
     seg = rep.AnnotatorRegistry.get_annotator(
@@ -209,15 +209,15 @@ def place_cameras(p, cam_yaw, scene, onboard_yaw=None):
     if onboard_yaw is not None and np.dot(target[:2] - eye[:2], heading[:2]) <= 0.1:
         target = eye + heading + [0, 0, -0.32]
     _aim(onboard, eye, target)
-    _aim(BIRD, (p[0], p[1], 5.5), (p[0], p[1], 0.0), up=(0, 1, 0))
+    _aim(BIRD, (10.0, 6.0, 18.5), (10.0, 6.0, 0.0), up=(0, 1, 0))
     return eye
 
 
 def project_bird(points_xy, centre, z=LIDAR_Z):
     k = BIRD.get_intrinsics_matrix()
-    depth = 5.5 - z
-    u = k[0, 2] + k[0, 0] * (points_xy[:, 0] - centre[0]) / depth
-    v = k[1, 2] - k[1, 1] * (points_xy[:, 1] - centre[1]) / depth
+    depth = 18.5 - z
+    u = k[0, 2] + k[0, 0] * (points_xy[:, 0] - 10.0) / depth
+    v = k[1, 2] - k[1, 1] * (points_xy[:, 1] - 6.0) / depth
     return np.stack([u, v], 1)
 
 

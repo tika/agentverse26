@@ -382,6 +382,11 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         a.gas = lagged.update(reading, frame_dt)
         reading = {**reading, **a.gas}
         perception = perceive(a.scene)
+        if state.get('yolo_vision'):
+            perception['yolo']=state['yolo_vision'].observe(frames['first'],onboard.get_depth(),p,yaw,a.nav.fused,t)
+            # Segmentation remains inside the synthetic thermal sensor backend.
+            # It supplies no visual corrosion evidence to the planner.
+            perception['corrosion_px']={}
         mark = lap('perception', mark)
         audio = robot_audio((p[0], p[1], 0.6), t, frame_dt, a.scene.get('acoustic', []), a.nav.touchdowns)
         a.hiss = hiss_detector(audio)
@@ -425,6 +430,22 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
             if px > 150 and a.add_finding(t, f'corrosion_{drum_id}', kind='visible_corrosion', drum=drum_id,
                                           detector='simulator segmentation placeholder (no trained detector yet)'):
                 a.event(t, f"Corrosion on {DRUMS[drum_id]['display_id']}!")
+        vision=perception.get('yolo')
+        if vision and vision['fresh']:
+            for observation in vision['associations']:
+                drum_id=observation['drum_id']
+                record=a.data.setdefault('vision_records',{}).setdefault(drum_id,{'observations':0,'conditions':[]})
+                record['observations']+=1
+                record['conditions']=sorted(set(record['conditions'])|set(observation['faults']))
+                for fault in observation['faults']:
+                    kind='visible_corrosion' if fault=='corrosion' else 'visible_bulge'
+                    first=a.add_finding(t,f'{fault}_{drum_id}',kind=kind,drum=drum_id,
+                        detector='trained YOLO26s RGB API',model_run=vision['run_id'],
+                        association=observation['association'],range_m=round(observation['range_m'],2),
+                        confidence='high' if record['observations']>=2 else 'low',
+                        observations=record['observations'])
+                    if first:a.event(t,f"YOLO {fault} at map {DRUMS[drum_id]['display_id']}; get a closer view")
+            a.data['yolo_stats']={k:vision[k] for k in ('status','calls','failures','wall_seconds','age_s')}
         a.hiss_frames = a.hiss_frames + 1 if a.hiss['hiss_score'] > 0.5 else 0
         # Gas and microphone are omnidirectional: they give evidence near the robot, not which drum.
         if a.hiss_frames == 6 and a.add_finding(t, 'acoustic_hiss', kind='sustained_hiss', score=round(a.hiss['hiss_score'], 2),
@@ -502,6 +523,17 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
 def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
     """Reuse the scenario layout, then replace the nav and decision panels with real-sensor values."""
     a.nav.landmarks = round(a.nav.icp_inliers * 100)
+    vision=perception.get('yolo')
+    if vision:
+        frames=dict(frames)
+        view=Image.fromarray(frames['first']);vd=ImageDraw.Draw(view)
+        for item in vision['detections']:
+            color={'drum':'#35d7ff','corrosion':'#ff9829','bulge':'#ed67f5'}[item['class_name']]
+            vd.rectangle(item['bbox_xyxy'],outline=color,width=2)
+        for item in vision['associations']:
+            x,y,_,_=item['box']
+            vd.text((x,max(25,y)),f"map {item['display_id']} {'/'.join(item['faults']) or 'drum'}",font=FONT[14],fill='#ffffff',stroke_width=1,stroke_fill='black')
+        frames['first']=np.asarray(view)
     canvas = compose(a, frames, perception, reading, a.nav.errors(p, yaw), p, yaw, roll, pitch, t)
     draw = ImageDraw.Draw(canvas)
     y0 = 728
@@ -530,8 +562,11 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
         draw.text((1460, y0 + 196 + 24 * i), f'{et:4.1f}s  {text}'[:54], font=FONT[16],
                   fill='#ff9f9f' if '!' in text else 'white')
     draw.rectangle((0, H - 28, W, H), fill='#111822')
-    draw.text((16, H - 26), 'Onboard: RTX LiDAR, physics IMU, joint encoders, RGB-D, PTZ, synthetic LWIR/H2/mic/swab. '
-              'Decisions: Cosmos Reason 2 over safety-checked actions. Corrosion: segmentation stand-in until YOLO.',
+    if vision:
+        draw.text((16,974),f"YOLO26s {vision['status']} | {len(vision['associations'])} mapped drums | {len(vision['detections'])} boxes",font=FONT[16],fill='#35d7ff')
+        draw.text((16,1000),f"API {vision['wall_seconds']*1000:.0f} ms | age {vision['age_s']:.2f}s | calls {vision['calls']} | errors {vision['failures']}",font=FONT[16],fill='white')
+    draw.text((16, H - 26), 'RGB: trained YOLO26s + depth/map association. Navigation: LiDAR/IMU/encoders. '
+              'LWIR/H2/mic/swab are simulated sensors. Cosmos chooses safety-checked actions; fallback is labelled.',
               font=FONT[14], fill='#6f8396')
     return canvas
 
@@ -559,6 +594,9 @@ def build_report(a):
         grade = classify_condition(measured, CONFIG)
         thermal = a.findings.get(f'thermal_{drum_id}')
         notes = []
+        visual=a.data.get('vision_records',{}).get(drum_id)
+        if visual and visual['conditions']:
+            notes.append('YOLO observed '+', '.join(visual['conditions'])+f" in {visual['observations']} views; coverage not measured")
         if thermal:
             delta = thermal['surface_temp_c'] - thermal['air_temp_c']
             notes.append(f"surface {thermal['surface_temp_c']:.0f} C, +{delta:.0f} C vs air (thermal anomaly)")

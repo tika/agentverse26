@@ -313,12 +313,20 @@ def cosmos_chat(content, system=None, max_tokens=512, timeout_s=180):
     import os as _os
     import urllib.request as _url
     url, key = _os.environ.get('COSMOS_URL'), _os.environ.get('VLLM_API_KEY')
-    if not url or not key:
-        raise RuntimeError('COSMOS_URL / VLLM_API_KEY not set on this worker')
+    model=_os.environ.get('COSMOS_MODEL','cosmos')
+    config_file=_os.environ.get('COSMOS_CONFIG_FILE')
+    if config_file and Path(config_file).exists():
+        config=json.loads(Path(config_file).read_text())
+        url=config.get('COSMOS_URL',url);key=config.get('VLLM_API_KEY',key)
+        model=config.get('COSMOS_MODEL',model)
+    if not url:
+        raise RuntimeError('External Cosmos endpoint has not been configured')
     messages = ([{'role': 'system', 'content': system}] if system else []) + [{'role': 'user', 'content': content}]
-    body = json.dumps({'model': 'cosmos', 'messages': messages, 'max_tokens': max_tokens, 'temperature': 0.0}).encode()
+    body = json.dumps({'model': model, 'messages': messages, 'max_tokens': max_tokens, 'temperature': 0.0}).encode()
+    headers={'Content-Type':'application/json'}
+    if key:headers['Authorization']=f'Bearer {key}'
     request = _url.Request(url.rstrip('/') + '/v1/chat/completions', data=body, method='POST',
-                           headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key}'})
+                           headers=headers)
     with _url.urlopen(request, timeout=timeout_s) as response:
         return json.loads(response.read())['choices'][0]['message']['content']
 

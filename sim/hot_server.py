@@ -7,6 +7,7 @@ encoded to <dir>.mp4 by tools/hot_hall.py.
 """
 import json
 import math
+import os
 from pathlib import Path
 import time
 import traceback
@@ -15,7 +16,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 SIM = Path(__file__).resolve().parent
 HOT = Path('/tmp/hot')
-SPAWN = (10.0, 6.0)  # West edge of the ILW rows, centre aisle.
+SPAWN = (float(os.environ.get('HOT_SPAWN_X','10')),float(os.environ.get('HOT_SPAWN_Y','6')))
 VIEW = (640, 360)
 
 
