@@ -39,7 +39,7 @@ def benchmark():
         ], env={**os.environ, "OUTPUT_DIR": str(root)},
             stdout=stream, stderr=subprocess.STDOUT, timeout=700, cwd="/isaac-sim")
     elapsed = time.perf_counter() - started
-    timing_path = root / "timing.json"
+    timing_path = root / "spot-radiation" / "timing.json"
     if result.returncode == 0 and timing_path.exists():
         timing = json.loads(timing_path.read_text())
         run = timing["radiation"]
@@ -57,7 +57,7 @@ def benchmark():
     payload = io.BytesIO()
     with tarfile.open(fileobj=payload, mode="w:gz") as archive:
         for path in root.rglob("*"):
-            if path.is_file() and path.suffix != ".jpg":
+            if path.is_file() and (path.suffix != ".jpg" or path.name in {"00000.jpg", "00040.jpg", "00080.jpg"}):
                 archive.add(path, arcname=path.relative_to(root))
     return payload.getvalue()
 
