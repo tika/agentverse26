@@ -141,7 +141,7 @@ def run():
         for camera in (side, front):
             camera.prim.GetAttribute("focalLength").Set(15.0)
         if args.radiation:
-            aim(side, (7.8, 1.3, 5.45), (8.0, 6.0, 0.25))
+            aim(side, (6.8, 1.3, 5.45), (7.0, 6.0, 0.25))
         else:
             aim(side, (10.7, 2.2, 5.5), (11.7, 7.7, 0.1))
         world.reset()
@@ -201,7 +201,11 @@ def run():
             return None if rgba is None or not rgba.size else rgba[:, :, :3].astype(np.uint8)
 
         def annotate(side_rgb, rgb, mask, robot, estimate, message, t, nearest, mode, radiation, trail):
-            canvas = Image.new("RGB", (960, 344), "#111822")
+            canvas = Image.new("RGB", (960, 356 if args.radiation else 344), "#111822")
+            if args.radiation:
+                # Lift shadow detail in the review only. Depth and sensor values stay raw.
+                display = (255 * (np.arange(256) / 255) ** 0.65).astype(np.uint8)
+                side_rgb, rgb = display[side_rgb], display[rgb]
             canvas.paste(Image.fromarray(side_rgb), (0, 28))
             marked = rgb.copy()
             marked[mask] = (0.45 * marked[mask] + 0.55 * np.array([255, 88, 220])).astype(np.uint8)
@@ -214,22 +218,21 @@ def run():
             draw.text((10, 325), f"Central depth: {depth_text}  |  planner: rules baseline", font=font, fill="#b9c8d6")
             if radiation is not None:
                 color = {"green": "#5fe2af", "amber": "#ffc55e", "red": "#ff6767"}
-                draw.rectangle((0, 320, 959, 343), fill="#111822")
-                draw.text((10, 324), f"SIM GAMMA  {radiation['dose_rate_uSv_h']:5.1f} uSv/h  |  "
+                draw.text((10, 330), f"SIM GAMMA  {radiation['dose_rate_uSv_h']:5.1f} uSv/h  |  "
                           f"accumulated proxy {1000 * radiation['mission_dose_mSv']:.4f} uSv  |  "
                           f"centre depth {depth_text}  |  {radiation['status'].upper()}", font=font,
                           fill=color[radiation["status"]])
                 draw.rectangle((640, 34, 947, 94), fill="#111822")
                 stop_rate = scenario["thresholds"]["hot_spot"]
                 draw.line([(645, 54), (943, 54)], fill="#ff6767")
-                draw.text((648, 36), f"Dose history  |  stop above {stop_rate:g} uSv/h",
+                draw.text((648, 36), f"Dose history  |  demo retreat above {stop_rate:g} uSv/h",
                           font=ImageFont.load_default(size=12), fill="white")
                 points = [(646 + i * 5, 89 - min(rate / stop_rate, 1.4) * 35)
                           for i, rate in enumerate(trail[-59:])]
                 if len(points) > 1:
                     draw.line(points, fill=color[radiation["status"]], width=2)
             def map_point(point):
-                return (17 + (point[0] - (4 if args.radiation else 8)) * (13 if args.radiation else 20), 42 + (10.5 - point[1]) * 15)
+                return (17 + (point[0] - (3 if args.radiation else 8)) * (13 if args.radiation else 20), 42 + (10.5 - point[1]) * 15)
             draw.rectangle((9, 35, 151, 121), fill="#111822")
             draw.line([map_point(p) for p in [(start_x, 6), *direct]], fill="#999999", width=2)
             if estimate is not None:
