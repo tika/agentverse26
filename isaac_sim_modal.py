@@ -51,6 +51,10 @@ image = (
         *(f"rm -rf {src} && mkdir -p $(dirname {src}) && ln -s {dst} {src}" for src, dst in CACHE_LINKS.items())
     )
     .add_local_dir(pathlib.Path(__file__).parent / "scripts", remote_path="/scripts")
+    .add_local_dir(
+        pathlib.Path(__file__).parent / "sim", remote_path="/scene",
+        ignore=["out/**", "__pycache__/**"],
+    )
 )
 
 cache = modal.Volume.from_name("isaac-sim-cache", create_if_missing=True)

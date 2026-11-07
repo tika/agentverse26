@@ -177,3 +177,22 @@ ffmpeg -framerate 24 -i out/take-ID/%05d.png -pix_fmt yuv420p -movflags +faststa
 
 Stop the worker with `modal app stop APP_ID` when finished. The GPU stays
 allocated between takes and Modal caps the worker invocation at 24 hours.
+
+### Spill perception and detour
+
+```sh
+modal run --detach isaac_sim_modal.py --script scripts/spot_spill.py
+ffmpeg -framerate 8 -i out/spot-spill/spill/%05d.jpg -pix_fmt yuv420p -movflags +faststart out/spot-spill.mp4
+```
+
+The dry and spill cases share the hall, Spot, and camera setup in one Isaac
+process. The spill appears mid-run. A pixel detector looks for a fluorescent
+magenta tracer and projects its mask centroid onto the floor. The rules baseline
+blocks the direct aisle and selects the north cross-aisle when the estimated
+spill is in the direct aisle. The detector receives RGB and camera geometry.
+Depth is displayed separately. The scene's actual spill position is used to
+score sampled base clearance.
+
+Each case exports annotated frames, `events.jsonl`, and `score.json`.
+The tracer and fixed alternate route make this a controlled perception test.
+The demo uses a rules planner and a scripted scene event.
