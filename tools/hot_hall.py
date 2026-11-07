@@ -2,6 +2,7 @@
 
     python tools/hot_hall.py up                    # start (about 4 min to HOT_READY), stays up 4 h
     python tools/hot_hall.py run scripts/hot/walk_aisle.py   # exec on the live stage, fetch mp4s
+    python tools/hot_hall.py run lib.py scenario.py          # several files run as one request
     python tools/hot_hall.py down
 
 Request scripts run inside sim/hot_server.py; see its docstring for the helpers they get.
@@ -113,13 +114,13 @@ def up():
         time.sleep(10)
 
 
-def run(script, timeout_s=900):
-    rid = time.strftime('%H%M%S-') + Path(script).stem + '-' + uuid.uuid4().hex[:4]
+def run(*scripts, timeout_s=1800):
+    rid = time.strftime('%H%M%S-') + Path(scripts[-1]).stem + '-' + uuid.uuid4().hex[:4]
     status = results.get('_status') or {}
     if not status.get('ready'):
         raise SystemExit('Hot worker is not ready; run `python tools/hot_hall.py up`')
     started = time.perf_counter()
-    requests.put({'id': rid, 'source': Path(script).read_text()})
+    requests.put({'id': rid, 'source': '\n'.join(Path(script).read_text() for script in scripts)})
     while (result := results.get(rid)) is None:
         if time.perf_counter() - started > timeout_s:
             raise SystemExit(f'No result for {rid} after {timeout_s}s')
@@ -127,7 +128,7 @@ def run(script, timeout_s=900):
     results.pop(rid)
     OUT.mkdir(parents=True, exist_ok=True)
     with tarfile.open(fileobj=io.BytesIO(result['archive'])) as archive:
-        archive.extractall(OUT)
+        archive.extractall(OUT, **({'filter': 'data'} if sys.version_info >= (3, 12) else {}))
     folder = OUT / rid
     print(f'{rid}: {time.perf_counter() - started:.1f}s round trip -> {folder}')
     error = folder / 'error.txt'
@@ -154,7 +155,7 @@ if __name__ == '__main__':
     if command == 'up':
         up()
     elif command == 'run' and len(sys.argv) > 2:
-        run(sys.argv[2])
+        run(*sys.argv[2:])
     elif command == 'down':
         down()
     else:
