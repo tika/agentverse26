@@ -36,7 +36,7 @@ CACHE_LINKS = {
     f"{ISAAC_HOME}/.local/share/ov/data": f"{CACHE_DIR}/data",
 }
 
-image = (
+base_image = (
     modal.Image.from_registry(f"nvcr.io/nvidia/isaac-sim:{ISAAC_SIM_VERSION}", add_python="3.12")
     .entrypoint([])  # the image defaults to runheadless.sh; Modal needs to own the entrypoint
     .env(
@@ -51,12 +51,17 @@ image = (
     .run_commands(
         *(f"rm -rf {src} && mkdir -p $(dirname {src}) && ln -s {dst} {src}" for src, dst in CACHE_LINKS.items())
     )
-    .add_local_dir(pathlib.Path(__file__).parent / "scripts", remote_path="/scripts")
-    .add_local_dir(
+)
+
+
+def mount_scene(runtime_image):
+    return runtime_image.add_local_dir(pathlib.Path(__file__).parent / "scripts", remote_path="/scripts").add_local_dir(
         pathlib.Path(__file__).parent / "sim", remote_path="/scene",
         ignore=["out/**", "__pycache__/**"],
     )
-)
+
+
+image = mount_scene(base_image)
 
 cache = modal.Volume.from_name("isaac-sim-cache", create_if_missing=True)
 

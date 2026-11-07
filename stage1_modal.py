@@ -8,9 +8,9 @@ import tarfile
 import time
 
 import modal
-from isaac_sim_modal import CACHE_DIR, cache, image, _prepare_cache
+from isaac_sim_modal import CACHE_DIR, cache, base_image, mount_scene, _prepare_cache
 
-app = modal.App("agentverse-stage1-rtx", image=image.pip_install("imageio-ffmpeg"))
+app = modal.App("agentverse-stage1-rtx", image=mount_scene(base_image.pip_install("imageio-ffmpeg")))
 
 
 @app.function(gpu="RTX-PRO-6000", volumes={CACHE_DIR: cache},

@@ -30,6 +30,15 @@ timing = {"renderer_profile": "fast" if args.fast else "default",
 
 def run():
     import numpy as np
+    if args.radiation:
+        import torch
+
+        value = (torch.ones(1, device="cuda") + 1).item()
+        assert value == 2
+        timing["cuda"] = {
+            "torch": torch.__version__, "runtime": torch.version.cuda,
+            "device": torch.cuda.get_device_name(),
+        }
     import omni.usd
     from PIL import Image, ImageDraw, ImageFont
     from pxr import Gf, Sdf, UsdGeom, UsdLux, UsdPhysics, UsdShade
