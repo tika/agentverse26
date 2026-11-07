@@ -279,9 +279,13 @@ def run():
                     position, yaw, sensor_position = pose()
                     phase = perf_counter()
                     basis = camera_basis(position, yaw)
+                    capture_time = world.current_time
                     for _ in range(4):
                         app.update()
                         world.render()
+                    capture_position, _, _ = pose()
+                    if abs(world.current_time - capture_time) > 1e-8 or np.linalg.norm(capture_position-position) > 1e-5:
+                        raise RuntimeError("Physics advanced while flushing camera updates")
                     rgb, side_rgb = pixels(front), pixels(side)
                     if rgb is None or side_rgb is None:
                         raise RuntimeError("Camera dropped out")
