@@ -144,13 +144,21 @@ if __name__ == '__main__':
         rgba = cam.get_rgba()
         return None if rgba is None or not rgba.size else rgba[:, :, :3].astype(np.uint8)
 
-    for _ in range(60):
+    # The first run showed ~116 steps before RTX produced frames (shader/texture warm-up),
+    # so wait on time, not a fixed small count.
+    import time
+    warm_start = time.perf_counter()
+    warm_renders = 0
+    while rgb_now() is None:
+        if time.perf_counter() - warm_start > 240:
+            raise RuntimeError(f'Camera warm-up failed after {warm_renders} renders')
         fixed_exposure()
+        app.update()
         world.render()
-        if rgb_now() is not None:
-            break
-    else:
-        raise RuntimeError('Camera warm-up failed')
+        warm_renders += 1
+    for _ in range(10):  # let progressive RT settle on the first view
+        world.render()
+    print('WARMUP', warm_renders, 'renders', round(time.perf_counter() - warm_start, 1), 's', flush=True)
 
     frames = []
     for i, (eye, target, focal, label) in enumerate(plan):
@@ -159,6 +167,11 @@ if __name__ == '__main__':
         world.render()
         world.render()
         pixels = rgb_now()
+        for _ in range(20):
+            if pixels is not None:
+                break
+            world.render()
+            pixels = rgb_now()
         if pixels is None:
             raise RuntimeError(f'Camera dropped out at frame {i}')
         Image.fromarray(pixels).save(OUT / 'frames' / f'{i:05d}.jpg', quality=90)
@@ -177,7 +190,7 @@ if __name__ == '__main__':
     assert len(list((OUT / 'frames').glob('*.jpg'))) == len(plan)
     manifest = {'renderer': 'RayTracedLighting (default RTX)', 'resolution': list(RES), 'fps': 10,
                 'fixed_exposure': {'iso': 400, 'f_number': 2.8, 'shutter_reciprocal_s': 60},
-                'robot_motion': False, 'scene_metrics': metrics, 'frames': frames,
+                'robot_motion': False, 'scene_metrics': metrics, 'frames': frames, 'warmup_renders': warm_renders,
                 'intrinsics': cam.get_intrinsics_matrix().tolist(),
                 'note': 'gt_review_label is ground truth for review overlays only, never a perception input'}
     (OUT / 'manifest.json').write_text(json.dumps(manifest, indent=2))
