@@ -57,14 +57,14 @@ def clean_surfaces(seed=42):
 def plate_texture(entry):
     # Cache key includes the printed text: stage-2 plates print the location code.
     safe=entry['display_id'].replace('-','')
-    path=ASSETS/f'plate_{entry["id"]}_{entry["category"]}_{safe}_v3.png'
+    path=ASSETS/f'plate_{entry["id"]}_{entry["category"]}_{safe}_v4.png'
     if path.exists(): return {'diffuseColor':path}
     ASSETS.mkdir(parents=True,exist_ok=True)
     background=(225,190,45)
     image=Image.new('RGB',(512,358),background)
     draw=ImageDraw.Draw(image)
     draw.rectangle((5,5,506,352),outline=(24,25,22),width=5)
-    for angle in (30,150,270): draw.pieslice((29,28,143,142),angle,angle+60,fill=(22,22,18))
+    for angle in (60,180,300): draw.pieslice((29,28,143,142),angle,angle+60,fill=(22,22,18))  # one blade down
     draw.ellipse((67,66,105,104),fill=background)
     draw.ellipse((78,77,94,93),fill=(22,22,18))
     for text,y,size in ((entry['category'],30,90),(entry['display_id'],132,99)):
@@ -90,20 +90,27 @@ def _srgb(linear):
 def stencil_texture(entry, paint_linear):
     """Black spray-stencil package ID on the drum's own paint colour (no real organisation text)."""
     safe = entry['paint_color']
-    path = ASSETS/f'stencil_{entry["id"]}_{safe}_v1.png'
+    path = ASSETS/f'stencil_{entry["id"]}_{safe}_v2.png'
     if path.exists(): return {'diffuseColor':path}
     ASSETS.mkdir(parents=True,exist_ok=True)
     background = _srgb(paint_linear)
     image = Image.new('RGB',(1024,384),background)
     label = text_image(entry['id'],300,(28,26,22,255))
-    label.thumbnail((900,330))
+    label.thumbnail((760,330))
     rng = np.random.default_rng(entry['appearance_seed'])
     # Stencil look: vertical bridges through the letters, slight speckle at the edges.
     arr = np.asarray(label).copy()
     for x in range(0,arr.shape[1],int(rng.integers(55,75))):
         arr[:,x:x+6,3] = 0
     label = Image.fromarray(arr)
-    image.paste(label,((1024-label.width)//2,(384-label.height)//2),label)
+    image.paste(label,(60,(384-label.height)//2),label)
+    # One small magenta trefoil to the right of the ID (as on the reference drums).
+    draw = ImageDraw.Draw(image)
+    cx, cy, r_out, r_in = 1024-120, 192, 72, 16
+    for angle in (60,180,300):  # standard orientation: one blade down, two up (PIL angles are clockwise)
+        draw.pieslice((cx-r_out,cy-r_out,cx+r_out,cy+r_out),angle,angle+60,fill=(196,28,118))
+    draw.ellipse((cx-r_in-8,cy-r_in-8,cx+r_in+8,cy+r_in+8),fill=background)
+    draw.ellipse((cx-r_in,cy-r_in,cx+r_in,cy+r_in),fill=(196,28,118))
     speck = np.asarray(image).astype(np.int16)
     speck += rng.integers(-6,7,speck.shape[:2])[...,None]
     Image.fromarray(np.clip(speck,0,255).astype(np.uint8)).save(path)

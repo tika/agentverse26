@@ -141,10 +141,12 @@ def create_drum(stage,entry,materials):
         cylinder(stage,path+'/Lid',(0,0,1.153),.360,.004,materials[ilw_lid],segments=64)
         cylinder(stage,path+'/VentHousing',(.11,.03,1.174),.035,.038,materials[ilw_metal],segments=24)
         cylinder(stage,path+'/VentCap',(.11,.03,1.197),.036,.006,materials['filter'],segments=24)
+    # Every drum carries its stencil + trefoil (F13); back-row drums are hidden by occlusion,
+    # not by missing markings. Location plates only on aisle-facing drums.
+    if entry.get('face_sign'):
+        create_stencil(stage,entry,profile)
     if entry.get('visible_face',True):
         create_plate(stage,entry,profile)
-        if entry.get('face_sign'):
-            create_stencil(stage,entry,profile)
 
 
 def build_drums(seed=42):
