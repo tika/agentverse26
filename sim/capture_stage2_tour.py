@@ -142,9 +142,16 @@ if __name__ == '__main__':
         fixed_exposure()
         app.update()
         app.update()
-        rep.orchestrator.step(rt_subframes=2, delta_time=0.0, pause_timeline=True)
-        pixels = np.asarray(rgb_ann.get_data())[:, :, :3].astype(np.uint8)
-        d = np.asarray(depth_ann.get_data(), dtype=np.float32).reshape(RES[1], RES[0])
+        for attempt in range(8):
+            rep.orchestrator.step(rt_subframes=2, delta_time=0.0, pause_timeline=True)
+            raw_rgb = np.asarray(rgb_ann.get_data())
+            raw_d = np.asarray(depth_ann.get_data(), dtype=np.float32)
+            if raw_rgb.size >= RES[0] * RES[1] * 3 and raw_d.size == RES[0] * RES[1]:
+                break
+        else:
+            raise RuntimeError(f'annotators empty at frame {i}: rgb {raw_rgb.shape} depth {raw_d.shape}')
+        pixels = raw_rgb.reshape(RES[1], RES[0], -1)[:, :, :3].astype(np.uint8)
+        d = raw_d.reshape(RES[1], RES[0])
         Image.fromarray(pixels).save(OUT / 'frames' / f'{i:05d}.jpg', quality=90)
         patch = d[RES[1] // 2 - 5:RES[1] // 2 + 6, RES[0] // 2 - 5:RES[0] // 2 + 6]
         patch = patch[np.isfinite(patch) & (patch > 0)]
