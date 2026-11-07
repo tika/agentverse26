@@ -7,6 +7,9 @@ import math
 from pathlib import Path
 
 
+# Plate text: stage-2 location code (A-L-01-T2) or legacy row+slot (A03).
+PLATE_TEXT_RE = re.compile(r"(?:[A-Z][0-9]{2}|[ABC]-[LR]-[0-9]{2}-T[123](?:-D2)?)")
+
 def finite_number(value):
     return type(value) in (int, float) and math.isfinite(value)
 
@@ -119,7 +122,11 @@ class CosmosPlanner:
         return self.generate_json(messages)
 
     def read_drum_plate(self, rgb_path, box=None):
-        """Read a single visible plate from a camera frame or detector crop."""
+        """Read a single visible plate from a camera frame or detector crop.
+
+        Returns the PRINTED PLATE TEXT (key kept as "drum_id" for compatibility). It is not
+        the immutable drum ID: map it with perception/identity.py (display_id lookup).
+        """
         from PIL import Image
 
         with Image.open(rgb_path) as frame:
@@ -134,16 +141,17 @@ class CosmosPlanner:
             {"role": "user", "content": [
                 {"type": "image", "image": rgb},
                 {"type": "text", "text": (
-                    'Read the waste drum ID on the printed plate. It is one uppercase letter '
-                    'followed by two digits. Read only visible characters. If the plate is '
-                    'unreadable or more than one drum ID is visible, return null. Return only '
-                    'JSON with the key "drum_id".'
+                    'Read the code printed on the waste drum plate. It is either a location '
+                    'code like A-L-01-T2 (lane letter A-C, side L or R, two-digit column, '
+                    'tier T1-T3) or an older code of one uppercase letter followed by two '
+                    'digits. Read only visible characters. If the plate is unreadable or more '
+                    'than one plate is visible, return null. Return only JSON with the key "drum_id".'
                 )},
             ]},
         ])
         drum_id = result["drum_id"]
         if drum_id is not None and (
-            not isinstance(drum_id, str) or re.fullmatch(r"[A-Z][0-9]{2}", drum_id) is None
+            not isinstance(drum_id, str) or PLATE_TEXT_RE.fullmatch(drum_id) is None
         ):
             raise ValueError("Cosmos returned an invalid drum ID")
         return drum_id
