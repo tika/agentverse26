@@ -95,7 +95,7 @@ def main():
             canvas.paste(img, (0, bar_top))
             d = ImageDraw.Draw(canvas)
             t = fr["frame"] / manifest["fps"]
-            d.text((14, 9), f"STAGE 2 REVIEW | stacked store tour | {t:04.1f}s | review camera only, robot not moving",
+            d.text((14, 9), f"STAGE 2 REVIEW | stacked store tour | {t:04.1f}s | camera tour only, no robot in this capture",
                    font=big, fill=(235, 238, 240))
             label = pose["gt_review_label"]
             gt = label.split(":", 1)[1] if label.startswith("plate:") else label.replace("_", " ")
