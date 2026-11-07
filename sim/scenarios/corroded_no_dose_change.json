@@ -28,10 +28,10 @@
       {
         "kind": "corrosion",
         "surface_region": "lower_chime",
-        "severity": 2,
+        "severity": 3,
         "dimensions_m": [
-          0.12,
-          0.08
+          0.32,
+          0.18
         ],
         "visible_fraction": 0.9,
         "dose_effect": "none"

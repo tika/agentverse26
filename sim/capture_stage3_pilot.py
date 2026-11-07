@@ -29,7 +29,7 @@ if __name__ == '__main__':
     app = SimulationApp({'headless': True, 'fast_shutdown': True,
                          'extra_args': ['--enable', 'isaacsim.sensors.camera']})
     import omni.usd
-    from pxr import Gf, UsdLux, UsdGeom
+    from pxr import Gf
     from isaacsim.core.api import World
     from isaacsim.sensors.camera import Camera
     from build_hall import build_scene
@@ -51,10 +51,8 @@ if __name__ == '__main__':
     (OUT/'scene_scenarios.json').write_text(json.dumps(visible, indent=2)+'\n')
     plans = [((1.4, 6.0, 4.6), (10.0, 6.0, 1.0), 18.0, 'overview')]
     for scenario in scenarios:
-        if not scenario['runtime'].get('defects') and not scenario['runtime'].get('wet_case') and not scenario['runtime'].get('obstruction'):
-            continue
         entry = next((e for e in entries if e['id'] == scenario.get('asset_id')), None)
-        if entry:
+        if entry and scenario['runtime'].get('defects'):
             face = int(entry.get('face_sign', 1))
             defect = next(iter(scenario['runtime'].get('defects', [])), {})
             if defect.get('kind') == 'corrosion' and defect.get('surface_region') == 'lower_chime':
@@ -62,8 +60,10 @@ if __name__ == '__main__':
             else:
                 local_z = float(defect.get('center_z_m', entry['height']*.42))
             target = (entry['x'], entry['y'], entry.get('base_z',0)+local_z)
-            eye = (entry['x']-.42, entry['y']+face*(entry['radius']+1.0), target[2]+.18)
-            plans.append((eye, target, 52.0, scenario['scenario_id']))
+            # Back the camera away and use a longer focal length for a readable
+            # silhouette without clipping labels or nearby tiers.
+            eye = (entry['x']-1.00, entry['y']+face*(entry['radius']+1.20), target[2]+.18)
+            plans.append((eye, target, 62.0, scenario['scenario_id']))
         wet = scenario['runtime'].get('wet_case')
         if wet:
             center = wet.get('location_m', [entry['x'], entry['y']-entry['radius']-.45, 0.0]) if entry else [5.4,.7,0.0]
@@ -74,21 +74,14 @@ if __name__ == '__main__':
         if obstruction:
             center = obstruction['geometry_m']['center']
             # Keep the review camera inside the marked cross-aisle, clear of drum rows.
-            plans.append(((8.8, 6.0, 1.45), (center[0], center[1], center[2]), 38.0,
+            plans.append(((8.1, 6.0, 2.2), (center[0], center[1], center[2]), 32.0,
                           scenario['scenario_id']+'_obstruction'))
 
     cam = Camera('/World/Stage3ReviewCamera', resolution=RES)
     cam.prim.GetAttribute('horizontalAperture').Set(36.0)
     cam.prim.GetAttribute('verticalAperture').Set(36.0*RES[1]/RES[0])
     cam.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(.05, 40.0))
-    # Use the verified Stage-2 building lights only. Do not use a camera fill that
-    # would make close-up views brighter than the scene actually is.
-    fill = UsdLux.RectLight.Define(stage, '/World/Stage3InspectionLight')
-    fill.CreateWidthAttr(.32); fill.CreateHeightAttr(.24)
-    fill.CreateIntensityAttr(0.0)
-    fill.CreateEnableColorTemperatureAttr(False)
-    fill.CreateColorAttr(Gf.Vec3f(1.0,1.0,1.0))
-    fill_xf = UsdGeom.Xformable(fill).AddTransformOp()
+    # Use the verified Stage-2 building lights only. No capture-only fill light.
     world.reset(); cam.initialize(); cam.add_distance_to_image_plane_to_frame()
 
     def aim(eye, target, focal):
@@ -96,8 +89,6 @@ if __name__ == '__main__':
         q = matrix.GetInverse().ExtractRotationQuat()
         cam.set_world_pose(position=np.asarray(eye), orientation=np.asarray([q.GetReal(),*q.GetImaginary()]), camera_axes='usd')
         cam.prim.GetAttribute('focalLength').Set(float(focal))
-        fill_xf.Set(matrix.GetInverse())
-        fill.GetIntensityAttr().Set(0.0)
 
     def rgb_now():
         pixels = cam.get_rgba()
@@ -113,8 +104,9 @@ if __name__ == '__main__':
     frames=[]
     for i,(eye,target,focal,label) in enumerate(plans):
         aim(eye,target,focal); fixed_exposure()
-        for _ in range(14):
-            world.render()
+        # Match the verified Stage-2 tour path: two render flushes per paused
+        # camera pose, then capture exactly that pose.
+        world.render(); world.render()
         pixels=rgb_now()
         if pixels is None: raise RuntimeError(f'camera returned no RGB at pilot frame {i}')
         Image.fromarray(pixels).save(OUT/'frames'/f'{i:05d}.jpg',quality=92)

@@ -44,9 +44,24 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
                 z_center = float(defect.get('center_z_m', .08 if region == 'lower_chime' else entry['height']*.68))
                 face = float(entry.get('face_sign', 1))*math.pi/2
                 subtype = f"stage{min(4,max(1,severity))}" if entry['category']=='LLW' else 'pitting'
+                seed0 = int(scenario['seed'])+idx*991
                 specs = [{'type':'corrosion','subtype':subtype,'location':region,'z':z_center,
-                          'angle':face,'size':[width,height],'variant':int(scenario['seed'])%2,
-                          'mesh_seed':int(scenario['seed'])+idx*991,'severity':severity}]
+                          'angle':face,'size':[width,height],'variant':seed0%2,
+                          'mesh_seed':seed0,'severity':severity}]
+                if severity >= 3 and region == 'lower_chime':
+                    # Layer an irregular dark oxide bed, red-brown scale, small
+                    # active orange areas and two narrow downward runoffs.
+                    specs = [
+                        {**specs[0], 'subtype':'stage4', 'size':[width,height], 'mesh_seed':seed0+1},
+                        {**specs[0], 'subtype':'stage3', 'z':z_center+.018,
+                         'size':[width*.76,height*.72], 'mesh_seed':seed0+2},
+                        {**specs[0], 'subtype':'stage2', 'z':z_center+.025,
+                         'size':[width*.34,height*.48], 'mesh_seed':seed0+3},
+                        {**specs[0], 'subtype':'runoff', 'z':z_center+.065,
+                         'size':[.035,height*.70], 'angle':face-.16, 'mesh_seed':seed0+4},
+                        {**specs[0], 'subtype':'runoff', 'z':z_center+.055,
+                         'size':[.024,height*.52], 'angle':face+.21, 'mesh_seed':seed0+5},
+                    ]
                 built = build_corrosion(stage, entry, int(scenario['seed']) + idx*991,
                                         severity, specifications=specs)
                 for mesh in built:
@@ -106,6 +121,21 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
                     deformed.append(Gf.Vec3f(x*new_radius/max(radius, 1e-6),
                                               y*new_radius/max(radius, 1e-6), z))
                 points_attr.Set(deformed)
+                # Expose deformation in the visible stencil/plate band so the
+                # label builder can offset overlays in a follow-up hook.
+                band = (0.30*entry['height'], 0.84*entry['height'])
+                band_delta = 0.0
+                for original, changed in zip(data['points'], deformed):
+                    if band[0] <= float(original[2]) <= band[1]:
+                        band_delta = max(band_delta, math.hypot(float(changed[0]-original[0]),
+                                                                float(changed[1]-original[1])))
+                result.setdefault('deformation_hooks', {})[entry['id']] = {
+                    'max_radial_offset_in_label_band_m': round(band_delta, 5),
+                    'label_band_z_m': list(band),
+                    'recommended_label_clearance_m': round(band_delta + .004, 5)}
+                from drums import relabel_deformed
+                relabel_deformed(stage, entry,
+                    result['deformation_hooks'][entry['id']]['recommended_label_clearance_m'])
                 # Bulge dimensions_m[-1] is a radial expansion; diameter change
                 # is twice the maximum mesh displacement. A dent is local depth.
                 observed = (2*max_delta if kind == 'bulge' else max_delta)
@@ -129,8 +159,13 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
             from fault_textures import release_maps
             import numpy as np
             from defect_geometry import floor_mesh
-            bank = release_maps(entry['category'], True, entry['scene_seed'])
-            paint = material(stage, 'ScenarioWet_'+scenario['scenario_id'], (1,1,1), .08, textures=bank)
+            external_water = wet.get('fluid_kind') == 'external_water'
+            if external_water:
+                paint = material(stage, 'ScenarioWet_'+scenario['scenario_id'],
+                                 (.31,.34,.32), .42)
+            else:
+                bank = release_maps(entry['category'], True, entry['scene_seed'])
+                paint = material(stage, 'ScenarioWet_'+scenario['scenario_id'], (1,1,1), .08, textures=bank)
             center = (float(source[0]), float(source[1]))
             wet_mesh = mesh(stage, f"/World/Defects/{entry['id']}/Wet_{scenario['scenario_id']}",
                             *floor_mesh(np.random.default_rng(int(scenario['seed'])), center, .42, .68, z=.003), paint)
@@ -145,8 +180,17 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
         from materials import material
         geom = obstruction['geometry_m']
         center, size = geom['center'], geom['size']
-        paint = material(stage, 'ScenarioObstruction', (.27,.29,.28), .86)
+        paint = material(stage, 'ScenarioObstruction', (.14,.22,.27), .72)
         prim = box(stage, '/World/Obstructions/Scenario_'+scenario['scenario_id'], center, size, paint, collision=True)
+        # Handles and a reinforced rim make the equipment recognizable as a tote.
+        from geometry import box as make_box
+        dark = material(stage, 'ScenarioObstructionTrim', (.055,.07,.075), .82)
+        cx, cy, cz = map(float, center); sx, sy, sz = map(float, size)
+        for side in (-1, 1):
+            make_box(stage, f'{prim.GetPath()}/Handle_{side:+d}',
+                     (cx+side*sx*.38,cy,cz+sz*.50+.03), (.035,sy*.52,.10), dark)
+            make_box(stage, f'{prim.GetPath()}/Rim_{side:+d}',
+                     (cx+side*sx*.5,cy,cz+sz*.42), (.045,sy*1.02,.055), dark)
         result['obstructions'].append({'path':str(prim.GetPath()), 'route_id':obstruction['route_id'],
                                        'geometry_m':geom})
     return result

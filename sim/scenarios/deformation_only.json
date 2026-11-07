@@ -4,7 +4,7 @@
   "case_tags": [
     "deformation_only"
   ],
-  "asset_id": "D03",
+  "asset_id": "D05",
   "truth": {
     "faults": [
       "sidewall_dent"
