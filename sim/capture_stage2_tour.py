@@ -120,10 +120,12 @@ if __name__ == '__main__':
     plan = shots(entries)
     cam = camera(stage, '/World/TourCamera', plan[0][0], plan[0][1], plan[0][2], RES)
     product = rep.create.render_product(cam, RES)
-    raw = OUT / 'raw'
-    writer = rep.WriterRegistry.get('BasicWriter')
-    writer.initialize(output_dir=str(raw), rgb=True, distance_to_image_plane=True)
-    writer.attach([product])
+    # Read annotators directly after every step (BasicWriter dropped frames with a paused timeline).
+    rgb_ann = rep.AnnotatorRegistry.get_annotator('rgb')
+    depth_ann = rep.AnnotatorRegistry.get_annotator('distance_to_image_plane')
+    rgb_ann.attach([product])
+    depth_ann.attach([product])
+    (OUT / 'frames').mkdir(exist_ok=True)
     for _ in range(40):
         app.update()
         fixed_exposure()
@@ -141,28 +143,18 @@ if __name__ == '__main__':
         app.update()
         app.update()
         rep.orchestrator.step(rt_subframes=2, delta_time=0.0, pause_timeline=True)
+        pixels = np.asarray(rgb_ann.get_data())[:, :, :3].astype(np.uint8)
+        d = np.asarray(depth_ann.get_data(), dtype=np.float32).reshape(RES[1], RES[0])
+        Image.fromarray(pixels).save(OUT / 'frames' / f'{i:05d}.jpg', quality=90)
+        patch = d[RES[1] // 2 - 5:RES[1] // 2 + 6, RES[0] // 2 - 5:RES[0] // 2 + 6]
+        patch = patch[np.isfinite(patch) & (patch > 0)]
         frames.append({'frame': i, 'eye': list(eye), 'target': list(target), 'focal_mm': focal,
-                       'gt_review_label': label})
+                       'gt_review_label': label, 'mean_luma': float(pixels.mean()),
+                       'depth_center_m': float(np.median(patch)) if patch.size else None})
         if i % 20 == 0:
             print('TOUR_FRAME', i, flush=True)
     rep.orchestrator.wait_until_complete()
-    writer.detach()
-
-    rgbs = sorted(raw.glob('rgb_*.png'))
-    depths = sorted(raw.glob('distance_to_image_plane_*.npy'))
-    assert len(rgbs) == len(plan) == len(depths), (len(rgbs), len(depths), len(plan))
-    (OUT / 'frames').mkdir(exist_ok=True)
-    for f, rgb, dep in zip(frames, rgbs, depths):
-        pixels = np.asarray(Image.open(rgb))[:, :, :3]
-        Image.fromarray(pixels).save(OUT / 'frames' / f"{f['frame']:05d}.jpg", quality=90)
-        d = np.load(dep)
-        h, w = d.shape[:2]
-        patch = d[h // 2 - 5:h // 2 + 6, w // 2 - 5:w // 2 + 6]
-        patch = patch[np.isfinite(patch) & (patch > 0)]
-        f['depth_center_m'] = float(np.median(patch)) if patch.size else None
-        f['mean_luma'] = float(pixels.mean())
-    for p in list(rgbs) + list(depths):
-        p.unlink()
+    assert len(list((OUT / 'frames').glob('*.jpg'))) == len(plan)
     manifest = {'renderer': 'RayTracedLighting', 'resolution': list(RES), 'fps': 10,
                 'fixed_exposure': {'iso': 400, 'f_number': 2.8, 'shutter_reciprocal_s': 60},
                 'robot_motion': False, 'scene_metrics': metrics, 'frames': frames,
