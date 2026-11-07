@@ -25,6 +25,28 @@ class InspectionChecks(unittest.TestCase):
         self.assertAlmostEqual(far['dose_rate_uSv_h']-.2,2.5)
         with self.assertRaises(ValueError): w.sample((1,0,.5),1)
 
+    def test_gamma_failure_and_saturation_leave_dose_gap(self):
+        self.c['radiation']['saturation_uSv_h'] = 20
+        world = SensorWorld([self.drum], self.c)
+        pose = (1, 0, .5)
+        world.sample(pose, 0)
+        first = world.sample(pose, 1)
+        failed = world.sample(pose, 2, gamma_operational=False)
+        self.assertEqual(failed['gamma']['status'], 'failed')
+        self.assertIsNone(failed['dose_rate_uSv_h'])
+        saturated = world.sample((.5, 0, .5), 3)
+        self.assertEqual(saturated['gamma']['status'], 'saturated')
+        self.assertEqual(saturated['dose_rate_uSv_h'], 20)
+        self.assertFalse(saturated['gamma']['valid'])
+        self.assertFalse(saturated['dose_complete'])
+        recovered = world.sample(pose, 4)
+        self.assertEqual(recovered['gamma']['timestamp_s'], 4)
+        self.assertEqual(recovered['mission_dose_mSv'], first['mission_dose_mSv'])
+        self.assertGreater(world.sample(pose, 5)['mission_dose_mSv'], first['mission_dose_mSv'])
+        observation = {**saturated, 'camera_timestamp_s': 3, 'nearest_drum_surface_m': 1.1}
+        self.assertEqual(safety_decision(observation, 3)['action'], 'back_off_last_safe_waypoint')
+        self.assertEqual(safety_decision(observation, 6)['action'], 'stop')
+
     def test_shielding_and_sensor_packet_boundary(self):
         blocker = {**self.drum,'id':'D02','x':1.,'source_strength':0.}
         self.assertTrue(intersects_drum((2,0,.5),(0,0,.5),blocker))

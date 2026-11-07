@@ -4,7 +4,9 @@ from pathlib import Path
 
 
 def write_aisles(path=None):
-    aisles = [{'id':i,'rect':[0,y-1,20,y+1],'center_y':y} for i,y in enumerate((2,6,10),1)]
+    # v1.2.1 dense layout (sim/layouts/stacking.json): clear bands between pallet rows.
+    bands = {1:(1.345,2.755), 2:(5.265,6.735), 3:(9.245,10.655)}
+    aisles = [{'id':i,'rect':[0,bands[i][0],20,bands[i][1]],'center_y':y} for i,y in enumerate((2,6,10),1)]
     crosses = [{'id':name,'rect':[lo,0,hi,12],'center_x':center}
                for name,lo,hi,center in (('front',0,2.5,1.25),('middle',9,11,10),('back',17.5,20,18.75))]
     xs = sorted(set([round(i*1.5,2) for i in range(14)] + [1.25,10.0,18.75,20.0]))
