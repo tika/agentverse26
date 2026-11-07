@@ -19,7 +19,8 @@ JOBS={'hall':('capture_hall.py','step1','hall.usda','HALL_CAPTURE_OK'),
       'training':('test_render.py','test_render','scene_training.usda','TRAINING_CAPTURE_OK'),
       'robot':('capture_robot.py','robot','scene_robot.usda','ROBOT_CAPTURE_OK'),
       'environment':('build_environment.py','environment','scene_environment.usda','ENVIRONMENT_BUILD_OK'),
-      'presentation':('capture_presentation.py','presentation','scene_presentation.usda','PRESENTATION_CAPTURE_OK')}
+      'presentation':('capture_presentation.py','presentation','scene_presentation.usda','PRESENTATION_CAPTURE_OK'),
+      'barrel_preview':('render_barrel_preview.py','barrel_preview','scene_barrel_preview.usda','BARREL_PREVIEW_OK')}
 
 
 @app.function(image=image,gpu=['L40S','L4','A10G'],cpu=6,memory=24576,

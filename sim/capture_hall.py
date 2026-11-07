@@ -64,6 +64,10 @@ def prepare_view(stage, name, eye, target, focal, output_root=OUTPUT):
 
 def capture_views(app, stage, views, output_root):
     import omni.replicator.core as rep
+    import carb
+    # Kit can leak viewport grid/axis overlays into a render product's first frame.
+    carb.settings.get_settings().set_bool('/app/viewport/grid/enabled',False)
+    carb.settings.get_settings().set_bool('/app/viewport/defaults/guide/grid/visible',False)
     writers,details=[],{}
     for name,(eye,target,focal) in views.items():
         writer,details[name]=prepare_view(stage,name,eye,target,focal,output_root)
