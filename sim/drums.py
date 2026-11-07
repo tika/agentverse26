@@ -8,7 +8,7 @@ from profiles import drum_profile, make_drum_mesh, radius_at
 INVENTORY=Path(__file__).with_name('drums.json')
 PAINT_NAMES=('faded_yellow','mid_grey','dark_blue')
 # v1.2.1 (Levi reference photo): every drum is yellow paint; linear-RGB base colours.
-YELLOWS={'safety_yellow':(.78,.52,.012),'warm_yellow':(.80,.45,.012),'faded_yellow':(.63,.48,.07)}
+YELLOWS={'safety_yellow':(.78,.56,.02),'warm_yellow':(.80,.50,.02),'faded_yellow':(.66,.53,.08)}  # tuned to reference R/G≈1.33
 CATEGORIES={'LLW':(.29,.88,1),'ILW':(.40,1.20,20)}
 ROWS=(('A',3.45,1,-1),('B',4.55,2,1),('C',7.45,2,-1),('D',8.55,3,1))
 
