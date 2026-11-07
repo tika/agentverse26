@@ -44,7 +44,7 @@ def inventory_check(stage, entries):
         want = (e['x'], e['y'], e.get('base_z', 0.0))
         if max(abs(a - b) for a, b in zip(got[:3], want)) > 1e-4:
             mismatches.append(f"{e['id']} USD {got[:3]} != inventory {want}")
-        if not got[3]:
+        if e.get('depth',1) == 1 and not got[3]:
             mismatches.append(f"{e['id']} has no plate")
     extra = sorted(set(usd) - {e['id'] for e in entries})
     pallets = len([p for p in stage.GetPrimAtPath('/World/Pallets').GetChildren() if p.GetName().endswith('_Deck')])
@@ -54,11 +54,11 @@ def inventory_check(stage, entries):
     return {'usd_drums': len(usd), 'inventory_drums': len(entries), 'extra_in_usd': extra,
             'mismatches': mismatches, 'pallet_decks': pallets, 'by_tier': tiers,
             'location_codes_unique': len({e['display_id'] for e in entries}) == len(entries),
-            'pass': not mismatches and not extra and pallets == len(entries)}
+            'pass': not mismatches and not extra and pallets == len({(e['stack_id'],e['location']['tier']) for e in entries})}
 
 
 def plate_z(e):
-    return e['base_z'] + 0.6 * e['height']
+    return e['base_z'] + 0.72 * e['height']
 
 
 def shots(entries):
@@ -77,8 +77,9 @@ def shots(entries):
         x = 1.5 + 7.5 * i / 27
         out.append(((x, 6.0, 1.0), (x + 3.0, 6.25, 0.9), 24, 'aisle_B_walk'))
     # 4. Plate stops tilting T1 -> top tier (camera tilt coverage).
-    for stack in ('B-L-01', 'B-R-02', 'B-L-05'):
-        tiers = sorted((e for e in entries if e['stack_id'] == stack), key=lambda e: e['location']['tier'])
+    from stacking import column_tiers
+    for lane,side,column in (('B','L',1),('B','R',4),('B','L',13)):
+        tiers = column_tiers(entries,lane,side,column)
         e0 = tiers[0]
         eye_y = 6.0 + (-0.1 if e0['y'] > 6 else 0.1)
         eye = (e0['x'], eye_y, 1.55)
@@ -122,6 +123,7 @@ if __name__ == '__main__':
     (OUT / 'inventory_check.json').write_text(json.dumps(check, indent=2))
     print('INVENTORY_CHECK', json.dumps({k: check[k] for k in ('usd_drums', 'pallet_decks', 'pass')}), flush=True)
 
+    (OUT/'inventory.json').write_text(json.dumps(entries,indent=2))
     plan = shots(entries)
     cam = Camera('/World/TourCamera', resolution=RES)
     cam.prim.GetAttribute('horizontalAperture').Set(36.0)
