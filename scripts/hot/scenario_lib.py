@@ -51,6 +51,8 @@ if 'scenario_cams' not in state:
         world.render()
     state['scenario_cams'] = (third, bird, seg)
 THIRD, BIRD, SEG = state['scenario_cams']
+# Match the chase camera's near clip so an aisle-side drum renders at standoff.
+onboard.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(0.05, 60))
 SPILLS = [str(p.GetPath()) for p in stage.Traverse() if p.GetName().startswith('Spill_')]
 
 
@@ -256,10 +258,6 @@ def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
         a, b = project_bird(np.array([p[:2], m.swab_contact]), p, 0.0)
         bd.line([tuple(a), tuple(b)], fill='#7cc4ff', width=3)
         bd.ellipse((b[0] - 5, b[1] - 5, b[0] + 5, b[1] + 5), outline='#7cc4ff', width=2)
-    for drum_id in m.flagged:
-        d = DRUMS[drum_id]
-        (u, v), = project_bird(np.array([[d['x'], d['y']]]), p, 1.0)
-        bd.ellipse((u - 22, v - 22, u + 22, v + 22), outline='#ff6767', width=3)
     est = project_bird(np.array([m.nav.fused[:2]]), p, 0.0)[0]
     bd.ellipse((est[0] - 6, est[1] - 6, est[0] + 6, est[1] + 6), outline='#ffc55e', width=2)
     canvas.paste(bird, (1280, 360))

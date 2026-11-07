@@ -58,6 +58,8 @@ class Agent:
         self.last_decision_t, self.pending_decision = -99.0, True
         self.hiss_frames, self.cosmos = 0, None
         self.data = {}
+        job = scene.get('job_drums') or [d['id'] for d in inventory if d['row'] in STANDOFF and d['category'] == 'ILW']
+        self.memory = InspectionMemory(job)
 
     def event(self, t, text):
         self.events.append((t, text))
@@ -72,6 +74,150 @@ class Agent:
         return True
 
 
+STATUS_COLORS = {'inspecting': (235, 240, 245), 'good': (60, 220, 140), 'attention': (255, 190, 70),
+                 'bad': (255, 80, 80)}
+CHECKS = ('id', 'thermal', 'visual')  # A drum counts as inspected once all three are done.
+
+
+class InspectionMemory:
+    """What the robot knows about each drum on this round: checks done, evidence, and a status."""
+
+    def __init__(self, drum_ids):
+        self.drums = {d: {'checks': {}, 'status': 'none', 'reasons': [], 'last_t': None} for d in drum_ids}
+
+    def record(self, drum_id, check, t, **evidence):
+        entry = self.drums.setdefault(drum_id, {'checks': {}, 'status': 'none', 'reasons': [], 'last_t': None})
+        entry['checks'][check] = {'t': round(t, 1), **evidence}
+        entry['last_t'] = round(t, 1)
+
+    def update_status(self, a):
+        for drum_id, entry in self.drums.items():
+            c, bad, attention = entry['checks'], [], []
+            if drum_id in a.flagged:
+                bad.append('alert raised')
+            th = c.get('thermal')
+            if th and th['delta_c'] >= HEAT_RISE_C:
+                bad.append(f"surface {th['surface_c']:.0f} C, {th['delta_c']:+.0f} C vs air")
+            vis = c.get('visual')
+            if vis and 'rust_pct' in vis:
+                rust = CONFIG['thresholds']['rust_pct']
+                if vis['rust_pct'] > rust['failing']:
+                    bad.append(f"rust {vis['rust_pct']:.0f}%")
+                elif vis['rust_pct'] >= rust['tolerable']:
+                    attention.append(f"rust {vis['rust_pct']:.0f}%")
+            elif vis:
+                if vis.get('rust_observed'):attention.append('YOLO visible rust; coverage not measured')
+                if vis.get('bulge_observed'):attention.append('YOLO visible bulge; needs corroboration')
+            ident = c.get('id')
+            if ident:
+                if ident['result'] == 'mismatch':
+                    (bad if ident.get('confirmed') else attention).append(f"plate {ident['read']} vs record {ident['record']}")
+                elif ident['result'] != 'match':
+                    (bad if ident.get('tries', 1) >= 3 else attention).append(f"plate {ident['result']}")
+            swab = c.get('swab')
+            if swab and swab['positive']:
+                bad.append(f"swab alpha {swab['alpha_bq_cm2']:.2f} Bq/cm2")
+            if any(f.get('drum') == drum_id and f.get('confidence') == 'low' for f in a.findings.values()):
+                attention.append('unconfirmed finding')
+            done = all(k in c for k in CHECKS)
+            entry['reasons'] = bad or attention
+            entry['missing'] = [k for k in CHECKS if k not in c]
+            entry['status'] = ('bad' if bad else 'attention' if attention else 'good' if done
+                               else 'inspecting' if c else 'none')
+
+    def progress(self):
+        """Compact view for Cosmos: what is done, what is missing, what is wrong."""
+        return {DRUMS[d]['display_id']: {'status': e['status'], 'missing_checks': e.get('missing', list(CHECKS)),
+                                         'issues': e['reasons']}
+                for d, e in self.drums.items()}
+
+
+def observe_for_memory(a, t, perception, reading, est):
+    """Opportunistic checks while working: thermal and visual need a close enough, clear view."""
+    for drum_id, px in perception['drum_px'].items():
+        if drum_id not in a.memory.drums:
+            continue
+        d = DRUMS[drum_id]
+        distance = math.dist(est[:2], (d['x'], d['y']))
+        if distance < 4.5 and px >= 400 and drum_id in perception['drum_temps']:
+            apparent = perception['drum_temps'][drum_id]
+            surface = correct_emissivity(apparent, EMISSIVITY[d['category']], reading['temperature_c'])
+            previous = a.memory.drums[drum_id]['checks'].get('thermal')
+            if previous is None or distance < previous['range_m']:  # Keep the closest view.
+                a.memory.record(drum_id, 'thermal', t, surface_c=round(surface, 1), apparent_c=round(apparent, 1),
+                                delta_c=round(surface - reading['temperature_c'], 1), range_m=round(distance, 1))
+        if not perception.get('yolo') and distance < 3.5 and px >= 1500:
+            rust = a.data.get('rust_pct', {}).get(drum_id, 0.0)
+            previous = a.memory.drums[drum_id]['checks'].get('visual')
+            if previous is None or rust > previous['rust_pct']:
+                a.memory.record(drum_id, 'visual', t, rust_pct=round(rust, 1), range_m=round(distance, 1),
+                                detector='segmentation placeholder')
+    vision=perception.get('yolo')
+    if vision and vision['fresh'] and vision['status']=='ok':
+        for observation in vision['associations']:
+            drum_id=observation['drum_id']
+            if drum_id not in a.memory.drums or observation['range_m']>4:continue
+            previous=a.memory.drums[drum_id]['checks'].get('visual',{})
+            a.memory.record(drum_id,'visual',t,
+                rust_observed='corrosion' in observation['faults'] or previous.get('rust_observed',False),
+                bulge_observed='bulge' in observation['faults'] or previous.get('bulge_observed',False),
+                views=previous.get('views',0)+1,coverage_measured=False,
+                range_m=round(observation['range_m'],2),detector='trained YOLO26s RGB API',model_run=vision['run_id'])
+
+
+def project_camera(camera, points):
+    """World points -> pixel (u, v) and depth for a Camera, using its pose and intrinsics."""
+    k = camera.get_intrinsics_matrix()
+    position, quat = camera.get_world_pose(camera_axes='world')
+    qw, qx, qy, qz = quat
+    rot = np.array([[1 - 2 * (qy * qy + qz * qz), 2 * (qx * qy - qz * qw), 2 * (qx * qz + qy * qw)],
+                    [2 * (qx * qy + qz * qw), 1 - 2 * (qx * qx + qz * qz), 2 * (qy * qz - qx * qw)],
+                    [2 * (qx * qz - qy * qw), 2 * (qy * qz + qx * qw), 1 - 2 * (qx * qx + qy * qy)]])
+    local = (np.asarray(points) - position) @ rot  # Camera world axes: +x forward, +y left, +z up.
+    depth = local[:, 0]
+    u = k[0, 2] - k[0, 0] * local[:, 1] / np.maximum(depth, 1e-3)
+    v = k[1, 2] - k[1, 1] * local[:, 2] / np.maximum(depth, 1e-3)
+    return np.stack([u, v], 1), depth
+
+
+def draw_memory_overlay(canvas, a, p):
+    """Floor rings and tags per drum: none = no overlay; white in progress; green/amber/red by status."""
+    layer = Image.new('RGBA', canvas.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer)
+    view = Image.new('RGBA', (1280, 720), (0, 0, 0, 0))  # Third-person overlay, clipped to its own panel.
+    vdraw = ImageDraw.Draw(view)
+    ring = np.linspace(0, 2 * math.pi, 40)
+    for drum_id, entry in a.memory.drums.items():
+        if entry['status'] == 'none':
+            continue
+        d, color = DRUMS[drum_id], STATUS_COLORS[entry['status']]
+        r = d['radius'] + 0.14
+        floor = np.stack([d['x'] + r * np.cos(ring), d['y'] + r * np.sin(ring), np.full_like(ring, 0.02)], 1)
+        uv, depth = project_camera(THIRD, floor)
+        on_screen = (uv[:, 0] > -200) & (uv[:, 0] < 1480) & (uv[:, 1] > -200) & (uv[:, 1] < 920)
+        if (depth > 0.8).all() and on_screen.all():  # Skip rings too close to the chase camera to project well.
+            vdraw.polygon([tuple(x) for x in uv], fill=color + (70,), outline=color + (255,), width=4)
+            tag_uv, tdepth = project_camera(THIRD, [[d['x'], d['y'], d['height'] + 0.25]])
+            tu, tv = tag_uv[0]
+            if tdepth[0] > 0.3 and 0 <= tu < 1280 and 0 <= tv < 720:
+                label = f"{d['display_id']} {entry['status'].upper()}"
+                vdraw.rectangle((tu - 6 - 4.5 * len(label), tv - 14, tu + 6 + 4.5 * len(label), tv + 12), fill=(13, 19, 27, 200))
+                vdraw.text((tu - 4.5 * len(label), tv - 11), label, font=FONT[16], fill=color + (255,))
+        centre = project_bird(np.array([[d['x'], d['y']]]), p, d['height'])[0] + [1280, 360]
+        rr = 26
+        draw.ellipse((centre[0] - rr, centre[1] - rr, centre[0] + rr, centre[1] + rr), fill=color + (60,),
+                     outline=color + (255,), width=4)
+    layer.paste(view.crop((0, 0, 1280, 668)), (0, 0))  # Stop above the title banner.
+    canvas.paste(Image.alpha_composite(canvas.convert('RGBA'), layer).convert('RGB'))
+    # Job progress in the bird's-eye corner.
+    draw = ImageDraw.Draw(canvas)
+    counts = {k: sum(e['status'] == k for e in a.memory.drums.values()) for k in ('good', 'attention', 'bad', 'inspecting', 'none')}
+    text = (f"JOB {counts['good'] + counts['attention'] + counts['bad']}/{len(a.memory.drums)} inspected   "
+            f"good {counts['good']}  attention {counts['attention']}  bad {counts['bad']}")
+    draw.rectangle((1284, 690, 1916, 716), fill='#0d131b')
+    draw.text((1292, 694), text, font=FONT[16], fill='white')
+
+
 def standoff_for(drum):
     return np.array([drum['x'], STANDOFF[drum['row']]])
 
@@ -81,6 +227,10 @@ def offered_actions(a, p_est, reading):
     gamma_ok = reading['dose_rate_uSv_h'] <= DOSE_BACKOFF
     actions = [{'id': 'continue_patrol', 'description': 'Resume the ordered centre-aisle patrol'}]
     drums = sorted({f['drum'] for f in a.findings.values() if f.get('drum')})
+    # The job: drums still missing checks can be inspected too (nearest two ahead along the round).
+    todo = [d for d, e in a.memory.drums.items() if e['status'] in ('none', 'inspecting') and d not in drums]
+    todo.sort(key=lambda d: math.dist(p_est[:2], standoff_for(DRUMS[d])))
+    drums += todo[:2]
     for drum_id in drums:
         drum = DRUMS[drum_id]
         name = drum['display_id']
@@ -162,6 +312,7 @@ def snapshot_for(a, t, p_est, reading):
                          'relative_humidity_pct': round(reading['relative_humidity_pct']),
                          'microphone_hiss_score': round(a.hiss['hiss_score'], 2)},
             'findings': open_findings,
+            'inspection_progress': a.memory.progress(),
             'actions': a.actions}
 
 
@@ -256,6 +407,12 @@ def read_plate_for(a, drum, t, p, yaw):
     plate_text = f"{answer['drum_id']} {answer['category']}" if readability == 'readable' else None
     a.ids_read[drum['id']] = plate_text
     a.data.setdefault('readability', {})[drum['id']] = readability
+    tries = a.memory.drums.get(drum['id'], {}).get('checks', {}).get('id', {}).get('tries', 0) + 1
+    if drum['id'] in a.memory.drums:
+        result = readability if plate_text is None else ('match' if plate_text == expected else 'mismatch')
+        prior = a.memory.drums[drum['id']]['checks'].get('id', {})
+        a.memory.record(drum['id'], 'id', t, result=result, read=plate_text, record=expected, tries=tries,
+                        confirmed=result == 'mismatch' and prior.get('read') == plate_text)
     unclear = f"plate_{drum['id']}"
     if plate_text is None:
         a.add_finding(t, unclear, kind='plate_unclear', drum=drum['id'], readability=readability,
@@ -465,9 +622,14 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                 a.add_finding(t, f'swab_{drum_id}', kind='smear_swab', drum=drum_id,
                               alpha_bq_cm2=round(result['alpha_bq_cm2'], 2), beta_gamma_bq_cm2=round(result['beta_gamma_bq_cm2'], 1),
                               alpha_limit=limits['alpha'], positive=positive)
+                if drum_id in a.memory.drums:
+                    a.memory.record(drum_id, 'swab', t, alpha_bq_cm2=round(result['alpha_bq_cm2'], 2),
+                                    beta_gamma_bq_cm2=round(result['beta_gamma_bq_cm2'], 1), positive=positive)
                 a.swab_text = f"a {result['alpha_bq_cm2']:.2f}  b/g {result['beta_gamma_bq_cm2']:.1f} Bq/cm2"
                 a.event(t, f"Swab {DRUMS[drum_id]['display_id']}: alpha {result['alpha_bq_cm2']:.2f} Bq/cm2" + ('!' if positive else ''))
                 a.swab_contact = None
+        observe_for_memory(a, t, perception, reading, est)
+        a.memory.update_status(a)
         mark = lap('sensing_findings', mark)
         if a.status != 'RETREAT':
             read_plates(a, t, p, yaw)
@@ -510,6 +672,8 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
     report = build_report(a)
     (OUT / name / 'report.json').write_text(json.dumps(report, indent=2, default=float))
     (OUT / name / 'report.md').write_text(report_markdown(report))
+    (OUT / name / 'memory.json').write_text(json.dumps(a.memory.drums, indent=2, default=float))
+    state.setdefault('memory_log', []).append({'run': name, 'drums': a.memory.drums})  # For comparing rounds later.
     last = Image.open(frames_dir / f'{index:05d}.jpg')
     card = report_card(last, report)
     for k in range(int(report_seconds * FPS)):
@@ -535,6 +699,7 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
             vd.text((x,max(25,y)),f"map {item['display_id']} {'/'.join(item['faults']) or 'drum'}",font=FONT[14],fill='#ffffff',stroke_width=1,stroke_fill='black')
         frames['first']=np.asarray(view)
     canvas = compose(a, frames, perception, reading, a.nav.errors(p, yaw), p, yaw, roll, pitch, t)
+    draw_memory_overlay(canvas, a, p)
     draw = ImageDraw.Draw(canvas)
     y0 = 728
     draw.rectangle((0, y0, 480, y0 + 200), fill='#111822')
@@ -573,83 +738,67 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
 
 def build_report(a):
     """Grade each inspected drum with sim/criteria.py; Cosmos writes the summary from the structured result."""
-    from criteria import classify_condition
     temps = [e[0] for e in a.data.get('env', [])] or [float('nan')]
     rhs = [e[1] for e in a.data.get('env', [])] or [float('nan')]
-    seen = set(a.ids_read) | {f['drum'] for f in a.findings.values() if f.get('drum')}
+    a.memory.update_status(a)
+    actions = {'bad': ['stop', 'capture_best_angle', 'raise_alert', 'route_around_aisle'],
+               'attention': ['reinspect_second_angle', 'flag_next_shift'], 'good': ['log_continue'],
+               'inspecting': ['complete_inspection'], 'none': ['inspect_next_round']}
+    extra = {f['drum'] for f in a.findings.values() if f.get('drum')} - set(a.memory.drums)
     drums = []
-    for drum_id in sorted(seen, key=lambda d: DRUMS[d]['display_id']):
+    for drum_id in sorted(set(a.memory.drums) | extra, key=lambda d: DRUMS[d]['display_id']):
         d = DRUMS[drum_id]
-        measured = {'temperature_c': float(np.median(temps)), 'relative_humidity_pct': float(np.median(rhs))}
-        plate = a.ids_read.get(drum_id, 'not attempted')
-        if drum_id in a.ids_read:
-            measured['label_readability'] = a.data.get('readability', {}).get(drum_id, 'readable' if plate else 'unreadable')
-        if drum_id in a.data.get('rust_pct', {}):
-            measured['rust_pct'] = round(a.data['rust_pct'][drum_id], 1)
-        swab = a.findings.get(f'swab_{drum_id}')
-        if swab:
-            measured['swab'] = {'alpha_bq_cm2': swab['alpha_bq_cm2'], 'beta_gamma_bq_cm2': swab['beta_gamma_bq_cm2']}
-        if drum_id in a.data.get('peak_dose', {}):
-            measured['peak_dose_uSv_h'] = round(a.data['peak_dose'][drum_id], 1)
-        grade = classify_condition(measured, CONFIG)
-        thermal = a.findings.get(f'thermal_{drum_id}')
-        notes = []
-        visual=a.data.get('vision_records',{}).get(drum_id)
-        if visual and visual['conditions']:
-            notes.append('YOLO observed '+', '.join(visual['conditions'])+f" in {visual['observations']} views; coverage not measured")
-        if thermal:
-            delta = thermal['surface_temp_c'] - thermal['air_temp_c']
-            notes.append(f"surface {thermal['surface_temp_c']:.0f} C, +{delta:.0f} C vs air (thermal anomaly)")
-            if grade['zone'] in ('Ideal', 'Unknown', 'Tolerable'):
-                grade['zone'] = 'Failing' if drum_id in a.flagged else 'Tolerable'
-        if 'rust_pct' in measured:
-            notes.append(f"visible rust {measured['rust_pct']:.0f}% of view (segmentation placeholder)")
-        if f'record_{drum_id}' in a.findings:
-            m = a.findings[f'record_{drum_id}']
-            notes.append(f"plate {m['plate_read']} vs record {m['record']}" + ('' if m['confidence'] == 'high' else ' (unconfirmed)'))
-        if drum_id in a.flagged:
-            notes.append('ALERT raised')
-        drums.append({'drum': d['display_id'], 'category': d['category'], 'plate_read': plate,
-                      'record': a.scene['records'].get(drum_id), 'grade': grade['zone'],
-                      'actions': grade['actions'], 'missing': grade['missing'], 'measured': measured, 'notes': notes})
+        entry = a.memory.drums.get(drum_id)
+        if entry is None:  # Seen on the way, outside this job: report the finding, not a status.
+            notes = [f"{f['kind']} seen (outside this job)" for f in a.findings.values() if f.get('drum') == drum_id]
+            if drum_id in a.data.get('rust_pct', {}):
+                notes = [f"rust {a.data['rust_pct'][drum_id]:.0f}% seen (outside this job)"]
+            drums.append({'drum': d['display_id'], 'category': d['category'], 'plate_read': a.ids_read.get(drum_id, 'not attempted'),
+                          'record': a.scene['records'].get(drum_id), 'grade': 'outside job', 'checks_done': [],
+                          'missing': [], 'actions': ['schedule_inspection'], 'notes': notes})
+            continue
+        drums.append({'drum': d['display_id'], 'category': d['category'],
+                      'plate_read': a.ids_read.get(drum_id, 'not attempted'), 'record': a.scene['records'].get(drum_id),
+                      'grade': entry['status'], 'checks_done': sorted(entry['checks']), 'missing': entry.get('missing', []),
+                      'evidence': entry['checks'], 'actions': actions[entry['status']], 'notes': entry['reasons']})
     report = {'title': a.title, 'drums': drums, 'round_status': a.status,
               'patrol_stops_completed': a.patrol_index, 'patrol_stops_total': len(a.patrol),
               'environment': {'air_temp_c': round(float(np.median(temps)), 1), 'rh_pct': round(float(np.median(rhs))),
                               'max_h2_ppm': round(max(a.history['h2'] or [0])), 'max_gamma_uSv_h': round(max(a.history['gamma'] or [0]), 1)},
               'alerts': [DRUMS[d]['display_id'] for d in a.flagged],
               'decisions': [{k: d[k] for k in ('t', 'action_id', 'reason', 'source')} for d in a.decisions],
-              'not_inspected': [d['display_id'] for d in inventory if d['row'] in STANDOFF and d['id'] not in seen
-                                and d['x'] >= a.patrol[0][0] - 6]}
+              'not_inspected': [DRUMS[d]['display_id'] for d, e in a.memory.drums.items() if e['status'] in ('none', 'inspecting')]}
     report['summary'] = factual_summary(report)
 
     return report
 
 
 def factual_summary(r):
-    """Built from measured facts only; the 2B model embellished when asked to write this."""
-    failing = [d for d in r['drums'] if d['grade'] == 'Failing']
-    parts = []
-    if failing:
-        parts.append('; '.join(f"{d['drum']} failing ({', '.join(d['notes']) or 'see table'})" for d in failing) + '.')
-    else:
-        parts.append('No failing drums found.')
-    mismatches = [d['drum'] for d in r['drums'] if any(n.startswith('plate ') for n in d['notes'])]
-    unclear = [d['drum'] for d in r['drums'] if d['plate_read'] is None]
-    parts.append(f"Inventory: {len([d for d in r['drums'] if d['plate_read'] and d['plate_read'] != 'not attempted'])} plates read"
-                 + (f", mismatch at {', '.join(mismatches)}" if mismatches else ', no mismatches')
-                 + (f", unreadable at {', '.join(unclear)}" if unclear else '') + '.')
+    """Built from the inspection memory only; the 2B model embellished when asked to write this."""
+    job = [d for d in r['drums'] if d['grade'] != 'outside job']
+    count = {k: [d['drum'] for d in job if d['grade'] == k] for k in ('good', 'attention', 'bad', 'inspecting', 'none')}
+    parts = [f"{len(job) - len(count['none']) - len(count['inspecting'])}/{len(job)} drums fully inspected: "
+             f"{len(count['good'])} good, {len(count['attention'])} need attention, {len(count['bad'])} bad."]
+    for d in job:
+        if d['grade'] in ('bad', 'attention'):
+            parts.append(f"{d['drum']} {d['grade']}: {', '.join(d['notes'])}.")
+    outside = [f"{d['drum']} ({', '.join(d['notes'])})" for d in r['drums'] if d['grade'] == 'outside job']
+    if outside:
+        parts.append(f"Also seen outside the job: {'; '.join(outside)}.")
     e = r['environment']
-    parts.append(f"H2 peaked at {e['max_h2_ppm']} ppm and gamma at {e['max_gamma_uSv_h']} uSv/h; air {e['air_temp_c']} C, RH {e['rh_pct']}%.")
+    parts.append(f"H2 peaked at {e['max_h2_ppm']} ppm, gamma at {e['max_gamma_uSv_h']} uSv/h.")
     if r['not_inspected']:
-        parts.append(f"Not inspected{' after the alert' if r['alerts'] else ' this round'}: {', '.join(r['not_inspected'])}.")
+        parts.append(f"Still to inspect: {', '.join(r['not_inspected'])}.")
     return ' '.join(parts)
 
 
 def report_markdown(r):
     lines = [f"# Inspection report: {r['title']}", '', r['summary'], '',
-             '| Drum | Cat | Plate read | Record | Grade | Notes |', '|---|---|---|---|---|---|']
+             '| Drum | Cat | Status | Checks done | Missing | Plate read | Record | Issues |',
+             '|---|---|---|---|---|---|---|---|']
     for d in r['drums']:
-        lines.append(f"| {d['drum']} | {d['category']} | {d['plate_read']} | {d['record']} | {d['grade']} | {'; '.join(d['notes'])} |")
+        lines.append(f"| {d['drum']} | {d['category']} | {d['grade']} | {', '.join(d['checks_done'])} | "
+                     f"{', '.join(d['missing'])} | {d['plate_read']} | {d['record']} | {'; '.join(d['notes'])} |")
     e = r['environment']
     lines += ['', f"Environment: air {e['air_temp_c']} C, RH {e['rh_pct']}%, max H2 {e['max_h2_ppm']} ppm, "
                   f"max gamma {e['max_gamma_uSv_h']} uSv/h.", f"Alerts: {', '.join(r['alerts']) or 'none'}.",
@@ -671,8 +820,9 @@ def report_card(last_frame, r):
         line += word + ' '
     draw.text((80, y), line, font=FONT[18], fill='#d6e2ee')
     y += 50
-    colors = {'Failing': '#ff6767', 'Tolerable': '#ffc55e', 'Ideal': '#5fe2af', 'Unknown': '#9fb2c4'}
-    for x, head in ((80, 'DRUM'), (200, 'CAT'), (290, 'PLATE READ'), (480, 'RECORD'), (650, 'GRADE'), (820, 'NOTES')):
+    colors = {'bad': '#ff6767', 'attention': '#ffc55e', 'good': '#5fe2af', 'inspecting': '#e6ecf2',
+              'none': '#6f8396', 'outside job': '#9fb2c4'}
+    for x, head in ((80, 'DRUM'), (200, 'CAT'), (290, 'PLATE READ'), (480, 'RECORD'), (650, 'STATUS'), (820, 'ISSUES / MISSING CHECKS')):
         draw.text((x, y), head, font=FONT[16], fill='#9fb2c4')
     for d in r['drums'][:12]:
         y += 34
@@ -680,8 +830,9 @@ def report_card(last_frame, r):
         draw.text((200, y), d['category'], font=FONT[22], fill='white')
         draw.text((290, y), str(d['plate_read']), font=FONT[22], fill='white')
         draw.text((480, y), str(d['record']), font=FONT[22], fill='white')
-        draw.text((650, y), d['grade'], font=FONT[22], fill=colors.get(d['grade'], 'white'))
-        draw.text((820, y), '; '.join(d['notes'])[:80], font=FONT[18], fill='#d6e2ee')
+        draw.text((650, y), d['grade'].upper(), font=FONT[22], fill=colors.get(d['grade'], 'white'))
+        detail = '; '.join(d['notes']) or (f"missing: {', '.join(d['missing'])}" if d['missing'] else 'all checks passed')
+        draw.text((820, y), detail[:80], font=FONT[18], fill='#d6e2ee')
     e = r['environment']
     draw.text((80, y + 60), f"Air {e['air_temp_c']} C   RH {e['rh_pct']}%   max H2 {e['max_h2_ppm']} ppm   "
                             f"max gamma {e['max_gamma_uSv_h']} uSv/h   Alerts: {', '.join(r['alerts']) or 'none'}   "

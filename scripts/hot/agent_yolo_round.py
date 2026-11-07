@@ -1,6 +1,7 @@
 # World authoring only. YOLO must discover visual faults from camera pixels;
 # Cosmos receives measured findings, never these authored source settings.
 scene=copy.deepcopy(BASE_SCENE)
+scene['job_drums']=[d['id'] for d in inventory if d['category']=='LLW' and d['row'] in STANDOFF]
 target=DRUMS['D12']  # C04, painted LLW, in the same asset domain as detector training.
 vent=[target['x'],target['y'],.65]
 scene['drum_offsets_c']={'D12':24.0}
