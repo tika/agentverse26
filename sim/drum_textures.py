@@ -57,20 +57,22 @@ def clean_surfaces(seed=42):
 def plate_texture(entry):
     # Cache key includes the printed text: stage-2 plates print the location code.
     safe=entry['display_id'].replace('-','')
-    path=ASSETS/f'plate_{entry["id"]}_{entry["category"]}_{safe}_v4.png'
+    path=ASSETS/f'plate_{entry["id"]}_{entry["category"]}_{safe}_v5.png'
     if path.exists(): return {'diffuseColor':path}
     ASSETS.mkdir(parents=True,exist_ok=True)
     background=(225,190,45)
     image=Image.new('RGB',(512,358),background)
     draw=ImageDraw.Draw(image)
     draw.rectangle((5,5,506,352),outline=(24,25,22),width=5)
-    for angle in (60,180,300): draw.pieslice((29,28,143,142),angle,angle+60,fill=(22,22,18))  # one blade down
-    draw.ellipse((67,66,105,104),fill=background)
-    draw.ellipse((78,77,94,93),fill=(22,22,18))
+    dense = 'face_sign' in entry  # v1.2.1: the stencil carries the drum's single trefoil (F13)
+    if not dense:
+        for angle in (60,180,300): draw.pieslice((29,28,143,142),angle,angle+60,fill=(22,22,18))  # one blade down
+        draw.ellipse((67,66,105,104),fill=background)
+        draw.ellipse((78,77,94,93),fill=(22,22,18))
     for text,y,size in ((entry['category'],30,90),(entry['display_id'],132,99)):
         label=text_image(text,size,(20,22,18,255))
-        label.thumbnail((300,90))
-        image.paste(label,(177,y),label)
+        label.thumbnail((440 if dense else 300,90))
+        image.paste(label,(36 if dense else 177,y),label)
     small=text_image('WASTE PACKAGE',30,(24,25,22,255))
     image.paste(small,((512-small.width)//2,228),small)
     rng=np.random.default_rng(entry['appearance_seed'])
