@@ -59,7 +59,7 @@ def drum_materials(stage,seed):
     return result
 
 
-def create_plate(stage,entry,profile):
+def create_plate(stage,entry,profile,clearance_m=0.0):
     from geometry import mesh
     from materials import material
     from drum_textures import plate_texture
@@ -71,7 +71,7 @@ def create_plate(stage,entry,profile):
     heights=sorted(set([low+.14*i/4 for i in range(5)] + [z for _,z in profile if low<z<high]))
     points,faces,uv=[],[],[]
     for z in heights:
-        radius=radius_at(profile,z)+.002
+        radius=radius_at(profile,z)+.002+clearance_m
         for column in range(13):
             theta=angle-angle_width/2+angle_width*column/12
             points.append((radius*math.cos(theta),radius*math.sin(theta),z))
@@ -85,7 +85,7 @@ def create_plate(stage,entry,profile):
     return mesh(stage,entry['prim_path']+'/Plate',points,faces,uv,paint)
 
 
-def create_stencil(stage,entry,profile):
+def create_stencil(stage,entry,profile,clearance_m=0.0):
     """Large black stencilled package ID on a curved band, facing the aisle (v1.2.1 F13)."""
     from geometry import mesh
     from materials import material
@@ -98,7 +98,7 @@ def create_stencil(stage,entry,profile):
     heights=sorted(set([low+band_h*i/4 for i in range(5)] + [z for _,z in profile if low<z<low+band_h]))
     points,faces,uv=[],[],[]
     for z in heights:
-        radius=radius_at(profile,z)+.0015
+        radius=radius_at(profile,z)+.0015+clearance_m
         for column in range(25):
             theta=angle-angle_width/2+angle_width*column/24
             points.append((radius*math.cos(theta),radius*math.sin(theta),z))
@@ -111,6 +111,25 @@ def create_stencil(stage,entry,profile):
             uv.extend([(column/24,v0),((column+1)/24,v0),((column+1)/24,v1),(column/24,v1)])
     paint=material(stage,'DrumStencil_'+entry['id'],(1,1,1),.5,.1,textures=stencil_texture(entry,YELLOWS[entry['paint_color']]))
     return mesh(stage,entry['prim_path']+'/Stencil',points,faces,uv,paint)
+
+
+def relabel_deformed(stage,entry,clearance_m):
+    """Rebuild a drum's stencil and plate pushed out by clearance_m (stage-3 deformation hook).
+
+    Codex's scenario_scene reports deformation_hooks[id]['recommended_label_clearance_m']
+    (max radial body displacement in the label band + 4 mm). A uniform offset keeps the
+    labels outside a bulged body; over a dent they may stand off by up to the dent depth.
+    """
+    if clearance_m <= 0:
+        return
+    profile=drum_profile(entry['category'])
+    for child in ('Stencil','Plate'):
+        path=entry['prim_path']+'/'+child
+        if stage.GetPrimAtPath(path): stage.RemovePrim(path)
+    if entry.get('face_sign'):
+        create_stencil(stage,entry,profile,clearance_m)
+    if entry.get('visible_face',True):
+        create_plate(stage,entry,profile,clearance_m)
 
 
 def create_drum(stage,entry,materials):
