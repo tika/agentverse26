@@ -35,7 +35,6 @@ def benchmark():
     with log.open("w") as stream:
         result = subprocess.run([
             "/isaac-sim/python.sh", "/scripts/spot_spill.py", "--radiation",
-            "--fast",
         ], env={**os.environ, "OUTPUT_DIR": str(root)},
             stdout=stream, stderr=subprocess.STDOUT, timeout=700, cwd="/isaac-sim")
     elapsed = time.perf_counter() - started
@@ -68,4 +67,6 @@ def main(output: str):
     destination.mkdir(parents=True, exist_ok=True)
     with tarfile.open(fileobj=io.BytesIO(benchmark.remote())) as archive:
         archive.extractall(destination, filter="data")
+    if not (destination / "stage1-review.mp4").is_file():
+        raise RuntimeError(f"Isaac capture did not produce a video. Inspect {destination / 'isaac.log'}")
     print(destination)
