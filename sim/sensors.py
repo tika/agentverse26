@@ -83,13 +83,13 @@ class SensorWorld:
         if not math.isfinite(time_s) or time_s < 0 or (self._last_time is not None and time_s < self._last_time):
             raise ValueError('Simulation time must be finite, nonnegative and monotonic')
         cfg = self.config['radiation']
+        saturation = cfg.get('saturation_uSv_h', 1000.0)
         rate = uncertainty = None
         status = 'failed'
         if gamma_operational:
             expected = cfg['background']+sum(value for _, value in self._sources(position))
             uncertainty = expected * cfg['noise_fraction']
             rate = max(0.0, self._dose_rng.gauss(expected, uncertainty))
-            saturation = cfg.get('saturation_uSv_h', 1000.0)
             status = 'saturated' if rate >= saturation else 'ok'
             rate = min(rate, saturation)
         current_rate = rate if status == 'ok' else None
@@ -100,7 +100,8 @@ class SensorWorld:
         self._last_time, self._previous_rate = time_s, current_rate
         gamma = {
             'sensor_id': 'spot_gamma', 'unit': 'uSv/h', 'value': rate,
-            'timestamp_s': time_s, 'age_s': 0.0, 'position_m': list(position),
+            'timestamp_s': time_s, 'age_s': 0.0, 'position_m': list(map(float, position)),
+            'saturation_limit_uSv_h': saturation,
             'uncertainty_uSv_h': uncertainty if status == 'ok' else None,
             'valid': status == 'ok', 'status': status,
         }

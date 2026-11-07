@@ -299,13 +299,21 @@ def run():
                                 np.save(output / f"depth-{index:05d}.npy", depth)
                     if args.radiation:
                         radiation = sensor.sample(sensor_position, t)
+                        radiation["gamma"]["yaw_rad"] = (yaw + math.pi) % (2 * math.pi) - math.pi
                         rate = radiation["dose_rate_uSv_h"]
                         limits = scenario["thresholds"]
                         radiation["status"] = ("red" if rate > limits["hot_spot"]
                                                else "amber" if rate > limits["controlled_zone"] else "green")
                         trail.append(rate)
                         log.write(json.dumps({"event": "dose_sample", "position_m": sensor_position.tolist(),
-                                              "frame": index, "central_depth_m": nearest, **radiation}) + "\n")
+                                              "frame": index, "central_depth_m": nearest,
+                            "camera": {
+                                "timestamp_s": t, "image_size_px": [480, 270],
+                                "intrinsics": front.get_intrinsics_matrix().tolist(),
+                                "world_eye_m": basis[0].tolist(), "world_forward": basis[1].tolist(),
+                                "world_right": basis[2].tolist(), "world_up": basis[3].tolist(),
+                            },
+                            **radiation}) + "\n")
                         if not retreating:
                             if rate < 0.7 * limits["hot_spot"]:
                                 last_clear = tuple(map(float, position[:2]))
