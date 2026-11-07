@@ -55,8 +55,9 @@ def validate_frame(folder,job):
     ids={b['internal_id'] for b in boxes if b['class_name']=='drum'}
     if any(b['internal_id'] not in ids for b in boxes):raise ValueError('Defect without visible drum')
     if cam['mode']=='single' and ids!={cam['target_id']}:raise ValueError('Single frame has incorrect drum count')
+    if cam['mode']=='inspection' and cam['target_id'] not in ids:raise ValueError('Inspection target missing')
     if cam['mode']=='context' and len(ids)<2:raise ValueError('Context frame has fewer than two visible drums')
-    if cam['mode'] not in ('single','context'):raise ValueError('Unknown view mode')
+    if cam['mode'] not in ('single','inspection','context'):raise ValueError('Unknown view mode')
     return meta
 
 

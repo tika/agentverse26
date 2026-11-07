@@ -143,10 +143,14 @@ and a selection of close, rear, side and occluded frames as well.
 - Printed A01–D07 warning plates are assigned independently of faults. Reuse the
   yellow/black shared artwork; leading zeroes stay. IDs are metadata, not detector
   classes. Plate caches are invalidated only inside each worker's container.
-- 60% true single-barrel frames and 40% multi-barrel context frames: **720/480**
-  images for this plan. Camera bearing, distance, height, lights, room palettes,
-  layout and clutter vary. Single frames explicitly hide all other drum/defect
-  roots. Context views require at least two visible drums and include occlusion.
+- 60% close inspection frames and 40% wider context frames: **720/480** images.
+  Seeded scenes contain 4, 6 or 8 drums, with variable visible counts. Camera
+  bearing, distance, height, lights, room palettes, layout and clutter vary.
+  All labelled drum/defect roots remain continuously visible in USD: repeated
+  hide/show caused native annotation IDs to disappear despite visible RGB in a
+  failed first attempt. Close inspection frames include neighbouring drums and
+  require the target to be annotated; planned centre rays avoid other drums.
+  Context views require at least two annotated drums and include occlusion.
 - Each visible drum has a box. Bulged drums also have one overlapping whole-drum
   condition box. Rust boxes represent local visible patches, grouped within each
   drum before small-box filtering. No invisible proxy is added to force a box.
@@ -181,7 +185,7 @@ is `class x_center y_center width height`, normalised to 0–1. Metadata include
 actual camera/environment parameters, identities, rust seeds, deformation,
 native boxes and annotation grouping. Metadata is not input to the detector.
 The exporter rejects missing/extra frames, failed scenes, duplicate images,
-invalid boxes/classes/calibration, incorrect object counts, missing split classes
+invalid boxes/classes/calibration, missing inspection targets, missing split classes
 and rust seeds crossing split boundaries. It builds into a new temporary directory
 and publishes only a complete release. Existing releases cannot be overwritten.
 

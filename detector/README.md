@@ -30,9 +30,19 @@ has its own rust seed and circumference shift. Bulged drums vary only within
 the reference remains 8% / 70 mm. These are not severity classes. All assets are
 painted LLW barrels; ILW/stainless is outside this pilot.
 
-## Diversity v2
+## Current diversity v3
 
-Every five captures contain three **single-barrel** inspection views and two
+The current generator keeps all labelled geometry continuously visible in USD,
+uses 4/6/8 drums per seeded scene, and captures three close inspection views plus
+two wider context views per five. Close frames may contain neighbours; all visible
+drums receive labels and the target must be annotated. Camera centre rays are
+screened for obstruction. This avoids a renderer annotation-ID failure caused by
+repeatedly hiding/showing drums. Context frames still require at least two drums.
+The completed v2 reports below are historical; the source now follows v3.
+
+## Earlier diversity v2 pilot
+
+The earlier five-capture pilot contained three **single-barrel** inspection views and two
 **multi-barrel** context views. Single views explicitly hide every other drum
 and its corrosion geometry. Export assertions require exactly the intended drum
 in their native boxes; context views require at least two visible drums. Every

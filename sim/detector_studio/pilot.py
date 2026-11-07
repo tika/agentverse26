@@ -56,6 +56,8 @@ def export_frame(directory, entries, camera_meta):
     boxes=retained
     if camera_meta.get('mode')=='single':
         assert set(drums)=={camera_meta['target_id']}, ('Single frame contains other drums',drums)
+    if camera_meta.get('mode')=='inspection':
+        assert camera_meta['target_id'] in drums, ('Inspection target not annotated',drums)
     if camera_meta.get('mode')=='context':
         assert len(drums)>=2, ('Context frame has fewer than two drums',drums)
     lines=[]
@@ -229,8 +231,8 @@ def main():
     settings.set_float('/rtx/post/tonemap/fNumber',4.)
     settings.set_float('/rtx/post/tonemap/cameraShutter',60.)
     build_seconds=time.perf_counter()-started
-    # One camera/product reused across frames: visibility is scene-wide, so a
-    # single-barrel frame cannot share a simultaneous capture with context views.
+    # Keep labelled instances continuously visible in USD. Repeated hide/show
+    # can invalidate renderer stable IDs and silently lose native boxes.
     path=camera(stage,'/World/Cameras/Inspection',(0,-2,.6),(0,0,.47),22.5,(640,640))
     product=rep.create.render_product(path,(640,640))
     render_started=time.perf_counter()
@@ -238,21 +240,12 @@ def main():
     frame_reports=[]
     for i,view in enumerate(specification['frames']):
         print('PILOT_PHASE '+json.dumps(dict(state='rendering',seed=seed,frame=i,mode=view['mode'])),flush=True)
-        active=[e for e in entries if view['mode']=='context' or e['id']==view['target_id']]
-        active_ids={e['id'] for e in active}
-        for entry in entries:
-            for root in ('/World/Drums/','/World/Defects/'):
-                prim=stage.GetPrimAtPath(root+entry['id'])
-                if prim:
-                    imageable=UsdGeom.Imageable(prim)
-                    if entry['id'] in active_ids:imageable.MakeVisible()
-                    else:imageable.MakeInvisible()
+        active=entries
+        ops=UsdGeom.Xformable(occluder).GetOrderedXformOps()
         if i%5==4:
-            occluder.MakeVisible()
-            ops=UsdGeom.Xformable(occluder).GetOrderedXformOps()
             angle=view['bearing_rad']
             ops[0].Set(Gf.Vec3d(1.35*math.cos(angle),1.35*math.sin(angle),.16))
-        else:occluder.MakeInvisible()
+        else:ops[0].Set(Gf.Vec3d(1000,1000,.16))
         view=dict(view)
         for light,power in lights:light.GetIntensityAttr().Set(power*view['light_scale'])
         directory=out/f'frame_{i:03d}';directory.mkdir()
