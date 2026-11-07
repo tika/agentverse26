@@ -160,6 +160,21 @@ if __name__ == '__main__':
         world.render()
     print('WARMUP', warm_renders, 'renders', round(time.perf_counter() - warm_start, 1), 's', flush=True)
 
+    # Alternate known camera heights over a clear floor patch. Each immediate depth
+    # must match the newly requested pose, including on abrupt pose changes.
+    alignment = []
+    for height in (2.,4.,2.,4.):
+        aim((1.25,6.,height),(1.251,6.,0.),24.)
+        for _ in range(4):
+            app.update()
+            world.render()
+        d = cam.get_depth()
+        patch = d[355:366,635:646]
+        measured = float(np.median(patch[np.isfinite(patch) & (patch>0)]))
+        alignment.append({'expected_floor_depth_m':height,'measured_m':measured})
+    (OUT/'camera_alignment.json').write_text(json.dumps(alignment,indent=2))
+    assert all(abs(row['expected_floor_depth_m']-row['measured_m'])<.12 for row in alignment), alignment
+
     frames = []
     for i, (eye, target, focal, label) in enumerate(plan):
         aim(eye, target, focal)
@@ -192,7 +207,7 @@ if __name__ == '__main__':
     manifest = {'renderer': 'RayTracedLighting (default RTX)', 'resolution': list(RES), 'fps': 10,
                 'fixed_exposure': {'iso': 400, 'f_number': 2.8, 'shutter_reciprocal_s': 60},
                 'robot_motion': False, 'scene_metrics': metrics, 'frames': frames, 'warmup_renders': warm_renders,
-                'intrinsics': cam.get_intrinsics_matrix().tolist(),
+                'intrinsics': cam.get_intrinsics_matrix().tolist(), 'camera_alignment':alignment,
                 'note': 'gt_review_label is ground truth for review overlays only, never a perception input'}
     (OUT / 'manifest.json').write_text(json.dumps(manifest, indent=2))
     print('STAGE2_TOUR_OK', len(frames), flush=True)
