@@ -137,7 +137,7 @@ def main():
                 title = "STAGE 3 REVIEW | overview"
             else:
                 sc = scenarios[sid]
-                rep = sa.assess_scenario(sc)
+                rep = sa.assess_scenario(sc, traces.get(sid))  # measured channels (REALITY CHECK 3.2)
                 view = label[len(sid):].strip("_").replace("_", " ") or "drum close-up"
                 title = f"STAGE 3 REVIEW | {sid.replace('_', ' ')} | {view}"
                 design = "SCENARIO DESIGN (review label, not a perception input): " + ", ".join(sc["case_tags"])

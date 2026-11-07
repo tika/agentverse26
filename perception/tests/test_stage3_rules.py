@@ -252,5 +252,48 @@ class Assessment(unittest.TestCase):
         self.assertIn("mark_area_avoid_tracking_and_alert", sa.assess_scenario(rel)["actions"])
 
 
+class MeasuredTraces(unittest.TestCase):
+    """REALITY CHECK 3.2 (Codex): channel findings must come from captured samples, not scenario flags."""
+
+    def trace(self, sid, gamma=0.3, h2=0.0, temp=18.2, validity="valid", h2_validity="below_detection_limit"):
+        def ch(v, units, val):
+            return {"value": v, "units": units, "timestamp_s": 1.0, "age_s": 0.0, "validity": val, "cause": "x"}
+        return {"scenario_id": sid, "samples": [{"time_s": 1.0, "pose_m": [5.0, 2.0, 0.55], "channels": {
+            "gamma": ch(gamma, "uSv/h", validity), "hydrogen": ch(h2, "ppm", h2_validity),
+            "thermal": ch(temp, "degC", validity)}}]}
+
+    def hyps(self, sc, tr):
+        import stage3_assess as sa
+        r = sa.assess_scenario(sc, tr)
+        self.assertEqual(r["channel_method"], "measured_traces")
+        return {f["hypothesis"] for f in r["findings"]}, r
+
+    def test_flag_without_measurement_gives_no_finding(self):
+        sc = scenario("x", ["gas_area_concern"], h2=True)          # declared anomaly...
+        hyps, r = self.hyps(sc, self.trace("x", h2=0.0))            # ...but nothing measured
+        self.assertNotIn("gas_concern_area", hyps)
+        self.assertFalse(r["channel_provenance"]["hydrogen"]["exceeds"])
+
+    def test_measurement_without_flag_gives_finding(self):
+        sc = scenario("x", ["healthy_control"])
+        hyps, r = self.hyps(sc, self.trace("x", gamma=42.0, h2=240.0, temp=35.6, h2_validity="valid"))
+        self.assertEqual(hyps, {"elevated_radiation_field", "gas_concern_area", "thermal_anomaly"})
+        self.assertIn("stand_off_and_alert", r["actions"])
+        self.assertIn("controlled_zone", r["channel_provenance"]["gamma"]["threshold_source"])
+
+    def test_stale_or_failed_cannot_raise_or_clear(self):
+        sc = scenario("x", ["healthy_control"])
+        tr = self.trace("x", gamma=42.0)
+        tr["samples"][0]["channels"]["gamma"]["age_s"] = 30.0      # stale
+        hyps, r = self.hyps(sc, tr)
+        self.assertNotIn("elevated_radiation_field", hyps)
+        self.assertEqual(r["channel_provenance"]["gamma"]["validity"], "stale")
+
+    def test_saturated_counts_as_exceeding(self):
+        sc = scenario("x", ["healthy_control"])
+        hyps, _ = self.hyps(sc, self.trace("x", gamma=1000.0, validity="saturated"))
+        self.assertIn("elevated_radiation_field", hyps)
+
+
 if __name__ == "__main__":
     unittest.main()
