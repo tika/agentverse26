@@ -1,5 +1,8 @@
 # Sensors and inspection criteria: implemented extension to Step 2
 
+See the [inspection source register](inspection_source_register.md) for the
+verified references, original scope of the numbers, and simulation choices.
+
 The fixed 28-drum layout is preserved: D01–D16 remain 200 L LLW and D17–D28
 remain 500 L ILW, at the original positions. The supplied criteria document's
 example 60-drum layout is deliberately not used. Its ILW-only premise is also

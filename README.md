@@ -12,6 +12,7 @@ local Isaac and Modal commands, editing, picture-ready settings and video captur
 - [Run commands, installed APIs and validation](sim/README.md)
 - [Environment build specification](docs/environment_mvp.md)
 - [Sensors, inspection criteria, safety rules and limitations](docs/sensors_and_criteria.md)
+- [Inspection source register and threshold rationale](docs/inspection_source_register.md)
 - [Detector/camera API and training start gate](docs/training_handoff.md)
 
 Use Python 3.12+ locally. Review each step through exported screenshots/video,
