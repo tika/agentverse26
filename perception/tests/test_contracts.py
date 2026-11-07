@@ -26,8 +26,8 @@ def cumulative(t, value, method="left_rectangle"):
     return {"contract_version": c.CONTRACT_VERSION, "sensor_id": "robot.gamma.0.cum",
             "kind": "cumulative_dose", "source": "robot", "timestamp_s": t, "units": "uSv",
             "value": value, "pose": POSE, "sample_age_s": 0.0, "validity": "valid",
-            "uncertainty": {"std": 0.0}, "status": "ok", "integration_method": method,
-            "simulated_proxy": True}
+            "uncertainty": {"std": None, "status": "unknown"}, "status": "ok",
+            "integration_method": method, "simulated_proxy": True, "complete": True}
 
 
 class DoseIntegration(unittest.TestCase):
@@ -84,7 +84,7 @@ class SensorValidity(unittest.TestCase):
         self.assertFalse(c.usable(m, now_s=10, max_age_s=2))
 
     def test_failed_sensor_may_have_null_value(self):
-        m = rate(10, None, validity="failed", uncertainty={"std": 0.0}, status="no response")
+        m = rate(10, None, validity="failed", uncertainty={"std": None, "status": "unknown"}, status="no response")
         self.assertEqual(c.sensor_message_errors(m), [])
         self.assertFalse(c.usable(m, now_s=10, max_age_s=2))
 
@@ -92,6 +92,18 @@ class SensorValidity(unittest.TestCase):
         self.assertTrue(c.sensor_message_errors(rate(0, 1.0, units="sim_rad")))
         self.assertTrue(c.sensor_message_errors(rate(0, 1.0, source="cloud")))
         self.assertTrue(c.sensor_message_errors(rate(0, 1.0, saturation_limit=None)))
+
+    def test_unknown_uncertainty_is_not_zero(self):
+        self.assertEqual(c.sensor_message_errors(rate(0, 1.0, uncertainty={"std": None, "status": "unknown"})), [])
+        self.assertEqual(c.sensor_message_errors(rate(0, 1.0, uncertainty={"std": 0.0})), [])
+        self.assertTrue(c.sensor_message_errors(rate(0, 1.0, uncertainty={"std": None})))
+        self.assertTrue(c.sensor_message_errors(rate(0, 1.0, uncertainty={"std": 0.0, "status": "unknown"})))
+
+    def test_incomplete_integral_is_lower_bound(self):
+        m = {**cumulative(5, 1.0), "complete": False}
+        self.assertTrue(c.sensor_message_errors(m))  # status 'ok' not allowed
+        self.assertEqual(c.sensor_message_errors({**m, "status": "incomplete_lower_bound"}), [])
+        self.assertTrue(c.sensor_message_errors({k: v for k, v in cumulative(5, 1.0).items() if k != "complete"}))
 
     def test_hydrogen_requires_measurement_scope_and_limit(self):
         h2 = {**rate(0, 40.0), "kind": "hydrogen", "units": "ppm", "source": "facility",
@@ -133,11 +145,35 @@ class ExistingSimulatorConformance(unittest.TestCase):
         w = self.world()
         rates, cums = [], []
         for i in range(10):
-            r, cu = gamma_messages(w.sample((2.0 + 0.3 * i, 6.0, 0.6), i * 0.5), saturation_limit_uSv_h=1000.0)
+            xyz = [2.0 + 0.3 * i, 6.0, 0.6]
+            r, cu = gamma_messages(w.sample(tuple(xyz), i * 0.5), saturation_limit_uSv_h=1000.0,
+                                   pose={"frame": "world", "xyz_m": xyz})
             self.assertEqual(c.sensor_message_errors(r) + c.sensor_message_errors(cu), [])
             rates.append(r)
             cums.append(cu)
         self.assertEqual(c.dose_stream_errors(rates, cums, rel_tol=1e-9), [])
+
+    def test_adapter_never_invents_pose(self):
+        from sim_adapter import gamma_messages
+        s = self.world().sample((2.0, 6.0, 0.6), 0.0)
+        s.pop("gamma", None)
+        with self.assertRaises(ValueError):
+            gamma_messages(s, saturation_limit_uSv_h=1000.0)
+
+    def test_adapter_marks_failed_and_incomplete(self):
+        from sim_adapter import gamma_messages
+        sample = {"time_s": 3.0, "dose_rate_uSv_h": None, "dose_timestamp_s": 3.0,
+                  "mission_dose_mSv": 0.001, "dose_complete": False,
+                  "gamma": {"sensor_id": "spot_gamma", "unit": "uSv/h", "value": None, "timestamp_s": 3.0,
+                            "age_s": 0.0, "position_m": [2.0, 6.0, 0.6], "uncertainty_uSv_h": None,
+                            "valid": False, "status": "failed"}}
+        r, cu = gamma_messages(sample, saturation_limit_uSv_h=1000.0)
+        self.assertEqual(c.sensor_message_errors(r) + c.sensor_message_errors(cu), [])
+        self.assertEqual(r["validity"], "failed")
+        self.assertEqual(r["uncertainty"], {"std": None, "status": "unknown"})
+        self.assertEqual((cu["complete"], cu["status"]), (False, "incomplete_lower_bound"))
+        with self.assertRaises(ValueError):
+            gamma_messages(sample, saturation_limit_uSv_h=1000.0, pose={"frame": "world", "xyz_m": [9, 9, 9]})
 
     def test_seeded_variation_is_repeatable(self):
         a = [m["value"] for m in self.stream(self.world(seed=7))[0]]

@@ -10,9 +10,9 @@ CPU only. No Modal job launched by Claude.
 | --- | --- |
 | `perception/contracts.py` | Versioned (`1.0.0`) validators: sensor sample, cumulative-dose oracle, detection, inspection record, high-level proposal, location codes, yaw normalisation. Pure Python. |
 | `perception/sim_adapter.py` | Renames `SensorWorld.sample()` output (flat f1a288b form **and** Codex S1 `gamma` packet) into contract messages. No physics. |
-| `perception/tests/test_contracts.py` | 30 tests: dose integration (both methods), oracle detects mSv/uSv mix-up and decreasing totals, stale/future/saturated/failed readings, hydrogen scope + detection limit, class order, box bounds, truth/probability leakage, ranking-not-probability priority, ambiguous identity, correlated-confidence product rejected, location code consistency, offered-goal/evidence/safety-override checks, yaw. Includes a conformance run of the existing simulator. |
+| `perception/tests/test_contracts.py` | 34 tests: dose integration (both methods), oracle detects mSv/uSv mix-up and decreasing totals, stale/future/saturated/failed readings, hydrogen scope + detection limit, class order, box bounds, truth/probability leakage, ranking-not-probability priority, ambiguous identity, correlated-confidence product rejected, location code consistency, offered-goal/evidence/safety-override checks, yaw. Includes a conformance run of the existing simulator. |
 
-Run: `python -m unittest discover -s perception/tests -v` (needs NumPy only for the simulator conformance tests). Result: 30/30 pass; existing `sim/tests` 9/9 pass.
+Run: `python -m unittest discover -s perception/tests -v` (needs NumPy only for the simulator conformance tests). Result: 34/34 pass; existing `sim/tests` 9/9 pass.
 
 ## Contract decisions (need Codex review before merge)
 
@@ -27,6 +27,13 @@ Run: `python -m unittest discover -s perception/tests -v` (needs NumPy only for 
 Ran Codex's `sim/sensors.py` read-only through the adapter: no schema errors, oracle conforms, outage marks `dose_complete=false`. Mapping: `unit→units`, `age_s→sample_age_s`, `position_m→pose.xyz_m`, `uncertainty_uSv_h→uncertainty.std`, `status ok/failed/saturated→validity valid/failed/saturated`. No change required for the adapter.
 
 Requested change: **while saturated, the integrator adds nothing** (`current_rate=None`), so cumulative dose is under-counted exactly in the highest field. Suggest integrating at `saturation_limit` as a lower bound and keeping `dose_complete=false`. (From reading the code; the test path did not reach 1000 uSv/h.) Also please add `saturation_limit` and pose yaw to the packet.
+
+## Codex review outcome (board 19:28:06) — applied in follow-up commit
+
+- Adapter no longer substitutes world origin: a sample without `position_m` requires a caller pose; a caller pose that disagrees with the packet is rejected.
+- Unknown uncertainty is `{"std": null, "status": "unknown"}`, distinct from a measured `0`. Failed readings and the (unmodelled) integral use it.
+- Cumulative dose requires `complete`; `complete=false` cannot report `status: ok` and is published as `incomplete_lower_bound`. The S1 baseline integral excludes invalid intervals and latches incompleteness; this is preserved, not presented as exact exposure.
+- Codex will add saturation setting and yaw at the capture boundary.
 
 ## Audit findings
 

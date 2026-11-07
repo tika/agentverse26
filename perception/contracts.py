@@ -125,6 +125,20 @@ def location_errors(loc, where="location: "):
 
 # ----------------------------------------------------------------------- sensors
 
+def uncertainty_errors(unc):
+    """Either a measured std (finite, >= 0, value units) or explicitly unknown.
+    Unknown is {"std": None, "status": "unknown"}; it is never encoded as 0."""
+    if not isinstance(unc, dict):
+        return ["uncertainty must be an object"]
+    if unc.get("std") is None:
+        return [] if unc.get("status") == "unknown" else ["missing uncertainty must be marked status='unknown'"]
+    if not (_finite(unc["std"]) and unc["std"] >= 0):
+        return ["uncertainty.std must be finite and non-negative (same units as value)"]
+    if unc.get("status") == "unknown":
+        return ["uncertainty cannot be both measured and unknown"]
+    return []
+
+
 def sensor_message_errors(msg):
     """Validate one sensor sample (robot instrument or facility feed)."""
     errors = []
@@ -150,9 +164,7 @@ def sensor_message_errors(msg):
         pass  # value may be null or a last-known reading; consumers must not use it
     elif not _finite(value) or value < 0:
         errors.append("a usable reading needs a finite non-negative value")
-    unc = msg["uncertainty"]
-    if not (isinstance(unc, dict) and _finite(unc.get("std")) and unc["std"] >= 0):
-        errors.append("uncertainty.std must be finite and non-negative (same units as value)")
+    errors += uncertainty_errors(msg["uncertainty"])
     errors += _pose_errors(msg["pose"], "")
     if not isinstance(msg["status"], str):
         errors.append("status must be a short string")
@@ -161,6 +173,10 @@ def sensor_message_errors(msg):
             errors.append(f"cumulative_dose needs integration_method in {INTEGRATION_METHODS}")
         if not msg.get("simulated_proxy", False):
             errors.append("cumulative_dose must declare simulated_proxy=true (not certified dosimetry)")
+        if not isinstance(msg.get("complete"), bool):
+            errors.append("cumulative_dose must state complete=true/false")
+        elif not msg["complete"] and msg["status"] == "ok":
+            errors.append("an incomplete integral must not report status 'ok' (it is a lower bound)")
     if kind == "hydrogen":
         if msg.get("measures") not in ("ambient", "package_headspace"):
             errors.append("hydrogen must state measures='ambient' or 'package_headspace'")
