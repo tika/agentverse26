@@ -5,11 +5,44 @@ import tempfile
 import unittest
 import numpy as np
 from PIL import Image
-from detector.pilot_specs import scene_spec
+from detector.pilot_specs import scene_spec, diversity_spec
+from detector.annotations import merge_rust_boxes
 from sim.detector_studio.pilot import export_frame
 
 
 class PilotTests(unittest.TestCase):
+    def test_diversity_camera_mix_and_reproducible_environment(self):
+        seen_layouts=set();seen_bearings=set();seen_floors=set()
+        for seed in range(1,33):
+            spec=diversity_spec(seed,25)
+            self.assertEqual(spec,diversity_spec(seed,25))
+            views=spec['frames']
+            self.assertEqual(sum(v['mode']=='single' for v in views),15)
+            self.assertEqual(sum(v['mode']=='context' for v in views),10)
+            ids={e['id'] for e in spec['entries']}
+            for view in views:
+                self.assertTrue(.45<=view['eye'][2]<=.8)
+                if view['mode']=='single':
+                    self.assertIn(view['target_id'],ids)
+                    self.assertTrue(1.0<=view['distance_m']<=1.5)
+                seen_bearings.add(round((view['bearing_rad']+np.pi/2)/(np.pi/2))%4)
+            seen_layouts.add(spec['environment']['layout'])
+            seen_floors.add(tuple(spec['environment']['floor_color']))
+        self.assertEqual(len(seen_layouts),3)
+        self.assertEqual(len(seen_floors),4)
+        self.assertEqual(len(seen_bearings),4)
+
+    def test_rust_merging_keeps_identity_and_limits_region_span(self):
+        def rust(identity,xyxy):return dict(class_name='corrosion',class_id=1,internal_id=identity,xyxy=xyxy)
+        boxes=[rust('D01',[10,80,13,84]),rust('D01',[14,80,18,84]),
+               rust('D02',[14,80,18,84]),rust('D01',[70,10,90,20])]
+        merged=merge_rust_boxes(boxes,{'D01':[0,0,100,200],'D02':[0,0,100,200]})
+        self.assertEqual(len(merged),3)
+        self.assertEqual(sum(b['source_cluster_count'] for b in merged),4)
+        d1=[b for b in merged if b['internal_id']=='D01']
+        self.assertEqual(len(d1),2)
+        self.assertTrue(any(b['xyxy']==[10,80,18,84] for b in d1))
+
     def test_reproducible_independent_labels_and_shape_ranges(self):
         self.assertEqual(scene_spec(4),scene_spec(4))
         conditions_by_plate={}

@@ -1,0 +1,38 @@
+{
+  "run_id": "20261107T201606Z",
+  "images": 40,
+  "gpus": 8,
+  "mix": {
+    "single": 24,
+    "context": 16
+  },
+  "unique_rgb_hashes": 40,
+  "class_counts": {
+    "drum": 86,
+    "corrosion": 530,
+    "bulge": 45
+  },
+  "raw_corrosion_boxes": 2280,
+  "ignored_small_boxes": 1041,
+  "single_barrel_native_box_assertions_passed": 24,
+  "multi_barrel_native_box_assertions_passed": 16,
+  "layouts": [
+    "cluster",
+    "row",
+    "staggered"
+  ],
+  "floor_palettes": 4,
+  "monotonic_launcher_seconds": 234.972,
+  "utc_launcher_span_seconds": 283.539787,
+  "timing_note": "Monotonic and UTC elapsed differ; retain both rather than treating this as a controlled throughput benchmark.",
+  "pixel_mean_range": [
+    129.48225260416666,
+    168.29694580078126
+  ],
+  "same_v1_images_rust_policy_comparison": {
+    "before": 1970,
+    "after": 773
+  },
+  "tests": "4 detector CPU tests and 10 existing sim tests passed; actual GPU assertions passed",
+  "scope": "40-image diversity validation only; no full dataset or model training"
+}

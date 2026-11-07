@@ -1,4 +1,4 @@
-"""Isolated five-view labelled pilot. Does not save over any hall USD or inventory."""
+"""Diverse single/context pilot; camera reuse, no writes to hall USD/inventory."""
 import json
 import math
 import os
@@ -9,7 +9,8 @@ from pathlib import Path
 SIM = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SIM))
 sys.path.insert(0, str(SIM.parents[0]))
-from detector.pilot_specs import scene_spec, CLASSES
+from detector.pilot_specs import diversity_spec, CLASSES
+from detector.annotations import merge_rust_boxes
 
 
 def export_frame(directory, entries, camera_meta):
@@ -33,7 +34,7 @@ def export_frame(directory, entries, camera_meta):
         assert cls in CLASSES and internal_id in by_id, semantic
         xyxy = [max(0,min(640,int(row[k]))) for k in ('x_min','y_min','x_max','y_max')]
         x0,y0,x1,y1 = xyxy
-        if x1-x0 < 2 or y1-y0 < 2:
+        if x1<=x0 or y1<=y0:
             ignored += 1
             continue
         boxes.append(dict(class_name=cls,class_id=CLASSES.index(cls),internal_id=internal_id,xyxy=xyxy))
@@ -41,7 +42,22 @@ def export_frame(directory, entries, camera_meta):
         # It is emitted from observed native drum boxes, never a second hidden overlay.
         if cls == 'drum' and by_id[internal_id]['bulge']:
             boxes.append(dict(class_name='bulge',class_id=2,internal_id=internal_id,xyxy=xyxy))
-    assert any(b['class_name']=='drum' for b in boxes), 'No drum annotations'
+    drums={b['internal_id']:b['xyxy'] for b in boxes if b['class_name']=='drum'}
+    assert drums, 'No drum annotations'
+    raw_rust_count=sum(b['class_name']=='corrosion' for b in boxes)
+    boxes=merge_rust_boxes(boxes,drums)
+    # Merge first: nearby sub-pixel chips can form a useful visible patch.
+    retained=[]
+    for b in boxes:
+        x0,y0,x1,y1=b['xyxy']
+        minimum=3 if b['class_name']=='corrosion' else 2
+        if x1-x0<minimum or y1-y0<minimum:ignored+=1
+        else:retained.append(b)
+    boxes=retained
+    if camera_meta.get('mode')=='single':
+        assert set(drums)=={camera_meta['target_id']}, ('Single frame contains other drums',drums)
+    if camera_meta.get('mode')=='context':
+        assert len(drums)>=2, ('Context frame has fewer than two drums',drums)
     lines=[]
     draw=ImageDraw.Draw(image)
     colors=['#35dc65','#ff7823','#42bfff']
@@ -56,8 +72,9 @@ def export_frame(directory, entries, camera_meta):
     image.save(directory/'boxes.jpg',quality=92)
     Image.open(rgb).convert('RGB').save(directory/'image.jpg',quality=95)
     (directory/'labels.txt').write_text('\n'.join(lines)+'\n')
-    meta=dict(drums=entries,camera=camera_meta,boxes=boxes,ignored_sub_2px_boxes=ignored,
-              annotation_policy='bulge uses one visible whole-drum condition box; corrosion spatial chip clusters',
+    meta=dict(drums=entries,camera=camera_meta,boxes=boxes,ignored_small_boxes=ignored,
+              raw_corrosion_boxes=raw_rust_count,
+              annotation_policy='bulge: one visible whole-drum box; corrosion: bounded per-drum visible patch grouping before small-box filtering',
               pixel_mean=float(pixels.mean()))
     (directory/'metadata.json').write_text(json.dumps(meta,indent=2))
     return {name:sum(b['class_name']==name for b in boxes) for name in CLASSES}
@@ -115,6 +132,7 @@ def rust_clusters(stage, entry, maps, alpha, profile):
 def main():
     started=time.perf_counter()
     seed=int(os.environ['PILOT_SEED'])
+    frame_count=int(os.environ.get('PILOT_FRAMES','5'))
     out=Path(os.environ['PILOT_OUTPUT']);out.mkdir(parents=True,exist_ok=True)
     from isaacsim import SimulationApp
     app=SimulationApp({'headless':True,'renderer':'RayTracedLighting','display_options':0})
@@ -141,18 +159,30 @@ def main():
     UsdGeom.Xform.Define(stage,'/World')
     stage.SetDefaultPrim(stage.GetPrimAtPath('/World'))
     rng=np.random.default_rng(seed)
-    floor=material(stage,'PilotFloor',(.30,.32,.30),.8)
-    wall=material(stage,'PilotWall',(.43,.44,.42),.9)
+    specification=diversity_spec(seed,frame_count)
+    environment=specification['environment']
+    floor=material(stage,'PilotFloor',environment['floor_color'],environment['floor_roughness'])
+    wall=material(stage,'PilotWall',environment['wall_color'],.9)
     box(stage,'/World/Floor',(0,0,-.055),(14,14,.1),floor,collision=True)
-    box(stage,'/World/Wall',(0,2,2),(14,.1,4),wall)
-    dome=UsdLux.DomeLight.Define(stage,'/World/Ambient');dome.CreateIntensityAttr(float(rng.uniform(130,190)))
-    for name,xyz,power in [('Key',(-2,-3,3),1800),('Fill',(3,-1,2.4),1000),('Top',(0,1,3),1400)]:
+    for name,center,size in [('North',(0,6,2),(12,.1,4)),('South',(0,-6,2),(12,.1,4)),
+                             ('East',(6,0,2),(.1,12,4)),('West',(-6,0,2),(.1,12,4))]:
+        box(stage,'/World/Walls/'+name,center,size,wall)
+    dome=UsdLux.DomeLight.Define(stage,'/World/Ambient');dome.CreateIntensityAttr(environment['ambient_power'])
+    lights=[]
+    for light_spec in environment['lights']:
+        name=light_spec['name'];xyz=light_spec['position'];power=light_spec['power']
         light=UsdLux.RectLight.Define(stage,'/World/'+name)
-        light.CreateWidthAttr(3);light.CreateHeightAttr(3);light.CreateIntensityAttr(float(power*rng.uniform(.85,1.15)))
-        light.CreateColorTemperatureAttr(float(rng.uniform(4700,6200)));light.CreateEnableColorTemperatureAttr(True)
+        light.CreateWidthAttr(light_spec['size_m']);light.CreateHeightAttr(light_spec['size_m']);light.CreateIntensityAttr(power)
+        light.CreateColorTemperatureAttr(light_spec['temperature_k']);light.CreateEnableColorTemperatureAttr(True)
         pose=Gf.Matrix4d().SetLookAt(Gf.Vec3d(*xyz),Gf.Vec3d(0,0,.4),Gf.Vec3d(0,0,1)).GetInverse()
         UsdGeom.Xformable(light).AddTransformOp().Set(pose)
-    entries=scene_spec(seed)
+        lights.append((light,power))
+    clutter=material(stage,'Clutter',(.25,.27,.28),.8)
+    for i,item in enumerate(environment['clutter']):
+        box(stage,f'/World/Clutter/Crate{i}',item['position'],item['size'],clutter)
+    occluder=box(stage,'/World/Occluder',(0,0,.16),(.46,.40,.32),clutter)
+    entries=specification['entries']
+    print('PILOT_PHASE '+json.dumps(dict(state='building_assets',seed=seed)),flush=True)
     materials=drum_materials(stage,42)
     canonical=make_inventory()
     for spec in entries:
@@ -196,36 +226,52 @@ def main():
     settings.set_float('/rtx/post/tonemap/fNumber',4.)
     settings.set_float('/rtx/post/tonemap/cameraShutter',60.)
     build_seconds=time.perf_counter()-started
-    captures=[];camera_meta=[]
-    for i in range(5):
-        # Three full-row views, then two closer views of independently chosen drums.
-        focus=0. if i<3 else entries[int(rng.integers(4))]['x']
-        distance=float(rng.uniform(3.7,4.4) if i<3 else rng.uniform(1.6,2.1))
-        eye=(focus+float(rng.uniform(-.35,.35)),-distance,float(rng.uniform(.45,.8)))
-        target=(focus,0,.52)
-        path=camera(stage,f'/World/Cameras/View{i}',eye,target,22.5,(640,640))
+    # One camera/product reused across frames: visibility is scene-wide, so a
+    # single-barrel frame cannot share a simultaneous capture with context views.
+    path=camera(stage,'/World/Cameras/Inspection',(0,-2,.6),(0,0,.47),22.5,(640,640))
+    product=rep.create.render_product(path,(640,640))
+    render_started=time.perf_counter()
+    counts={c:0 for c in CLASSES}
+    frame_reports=[]
+    for i,view in enumerate(specification['frames']):
+        print('PILOT_PHASE '+json.dumps(dict(state='rendering',seed=seed,frame=i,mode=view['mode'])),flush=True)
+        active=[e for e in entries if view['mode']=='context' or e['id']==view['target_id']]
+        active_ids={e['id'] for e in active}
+        for entry in entries:
+            for root in ('/World/Drums/','/World/Defects/'):
+                prim=stage.GetPrimAtPath(root+entry['id'])
+                if prim:
+                    imageable=UsdGeom.Imageable(prim)
+                    if entry['id'] in active_ids:imageable.MakeVisible()
+                    else:imageable.MakeInvisible()
+        if i%5==4:
+            occluder.MakeVisible()
+            ops=UsdGeom.Xformable(occluder).GetOrderedXformOps()
+            angle=view['bearing_rad']
+            ops[0].Set(Gf.Vec3d(1.35*math.cos(angle),1.35*math.sin(angle),.16))
+        else:occluder.MakeInvisible()
+        camera(stage,path,view['eye'],view['target'],22.5,(640,640))
+        for light,power in lights:light.GetIntensityAttr().Set(power*view['light_scale'])
         directory=out/f'frame_{i:03d}';directory.mkdir()
         writer=rep.WriterRegistry.get('BasicWriter')
         writer.initialize(output_dir=str(directory),rgb=True,bounding_box_2d_tight=True,semantic_types=['class','drum_id'])
-        product=rep.create.render_product(path,(640,640));writer.attach([product])
-        captures.append((writer,directory))
-        camera_meta.append(dict(eye=eye,target=target,width=640,height=640,fx=400,fy=400,cx=320,cy=320,focal_mm=22.5,horizontal_aperture_mm=36))
-    for _ in range(40):app.update()
-    render_started=time.perf_counter()
-    rep.orchestrator.run(num_frames=1)
-    for _ in range(1500):
-        app.update()
-        if all(list(d.glob('rgb*.png')) for w,d in captures) and rep.orchestrator.get_is_stopped():break
-    rep.orchestrator.stop();rep.orchestrator.wait_until_complete()
-    counts={c:0 for c in CLASSES}
-    for (writer,directory),meta in zip(captures,camera_meta):
+        writer.attach([product])
+        # Flush the previous pose/visibility/lighting before requesting annotation.
+        for _ in range(30 if i==0 else 6):app.update()
+        rep.orchestrator.step(rt_subframes=4,delta_time=0.,pause_timeline=True)
+        rep.orchestrator.wait_until_complete()
         writer.detach()
-        frame_counts=export_frame(directory,entries,meta)
+        meta=dict(**view,width=640,height=640,fx=400,fy=400,cx=320,cy=320,focal_mm=22.5,
+                  horizontal_aperture_mm=36,environment=environment)
+        frame_counts=export_frame(directory,active,meta)
+        frame_reports.append(dict(frame=i,mode=view['mode'],class_counts=frame_counts,
+                                  elapsed_seconds=time.perf_counter()-render_started))
         for c in counts:counts[c]+=frame_counts[c]
-        print('PILOT_PROGRESS '+json.dumps(dict(seed=seed,completed=len(list(out.glob('frame_*/metadata.json'))),target=5)),flush=True)
+        print('PILOT_PROGRESS '+json.dumps(dict(seed=seed,completed=len(list(out.glob('frame_*/metadata.json'))),target=frame_count)),flush=True)
+    rep.orchestrator.stop()
     assert all(counts.values()),counts
-    report=dict(seed=seed,images=5,classes=CLASSES,class_counts=counts,entries=entries,
-                build_seconds=time.perf_counter()-started if not captures else build_seconds,
+    report=dict(seed=seed,version=specification['version'],images=frame_count,classes=CLASSES,class_counts=counts,entries=entries,
+                environment=environment,frames=frame_reports,build_seconds=build_seconds,
                 capture_and_export_seconds=time.perf_counter()-render_started,
                 total_script_seconds=time.perf_counter()-started)
     (out/'report.json').write_text(json.dumps(report,indent=2))

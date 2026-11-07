@@ -34,7 +34,12 @@ def package(root):
                   split=None,purpose='pilot curation, not an independent evaluation set',
                   storage='detector-data:/pilots/'+root.name,
                   source_hashes={p:hashlib.sha256((Path(__file__).resolve().parents[1]/p).read_bytes()).hexdigest()
-                                 for p in ('detector/pilot_specs.py','sim/detector_studio/pilot.py')})
+                                 for p in ('detector/pilot_specs.py','detector/annotations.py','sim/detector_studio/pilot.py')})
+    modes={}
+    for path in frames:
+        mode=json.loads(path.read_text())['camera'].get('mode','legacy')
+        modes[mode]=modes.get(mode,0)+1
+    manifest['view_modes']=modes
     (target/'manifest.json').write_text(json.dumps(manifest,indent=2))
     manifest['package_seconds']=time.perf_counter()-started
     print(json.dumps(manifest,indent=2))
