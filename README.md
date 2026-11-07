@@ -267,3 +267,40 @@ inventory. Use the returned ID to associate evidence with an inventory
 record after the read. The reader is separate from the current walking demo.
 
 See [how to integrate the proposed sensor payloads](docs/spot_development.md#adding-sensor-payloads).
+
+To render the printed IDs on drums in the full hall (needs Python 3.12+ locally):
+
+```sh
+uv run --python 3.13 --with modal python tools/run_plates.py
+```
+
+Close-ups of A01, B02, C05, D06 and a row C aisle view are saved under
+`sim/out/plates/`. Use `tools/run_hall.py` jobs for texture-accurate stills:
+renders from `isaac_sim_modal.py` currently draw one texture on every surface.
+
+### Synthetic payloads for sensor development
+
+The radiation walk already records simulated gamma, cumulative dose, air
+temperature and humidity. `SensorWorld.sample` also supplies dew point.
+Compare a surface-temperature observation with dew point to flag possible
+condensation. A humidity reading taken in an aisle describes that sampling
+location. Add separate scenario sampling positions for dense stacks.
+
+- For gas tests, pass a `gas_vents` list in the scenario config. Each entry
+  takes `position_m` and optional `hydrogen_ppm` and `methane_ppm` fixture
+  strengths at that position. These are independent spatial test fields.
+  Gas keys are omitted when the scenario lacks a gas sensor configuration.
+- For floor sampling, use the existing virtual swab. The scenario can assign
+  optional pH, conductivity in µS/cm and chloride loading in mg/m² via
+  `set_surface_chemistry`. These are simulated sample results. Probe hardware,
+  wet-patch classification and collection efficiency are separate work.
+- `sim/inspection_payloads.py` has a thermal image helper that maps a
+  registered visible-instance buffer to surface temperatures, and a mono
+  microphone fixture that produces hiss or impulse waveforms. Wire these
+  into a camera and audio stream before using them for live decisions.
+- Use the RGB plate reader for ID. Match its result against the inventory
+  after reading the image. The live walking loop still needs that connection.
+
+No new alarm setpoints are defined by these fixtures. See the
+[inspection source register](docs/inspection_source_register.md) for the
+limits of the WIPP and Idaho comparisons.

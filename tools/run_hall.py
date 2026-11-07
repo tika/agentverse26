@@ -30,7 +30,8 @@ JOBS={'hall':('capture_hall.py','step1','hall.usda','HALL_CAPTURE_OK'),
       'robot':('capture_robot.py','robot','scene_robot.usda','ROBOT_CAPTURE_OK'),
       'environment':('build_environment.py','environment','scene_environment.usda','ENVIRONMENT_BUILD_OK'),
       'presentation':('capture_presentation.py','presentation','scene_presentation.usda','PRESENTATION_CAPTURE_OK'),
-      'barrel_preview':('render_barrel_preview.py','barrel_preview','scene_barrel_preview.usda','BARREL_PREVIEW_OK')}
+      'barrel_preview':('render_barrel_preview.py','barrel_preview','scene_barrel_preview.usda','BARREL_PREVIEW_OK'),
+      'plates':('capture_plates.py','plates','scene_plates.usda','PLATES_CAPTURE_OK')}
 
 
 @app.function(image=image,gpu=GPU_OPTIONS,cpu=max(6,GPU_COUNT*2),memory=max(24576,GPU_COUNT*8192),
@@ -66,7 +67,7 @@ def render(job='hall',shard=0,shards=1):
     with tarfile.open(fileobj=output,mode='w:gz') as archive:
         paths=['sim/out/'+step]
         if shard==0:paths+=['sim/assets/generated','sim/aisles.json','sim/'+scene]
-        if job in ('drums','sensors','training','robot','environment','presentation'): paths.append('sim/drums.json')
+        if job in ('drums','sensors','training','robot','environment','presentation','plates'): paths.append('sim/drums.json')
         for name in paths:
             path = root/name
             if path.exists(): archive.add(path,arcname=name)
