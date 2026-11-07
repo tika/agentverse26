@@ -13,7 +13,12 @@ def main():
     if not run_id:
         run_id = json.loads((Path(__file__).resolve().parents[1]/'out/detector_training/latest.json').read_text())['run_id']
     volume = modal.Volume.from_name('detector-models', environment_name='main')
-    raw = b''.join(volume.read_file(f'/runs/{run_id}/progress.json'))
+    try:
+        raw = b''.join(volume.read_file(f'/runs/{run_id}/progress.json'))
+    except FileNotFoundError:
+        print(json.dumps(dict(run_id=run_id, state='awaiting_saved_progress',
+                              note='Check the runner log for allocation, startup or failure details.'), indent=2))
+        return
     print(json.dumps(json.loads(raw), indent=2))
 
 
