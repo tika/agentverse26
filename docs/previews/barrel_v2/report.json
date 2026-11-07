@@ -1,0 +1,109 @@
+{
+  "seed": 74,
+  "scope": "isolated appearance study; full hall not changed",
+  "barrels": [
+    {
+      "name": "NormalRusted",
+      "display_label": "A3",
+      "rusted": true,
+      "nominal_radius_m": 0.29,
+      "height_m": 0.88,
+      "radial_swelling_fraction": 0,
+      "lid_dome_rise_m": 0
+    },
+    {
+      "name": "BulgedClean",
+      "display_label": "B1",
+      "rusted": false,
+      "nominal_radius_m": 0.29,
+      "height_m": 0.88,
+      "radial_swelling_fraction": 0.08,
+      "lid_dome_rise_m": 0.07
+    },
+    {
+      "name": "BulgedRusted",
+      "display_label": "C2",
+      "rusted": true,
+      "nominal_radius_m": 0.29,
+      "height_m": 0.88,
+      "radial_swelling_fraction": 0.08,
+      "lid_dome_rise_m": 0.07
+    }
+  ],
+  "views": {
+    "rust_barrel": {
+      "eye": [
+        -0.6,
+        -2.0,
+        1.25
+      ],
+      "look_at": [
+        -0.95,
+        0,
+        0.44
+      ],
+      "focal_length_mm": 49,
+      "image": "rust_barrel/rgb_0000.png"
+    },
+    "normal_vs_bulged": {
+      "eye": [
+        0,
+        -4.3,
+        1.6
+      ],
+      "look_at": [
+        0,
+        0,
+        0.46
+      ],
+      "focal_length_mm": 49,
+      "image": "normal_vs_bulged/rgb_0000.png"
+    },
+    "bulged_clean": {
+      "eye": [
+        0.2,
+        -1.9,
+        1.2
+      ],
+      "look_at": [
+        0,
+        0,
+        0.46
+      ],
+      "focal_length_mm": 49,
+      "image": "bulged_clean/rgb_0000.png"
+    },
+    "bulged_rusted": {
+      "eye": [
+        1.2,
+        -1.9,
+        1.2
+      ],
+      "look_at": [
+        0.95,
+        0,
+        0.46
+      ],
+      "focal_length_mm": 49,
+      "image": "bulged_rusted/rgb_0000.png"
+    },
+    "bulged_lid": {
+      "eye": [
+        1.2,
+        -1.5,
+        1.12
+      ],
+      "look_at": [
+        0.95,
+        0,
+        0.76
+      ],
+      "focal_length_mm": 56,
+      "image": "bulged_lid/rgb_0000.png"
+    }
+  },
+  "limits": [
+    "Bulge is an illustrative pressure/expansion cue, not a confirmed gas measurement",
+    "No pressure, gas chemistry, shell mechanics or rupture physics simulated"
+  ]
+}

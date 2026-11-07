@@ -17,6 +17,8 @@ OUTPUT=SIM/'out/presentation'
 def fixed_exposure(iso=400):
     import carb
     settings=carb.settings.get_settings()
+    settings.set_bool('/app/viewport/grid/enabled',False)
+    settings.set_bool('/app/viewport/defaults/guide/grid/visible',False)
     settings.set_bool('/rtx/post/histogram/enabled',False)
     settings.set_float('/rtx/post/tonemap/filmIso',float(iso))
     settings.set_float('/rtx/post/tonemap/fNumber',2.8)

@@ -11,7 +11,7 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
          .entrypoint([])
          .env({'ACCEPT_EULA':'Y','PRIVACY_CONSENT':'N','NVIDIA_DRIVER_CAPABILITIES':'all'})
          .add_local_dir(ROOT/'sim','/workspace/sim',copy=True,
-                        ignore=['out/**','__pycache__/**','*.usda']))
+                        ignore=['out/**','__pycache__/**','**/__pycache__/**','**/*.pyc','*.usda']))
 app = modal.App('agentverse-hall-render')
 JOBS={'hall':('capture_hall.py','step1','hall.usda','HALL_CAPTURE_OK'),
       'drums':('capture_drums.py','step2','scene_drums.usda','DRUM_CAPTURE_OK'),

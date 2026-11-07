@@ -36,6 +36,9 @@ def attach_capture(stage,name,path,output,resolution=(640,640)):
 
 def finish_captures(app,captures,warmup=30):
     import omni.replicator.core as rep
+    import carb
+    carb.settings.get_settings().set_bool('/app/viewport/grid/enabled',False)
+    carb.settings.get_settings().set_bool('/app/viewport/defaults/guide/grid/visible',False)
     for _ in range(warmup): app.update()
     rep.orchestrator.run(num_frames=1)
     for _ in range(900):

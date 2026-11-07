@@ -68,3 +68,9 @@ A gas-specific measurement would be needed to identify a gas; this screening
 module does not simulate one.
 
 Sample tags are **A3** (nominal rusted), **B1** (bulged clean), **C2** (bulged rusted). These review tags do not rename any Dxx package in the hall inventory.
+
+The [rendered three-variant comparison](previews/barrel_v2/README.md) is now
+checked in. B1/C2 share a maximum-diameter increase of approximately 5.37%
+and a 70 mm lid dome. The larger dome is an illustrative review choice, not a
+validated physical prediction. The viewport reference grid is explicitly hidden
+in captures (see the [upstream rendering issue](https://github.com/isaac-sim/IsaacSim/issues/887)).
