@@ -147,6 +147,8 @@ def actions_for(findings, coverage_fraction):
     hyps = {f["hypothesis"] for f in findings}
     if hyps & SAFETY_HYPOTHESES:
         actions.append("stand_off_and_alert")
+    if hyps & {"surface_contamination", "suspected_release"}:
+        actions.append("mark_area_avoid_tracking_and_alert")
     if any(HYPOTHESES[f["hypothesis"]][1] and f["distinct_views"] < 2 for f in findings):
         actions.append("second_view")
     if "wet_or_residue_unexplained" in hyps and "suspected_release" not in hyps:

@@ -242,6 +242,7 @@ class Assessment(unittest.TestCase):
         self.assertNotIn("suspected_release", {f["hypothesis"] for f in sa.assess_scenario(rel)["findings"]})
         rel["runtime"]["swab"] = {"alpha_bq_cm2": 0.1, "beta_gamma_bq_cm2": 6.0, "t_s": 30}
         self.assertIn("suspected_release", {f["hypothesis"] for f in sa.assess_scenario(rel)["findings"]})
+        self.assertIn("mark_area_avoid_tracking_and_alert", sa.assess_scenario(rel)["actions"])
 
 
 if __name__ == "__main__":
