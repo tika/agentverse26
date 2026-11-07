@@ -1,7 +1,9 @@
 # Train and call the drum detector
 
-This trains **one YOLO26s**, with all eight H100s jointly updating its weights.
-It does not train eight candidates. Inputs are the frozen 1,200-image release
+This trains **one YOLO26s**. After an eight-H100 allocation remained queued, the
+user requested RTX PRO 6000, so the default is now **one RTX PRO 6000** with the
+same global batch 64 and recipe. This is not an eight-RTX training cluster.
+Inputs are the frozen 1,200-image release
 `detector-data:/releases/barrels_v2_1200` in Modal workspace `paramsachdeva07`,
 environment `main`: 900 train / 150 validation / 150 test. Scene seeds do not
 cross splits. Classes are **0 drum, 1 corrosion, 2 bulge**. Printed inventory IDs
@@ -25,14 +27,18 @@ python3 -m unittest detector.test_evaluation_metrics detector.test_release
 python3 -u detector/modal_train.py
 ```
 
-The runner prints the run ID and Modal app URL. It requests `H100:8` on one
-machine, verifies eight GPUs and all eight distributed ranks, verifies the
+The runner prints the run ID and Modal app URL. It requests `RTX-PRO-6000`,
+verifies the CUDA-visible device and rank, verifies the
 archive and every dataset file hash, then trains at 640 px/global batch 64,
 AdamW lr 0.001, AMP, seed 42, up to 40 epochs, patience 10. Mild colour,
 translation, rotation, scaling and horizontal-flip augmentation are recorded in
 `train/args.yaml`; mosaic/mixup/vertical flips are disabled. Each epoch prints
 metrics, elapsed time and a rolling ETA, and commits progress/checkpoints.
-No GPU rendering is required during training.
+No GPU rendering is required during training. The optional original configuration
+is `DETECTOR_TRAIN_GPU=H100:8 python3 -u detector/modal_train.py`; this requests a
+single eight-GPU machine and checks all eight ranks. Never run both simultaneously
+for this one-model task. Modal's documented eight-GPU list does not include RTX
+PRO 6000, so independent RTX rendering workers are not treated as a DDP node.
 
 In a second terminal, read progress without allocating another GPU:
 
@@ -41,7 +47,7 @@ python3 detector/training_status.py
 # Or supply the explicit run ID to inspect an older run.
 ```
 
-After training, the eight-H100 worker exits. A separate L4 worker calibrates
+After training, the training worker exits. A separate L4 worker calibrates
 suspect/confirm confidence thresholds **using validation only**, then evaluates
 the 150 test images. The highest validation fitness selects `best.pt`. Test
 scores never choose weights or thresholds. The runner downloads small reports
@@ -56,7 +62,7 @@ All these paths are in **`detector-models:/runs/RUN_ID/`**:
 - `resume_last.pt`: optimizer-bearing checkpoint saved before the library strips
   optimizer state from final inference weights; retained for recovery.
 - `run_manifest.json`, `hardware.json`, `ranks/`, `training_runtime.json`:
-  dataset/source fingerprints, versions, actual GPU inventory, eight-rank proof,
+  dataset/source fingerprints, versions, actual GPU inventory, rank proof,
   and measured runtime.
 - `progress.json`, `epoch_events.jsonl`, `training.log`, `train/results.csv`,
   `train/args.yaml`, plots and periodic checkpoints.
@@ -150,7 +156,7 @@ simulator's physics loop. The API does not decide whether a drum contains gas.
 ## Code map
 
 - `training_image.py`: pinned isolated dependency image.
-- `modal_train.py`: eight-GPU orchestration, hash validation, persistence and L4 evaluation.
+- `modal_train.py`: RTX (or optional eight-H100) orchestration, hash validation, persistence and L4 evaluation.
 - `train_yolo26s.py`: eight-rank torchrun entry point and checkpoint/progress callbacks.
 - `evaluation_metrics.py`, `evaluate_yolo26s.py`: validation calibration and held-out metrics.
 - `training_status.py`: read-only progress query.

@@ -1,8 +1,9 @@
 # Drum detector fine-tuning plan
 
 Status: **execution authorized**. The user requested one YOLO26s distributed run
-on eight GPUs and an authenticated inference API. Dataset generation is complete.
-The implementation uses one `H100:8` node, global batch 64, 640 px, AdamW,
+on eight GPUs and an authenticated inference API, then requested switching to
+RTX PRO 6000 when the eight-H100 node remained queued. Dataset generation is complete.
+The current implementation defaults to one `RTX-PRO-6000`, global batch 64, 640 px, AdamW,
 40 epochs maximum and patience 10. Evaluation and serving use separate L4 workers
 after the training node is released. See `docs/yolo26s_training_serving.md` for
 commands and the final measured run report.
@@ -39,7 +40,7 @@ resplit nearby views, rewrite the release or mix earlier partial captures into i
 
 ## 2. Short correctness and timing benchmark
 
-Use the first epochs of the authorized eight-GPU run to check finite losses,
+Use the first epochs of the authorized run to check finite losses,
 checkpoint persistence and measured timing. Do not start a separate model sweep.
 
 Record image/container build, GPU allocation, dataset caching, first epoch,
@@ -56,7 +57,7 @@ test predictions during development or use test scores for checkpoint selection.
   missing image detail. More native pixels/closer views would require new captures.
 - Initial cap: 40 epochs, early stopping patience 10, training RNG seed 42.
   Select the best validation checkpoint from this one run.
-- Use global batch 64 (eight examples per GPU). Enable mixed precision when its compatibility check
+- Use global batch 64 (or eight examples per GPU on the optional H100:8 configuration). Enable mixed precision when its compatibility check
   passes. Save the resolved optimizer, learning rate and every augmentation setting.
 - Use mild brightness/contrast and horizontal flips; no vertical flips. Keep hue
   shifts small so corrosion colour remains meaningful. Record one conservative
