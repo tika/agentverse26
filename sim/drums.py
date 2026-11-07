@@ -47,10 +47,12 @@ def drum_materials(stage,seed):
     from drum_textures import clean_surfaces
     from materials import material
     result={}
-    for name,bank in clean_surfaces(seed).items():
-        metal=1.0 if name=='stainless' else 0.0
-        result[name]=material(stage,'Drum_'+name,(1,1,1),.35,metal,textures=bank['body'])
-        result[name+'_lid']=material(stage,'Drum_'+name+'_Lid',(1,1,1),.49,metal,textures=bank['lid'])
+    colors = {'faded_yellow':(.52,.42,.12), 'mid_grey':(.32,.35,.36),
+              'dark_blue':(.07,.16,.25), 'stainless':(.48,.49,.50)}
+    for name,color in colors.items():
+        metal = .75 if name == 'stainless' else .1
+        result[name] = material(stage,'Drum_'+name,color,.45,metal)
+        result[name+'_lid'] = material(stage,'Drum_'+name+'_Lid',color,.5,metal)
     result['cap']=material(stage,'DrumBungSteel',(.30,.33,.34),.4,.8)
     result['filter']=material(stage,'DrumVentFilter',(.12,.14,.14),.65,.1)
     return result

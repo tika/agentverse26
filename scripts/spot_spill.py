@@ -65,9 +65,8 @@ def run():
         sys.path.insert(0, "/scene")
         from sensors import SensorWorld, author_gamma_source, load_config
 
-        scene = UsdGeom.Xform.Define(stage, "/World")
-        scene.GetPrim().GetReferences().AddReference("/scene/scene_environment.usda", "/World")
-        stage.GetPrimAtPath("/World/Spot").SetActive(False)
+        from build_hall import build_scene
+        build_scene(42)
         inventory = json.loads(Path("/scene/drums.json").read_text())
         scenario = load_config()
         for drum in inventory:
@@ -202,10 +201,6 @@ def run():
 
         def annotate(side_rgb, rgb, mask, robot, estimate, message, t, nearest, mode, radiation, trail):
             canvas = Image.new("RGB", (960, 356 if args.radiation else 344), "#111822")
-            if args.radiation:
-                # Lift shadow detail in the review only. Depth and sensor values stay raw.
-                display = (255 * (np.arange(256) / 255) ** 0.65).astype(np.uint8)
-                side_rgb, rgb = display[side_rgb], display[rgb]
             canvas.paste(Image.fromarray(side_rgb), (0, 28))
             marked = rgb.copy()
             marked[mask] = (0.45 * marked[mask] + 0.55 * np.array([255, 88, 220])).astype(np.uint8)
@@ -215,11 +210,11 @@ def run():
             draw.text((490, 4), ("ONBOARD RGB  |  gamma sensor history" if args.radiation else "ONBOARD RGB  |  predicted tracer mask"), font=font, fill="white")
             draw.text((10, 307), message, font=font, fill="white")
             depth_text = f"{nearest:.1f} m" if nearest is not None else "unavailable"
-            draw.text((10, 325), f"Central depth: {depth_text}  |  planner: rules baseline", font=font, fill="#b9c8d6")
+            if radiation is None: draw.text((10, 325), f"Central depth: {depth_text}  |  planner: rules baseline", font=font, fill="#b9c8d6")
             if radiation is not None:
                 color = {"green": "#5fe2af", "amber": "#ffc55e", "red": "#ff6767"}
                 draw.text((10, 330), f"SIM GAMMA  {radiation['dose_rate_uSv_h']:5.1f} uSv/h  |  "
-                          f"accumulated proxy {1000 * radiation['mission_dose_mSv']:.4f} uSv  |  "
+                          f"trapezoid dose {1000 * radiation['mission_dose_mSv']:.4f} uSv  |  "
                           f"centre depth {depth_text}  |  {radiation['status'].upper()}", font=font,
                           fill=color[radiation["status"]])
                 draw.rectangle((640, 34, 947, 94), fill="#111822")
@@ -234,6 +229,7 @@ def run():
             def map_point(point):
                 return (17 + (point[0] - (3 if args.radiation else 8)) * (13 if args.radiation else 20), 42 + (10.5 - point[1]) * 15)
             draw.rectangle((9, 35, 151, 121), fill="#111822")
+            draw.text((15, 39), "AISLE POSITION", font=ImageFont.load_default(size=12), fill="white")
             draw.line([map_point(p) for p in [(start_x, 6), *direct]], fill="#999999", width=2)
             if estimate is not None:
                 draw.line([map_point(p) for p in [(start_x, 6), *alternate]], fill="#5fe2af", width=2)
@@ -341,7 +337,7 @@ def run():
                     if not path:
                         if retreating:
                             retreated = radiation["status"] != "red"
-                            message = ("Stopped after retreat | gamma reading below alert threshold" if retreated
+                            message = ("Retreat phase ended | gamma reading below alert threshold" if retreated
                                        else "Holding | no below-threshold retreat point reached")
                         else:
                             reached = True

@@ -33,10 +33,10 @@ def build_scene(seed=42, include_drums=True):
         UsdGeom.Scope.Define(stage,'/World/Hall/'+folder)
     bank = generate_textures(seed)
     mats = {
-        'floor':material(stage,'Floor',(.6,.6,.6),textures=bank['floor']),
-        'side':material(stage,'SideWall',(.6,.6,.6),textures=bank['wall'],uv_scale=(20/4.8,1)),
-        'end':material(stage,'EndWall',(.6,.6,.6),textures=bank['wall'],uv_scale=(13/4.8,1)),
-        'ceiling':material(stage,'Ceiling',(.50,.52,.48),.85),
+        'floor':material(stage,'Floor',(.38,.38,.38),.72),
+        'side':material(stage,'SideWall',(.65,.65,.65),.8),
+        'end':material(stage,'EndWall',(.65,.65,.65),.8),
+        'ceiling':material(stage,'Ceiling',(.65,.65,.65),.85),
         'steel':material(stage,'Steel',(.23,.27,.28),.43,.65),
         'duct':material(stage,'Duct',(.38,.42,.42),.55,.45),
         'yellow':material(stage,'CraneYellow',(.72,.48,.035),.48,.25),
@@ -52,10 +52,12 @@ def build_scene(seed=42, include_drums=True):
         mats[name] = material(stage,name,(1,1,1),.65,textures=bank[name])
     root = '/World/Hall/'
     box(stage,root+'Floor',(10,6,-.15),(20,12,.3),mats['floor'],collision=True)
-    for name,x in (('llw',1.5),('ilw',10.8)):
-        points = [(-.3,2.5,0),(-.3,-2.5,0),(.3,-2.5,0),(.3,2.5,0)]
-        mesh(stage,root+'Markings/'+name.upper(),points,[(0,1,2,3)],
-             [(0,0),(1,0),(1,1),(0,1)],mats['floor_'+name],(x,6,.0015))
+    # Geometry markings are in metres. Architecture uses solid materials, no tiled imagery.
+    for y in (1.3,2.7,5.3,6.7,9.3,10.7):
+        box(stage,root+f'Markings/Line{int(y*10)}',(10,y,.002),(18,.075,.004),mats['yellow'])
+    joint = material(stage,'ConcreteJoint',(.26,.26,.26),.85)
+    for x in (5,10,15):
+        box(stage,root+f'Markings/Joint{x}',(x,6,.001),(0.008,12,.002),joint)
     for name,center,size,kind in (
         ('WallSouth',(10,-.25,3),(20,.5,6),'side'),
         ('WallNorth',(10,12.25,3),(20,.5,6),'side'),
@@ -72,7 +74,7 @@ def build_scene(seed=42, include_drums=True):
     detail('PersonnelDoor',(.045,2.5,1.1),(.08,1,2.2),'door')
     detail('DoorWindow',(.091,2.5,1.62),(.018,.42,.52),'glass')
     detail('DoorHandle',(.12,2.14,1.05),(.06,.04,.22),'steel')
-    panel(stage,details+'RadiationSign',(.11,3.55,1.95),.8,.8,(1,0,0),mats['radiation'])
+    panel(stage,details+'RadiationSign',(.11,3.55,1.95),.5,.5,(1,0,0),mats['radiation'])
     for name,y in (('South',.35),('North',11.65)):
         detail('CraneRail'+name,(10,y,5.15),(20,.12,.18),'steel')
     detail('CraneBridge',(18.5,6,5.15),(.5,11.4,.45),'yellow')
@@ -88,7 +90,7 @@ def build_scene(seed=42, include_drums=True):
         x,y,z = center
         cylinder(stage,details+f'CCTV{number}Lens',(x+.23*direction,y,z),.065,.08,mats['glass'],rotation=(0,90,0))
     for name,x in (('llw',4.8),('ilw',13.8)):
-        panel(stage,details+name.upper()+'ZoneSign',(x,11.985,2.35),1.35,1.05,(0,-1,0),mats[name])
+        panel(stage,details+name.upper()+'ZoneSign',(x,11.985,2.35),.6,.45,(0,-1,0),mats[name])
     detail('FirePoint',(.13,9.65,1.35),(.16,.8,1.05),'fire')
     cylinder(stage,details+'Extinguisher',(.34,10.35,.9),.11,.62,mats['red'])
     # Dry grates stay inside wall margins, leaving every aisle clear.
@@ -104,7 +106,7 @@ def build_scene(seed=42, include_drums=True):
             light.CreateHeightAttr(.45)
             light.CreateIntensityAttr(4500 * (.4 if (row,number)==(2,4) else 1))
             light.CreateEnableColorTemperatureAttr(True)
-            light.CreateColorTemperatureAttr(5000)
+            light.CreateColorTemperatureAttr(4500)
             UsdGeom.Xformable(light).AddTranslateOp().Set(Gf.Vec3d(x,y,5.48))
     ambient = UsdLux.DomeLight.Define(stage,root+'Lights/Ambient')
     ambient.CreateIntensityAttr(90)
