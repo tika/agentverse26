@@ -8,6 +8,7 @@ The simulator stays the owner of the physics; this module only renames fields.
 Provenance rules (agreed with Codex, board 19:28:06):
 - Never invent a pose. A legacy sample without position_m needs a caller-supplied pose.
 - Unknown uncertainty is {"std": None, "status": "unknown"}, never 0.
+- Packet saturation_limit_uSv_h and yaw_rad (Codex 7a97a01+) are used when present.
 - The S1 integral excludes invalid intervals and latches dose_complete=false; an
   incomplete total is published as a lower bound, not an exact exposure.
 """
@@ -17,7 +18,7 @@ _STATUS_TO_VALIDITY = {"ok": "valid", "failed": "failed", "saturated": "saturate
 UNKNOWN = {"std": None, "status": "unknown"}
 
 
-def gamma_messages(sample, *, saturation_limit_uSv_h, integration_method="trapezoid",
+def gamma_messages(sample, *, saturation_limit_uSv_h=None, integration_method="trapezoid",
                    pose=None, source="robot"):
     """Return (dose_rate_msg, cumulative_dose_msg) for one SensorWorld sample.
 
@@ -31,6 +32,8 @@ def gamma_messages(sample, *, saturation_limit_uSv_h, integration_method="trapez
     }
     if g.get("position_m") is not None:
         packet_pose = {"frame": "world", "xyz_m": [float(v) for v in g["position_m"]]}
+        if g.get("yaw_rad") is not None:
+            packet_pose["yaw_rad"] = float(g["yaw_rad"])
         if pose is not None:
             if [round(v, 6) for v in pose["xyz_m"]] != [round(v, 6) for v in packet_pose["xyz_m"]]:
                 raise ValueError("caller pose disagrees with the sensor packet position")
@@ -39,6 +42,12 @@ def gamma_messages(sample, *, saturation_limit_uSv_h, integration_method="trapez
     elif pose is None:
         raise ValueError("sample has no position_m; supply the sensor pose explicitly")
 
+    packet_limit = g.get("saturation_limit_uSv_h")
+    if packet_limit is not None and saturation_limit_uSv_h is not None and packet_limit != saturation_limit_uSv_h:
+        raise ValueError("caller saturation limit disagrees with the sensor packet")
+    saturation_limit_uSv_h = packet_limit if packet_limit is not None else saturation_limit_uSv_h
+    if saturation_limit_uSv_h is None:
+        raise ValueError("saturation limit unknown; packet lacks it and none was supplied")
     validity = _STATUS_TO_VALIDITY.get(g["status"], "failed")
     unc = g.get("uncertainty_uSv_h")
     rate = {
