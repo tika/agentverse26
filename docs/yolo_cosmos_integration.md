@@ -81,3 +81,16 @@ The first saves a real hall RGB frame and trained predictions. The second is a
 three-second rules-baseline check with Cosmos and plate-model calls explicitly
 off. Its recording must not be represented as a Cosmos-driven mission. A full
 Cosmos recording still requires successful endpoint authentication.
+
+## Current preview checkpoint
+
+Cosmos text and image authentication passed on 7 November 2026. The reviewed
+barrel designs are now in the 28-drum hall; static screenshots and actual Cosmos
+preview outputs are documented in `docs/hall_barrel_v2.md`. No full mission was
+launched: the user requested screenshots before that stage.
+
+Before the final mission recording, inspect Spot's visual meshes: the earlier
+three-second rules-only smoke had valid upright walking poses, but its chase
+camera showed the sensor fixture without the full robot skin. Also retain the
+fixed completion counter: a visual finding alone must not count as completion
+when plate/thermal checks are missing.

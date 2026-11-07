@@ -54,13 +54,13 @@ if __name__=='__main__':
     for prim in stage.Traverse():
         if prim.GetName().startswith('Spill_'):
             UsdGeom.Imageable(prim).MakeInvisible();hidden.append(str(prim.GetPath()))
-    for _ in range(8):app.update();fixed_exposure(250)
+    for _ in range(8):app.update();fixed_exposure(400)
     views={
         'hall_overview':((1.3,1.4,4.8),(10.0,6.0,.8),20),
         'centre_aisle':((1.3,6.0,1.65),(9.0,6.0,.65),21),
-        'A03_normal_rusted':((6.25,1.6,1.25),(6.0,3.45,.45),44),
-        'B01_bulged_clean':((3.35,6.4,1.26),(3.0,4.55,.46),44),
-        'C02_bulged_rusted':((4.85,5.55,1.25),(4.5,7.45,.46),44),
+        'A03_normal_rusted':((6.25,1.25,1.30),(6.0,3.45,.45),44),
+        'B01_bulged_clean':((3.35,6.75,1.30),(3.0,4.55,.46),44),
+        'C02_bulged_rusted':((4.85,5.20,1.30),(4.5,7.45,.46),44),
         'C02_lid_detail':((4.75,6.2,1.35),(4.5,7.45,.76),56),
     }
     captures=capture_views(app,stage,views,OUT)
@@ -77,7 +77,7 @@ if __name__=='__main__':
                 variants={e['display_id']:dict(id=e['id'],category=e['category'],paint=e['paint_color'],
                     faults=e['faults'],shape=e['shape'],appearance_version=e['appearance_version']) for e in entries},
                 views=captures,hidden_release_fixtures=hidden,metrics=metrics,
-                exposure=dict(iso=250,f_number=2.8,shutter_reciprocal_s=60),
+                exposure=dict(iso=400,f_number=2.8,shutter_reciprocal_s=60),
                 limitations=['LLW bulge is authored geometry, not measured gas pressure',
                              'Stainless ILW design remains category-specific',
                              'No new dataset generation or model training'])

@@ -24,6 +24,7 @@ local Isaac and Modal commands, editing, picture-ready settings and video captur
 - [Detector/camera API and training start gate](docs/training_handoff.md)
 - [Isolated rust/bulge appearance review and two-cue screening](docs/barrel_appearance_review.md)
 - [Technical barrel design handoff for the next developer](docs/barrel_design_handoff.md)
+- [Reviewed rust/bulge assets now used by the 28-drum hall, static captures and Cosmos preview](docs/hall_barrel_v2.md)
 - [Single-workspace 1,200-image dataset: standalone agent instructions](docs/dataset_generation_handoff.md)
 - [Completed 1,200-image dataset: paths, previews and verification](docs/barrels_v2_1200_release.md)
 
