@@ -14,9 +14,12 @@ The model is pinned by SHA256
 
 All routes require a Modal workspace proxy token. In this local checkout,
 `source .runtime/detector_api.env` loads private credentials already provisioned
-for the API. That file is ignored by Git and has mode 0600. Other users should
-create their own proxy token with `modal workspace proxy-tokens create`; allow
-it in `main` if their workspace uses environment-scoped tokens. Do not paste
+for the API. That file is ignored by Git and has mode 0600. The endpoint owner
+must privately issue credentials to teammates, or a teammate with access to the
+`paramsachdeva07` workspace can create a token in that workspace with
+`modal workspace proxy-tokens create`. Tokens from unrelated Modal workspaces
+will not authenticate here. Allow the token in `main` if the workspace uses
+environment-scoped tokens. Do not paste
 credentials into source code, Markdown, logs or a browser frontend.
 
 Set `DETECTOR_API_URL` to the URL above, `DETECTOR_API_KEY` to the token ID and

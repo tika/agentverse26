@@ -120,6 +120,7 @@ class InspectionMemory:
             if any(f.get('drum') == drum_id and f.get('confidence') == 'low' for f in a.findings.values()):
                 attention.append('unconfirmed finding')
             done = all(k in c for k in CHECKS)
+            entry['complete'] = done
             entry['reasons'] = bad or attention
             entry['missing'] = [k for k in CHECKS if k not in c]
             entry['status'] = ('bad' if bad else 'attention' if attention else 'good' if done
@@ -212,7 +213,8 @@ def draw_memory_overlay(canvas, a, p):
     # Job progress in the bird's-eye corner.
     draw = ImageDraw.Draw(canvas)
     counts = {k: sum(e['status'] == k for e in a.memory.drums.values()) for k in ('good', 'attention', 'bad', 'inspecting', 'none')}
-    text = (f"JOB {counts['good'] + counts['attention'] + counts['bad']}/{len(a.memory.drums)} inspected   "
+    complete=sum(e.get('complete',False) for e in a.memory.drums.values())
+    text = (f"JOB {complete}/{len(a.memory.drums)} checks complete   "
             f"good {counts['good']}  attention {counts['attention']}  bad {counts['bad']}")
     draw.rectangle((1284, 690, 1916, 716), fill='#0d131b')
     draw.text((1292, 694), text, font=FONT[16], fill='white')
@@ -228,7 +230,7 @@ def offered_actions(a, p_est, reading):
     actions = [{'id': 'continue_patrol', 'description': 'Resume the ordered centre-aisle patrol'}]
     drums = sorted({f['drum'] for f in a.findings.values() if f.get('drum')})
     # The job: drums still missing checks can be inspected too (nearest two ahead along the round).
-    todo = [d for d, e in a.memory.drums.items() if e['status'] in ('none', 'inspecting') and d not in drums]
+    todo = [d for d, e in a.memory.drums.items() if not e.get('complete',False) and d not in drums]
     todo.sort(key=lambda d: math.dist(p_est[:2], standoff_for(DRUMS[d])))
     drums += todo[:2]
     for drum_id in drums:
@@ -631,7 +633,7 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         observe_for_memory(a, t, perception, reading, est)
         a.memory.update_status(a)
         mark = lap('sensing_findings', mark)
-        if a.status != 'RETREAT':
+        if a.use_cosmos and a.status != 'RETREAT':
             read_plates(a, t, p, yaw)
         mark = lap('plate_reads', mark)
         # Finish a follow-up before considering another. The hard dose stop can interrupt it.
@@ -760,6 +762,7 @@ def build_report(a):
         drums.append({'drum': d['display_id'], 'category': d['category'],
                       'plate_read': a.ids_read.get(drum_id, 'not attempted'), 'record': a.scene['records'].get(drum_id),
                       'grade': entry['status'], 'checks_done': sorted(entry['checks']), 'missing': entry.get('missing', []),
+                      'complete': entry.get('complete',False),
                       'evidence': entry['checks'], 'actions': actions[entry['status']], 'notes': entry['reasons']})
     report = {'title': a.title, 'drums': drums, 'round_status': a.status,
               'patrol_stops_completed': a.patrol_index, 'patrol_stops_total': len(a.patrol),
@@ -767,7 +770,7 @@ def build_report(a):
                               'max_h2_ppm': round(max(a.history['h2'] or [0])), 'max_gamma_uSv_h': round(max(a.history['gamma'] or [0]), 1)},
               'alerts': [DRUMS[d]['display_id'] for d in a.flagged],
               'decisions': [{k: d[k] for k in ('t', 'action_id', 'reason', 'source')} for d in a.decisions],
-              'not_inspected': [DRUMS[d]['display_id'] for d, e in a.memory.drums.items() if e['status'] in ('none', 'inspecting')]}
+              'not_inspected': [DRUMS[d]['display_id'] for d, e in a.memory.drums.items() if not e.get('complete',False)]}
     report['summary'] = factual_summary(report)
 
     return report
@@ -777,7 +780,7 @@ def factual_summary(r):
     """Built from the inspection memory only; the 2B model embellished when asked to write this."""
     job = [d for d in r['drums'] if d['grade'] != 'outside job']
     count = {k: [d['drum'] for d in job if d['grade'] == k] for k in ('good', 'attention', 'bad', 'inspecting', 'none')}
-    parts = [f"{len(job) - len(count['none']) - len(count['inspecting'])}/{len(job)} drums fully inspected: "
+    parts = [f"{sum(d.get('complete',False) for d in job)}/{len(job)} drums fully inspected: "
              f"{len(count['good'])} good, {len(count['attention'])} need attention, {len(count['bad'])} bad."]
     for d in job:
         if d['grade'] in ('bad', 'attention'):

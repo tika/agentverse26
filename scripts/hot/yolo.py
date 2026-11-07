@@ -55,7 +55,19 @@ class YoloVision:
                             association='geometry_map_from_rgb_depth_and_estimated_pose',box=barrel['bbox_xyxy'],
                             faults=faults,confidence=barrel['confidence'],range_m=float(np.median(distances[valid])),
                             map_offset_m=offset))
-                result.update(associations=associations,status='ok',wall_seconds=_ytime.perf_counter()-start,timestamp_s=t)
+                # Several overlapping predicted boxes can map to one physical drum.
+                # One inference contributes one observation per drum, never two views.
+                by_id={}
+                for item in associations:
+                    old=by_id.get(item['drum_id'])
+                    if old is None:by_id[item['drum_id']]=item;continue
+                    def area(value):
+                        x0,y0,x1,y1=value['box'];return (x1-x0)*(y1-y0)
+                    merged=dict(max((old,item),key=area))
+                    merged['faults']=sorted(set(old['faults'])|set(item['faults']))
+                    merged['confidence']=max(old['confidence'],item['confidence'])
+                    by_id[item['drum_id']]=merged
+                result.update(associations=list(by_id.values()),status='ok',wall_seconds=_ytime.perf_counter()-start,timestamp_s=t)
                 self.result=result
             except Exception as error:
                 self.failures+=1
