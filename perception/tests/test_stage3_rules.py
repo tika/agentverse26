@@ -209,5 +209,24 @@ class ScenarioChecks(unittest.TestCase):
         self.assertTrue(any("units" in e for e in errs) and any("cause" in e for e in errs))
 
 
+class Assessment(unittest.TestCase):
+    def test_rules_on_required_cases_never_read_truth(self):
+        import stage3_assess as sa
+        out = {r["scenario_id"]: r for r in (sa.assess_scenario(copy.deepcopy(sc)) for sc in GOOD_SET)}
+        self.assertEqual({f["hypothesis"] for f in out["s1"]["findings"]}, {"elevated_radiation_field"})
+        self.assertIn("measure_at_matched_reference_pose", out["s1"]["actions"])
+        self.assertEqual({f["hypothesis"] for f in out["s2"]["findings"]}, {"external_corrosion"})
+        self.assertEqual(out["s2"]["condition_status"], "finding_suspected")
+        # Hidden condition: truth says internal corrosion, runtime shows nothing -> not 'safe', not detected.
+        self.assertEqual(out["s3"]["findings"], [])
+        self.assertEqual(out["s3"]["condition_status"], "no_visible_defect_in_inspected_area")
+        self.assertEqual(out["s4"]["findings"], [])
+        self.assertEqual({f["hypothesis"] for f in out["s5"]["findings"]}, {"wet_or_residue_unexplained"})
+        self.assertIn("request_swab_if_safe", out["s5"]["actions"])
+        poisoned = copy.deepcopy(GOOD_SET[2])
+        poisoned["truth"] = {"internal_corrosion": True, "faults": ["corrosion"], "visible": True}
+        self.assertEqual(sa.assess_scenario(poisoned)["findings"], [])
+
+
 if __name__ == "__main__":
     unittest.main()
