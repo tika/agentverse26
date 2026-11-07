@@ -85,6 +85,10 @@ def offered_actions(a, p_est, reading):
         swabbed = f'swab_{drum_id}' in a.findings
         if drum['row'] in STANDOFF and not at_standoff and gamma_ok:
             actions.append({'id': f'inspect_{name}', 'description': f'Walk to the 1 m standoff in front of {name} and face it'})
+        low = any(f.get('drum') == drum_id and f.get('confidence') == 'low' for f in a.findings.values())
+        if low and gamma_ok and a.data.get('better_view', {}).get(drum_id, 0) < 2:
+            actions.append({'id': f'better_view_{name}', 'description':
+                            f'Unsure about {name}: move to a closer or second viewing angle and re-measure (plate, thermal)'})
         if at_standoff and not swabbed:
             actions.append({'id': f'swab_{name}', 'description': f'Stop and take a smear swab of the floor at the base of {name} (4 s)'})
         if drum_id not in a.flagged:
@@ -108,6 +112,9 @@ def rules_choice(a, actions):
             return {'action_id': f'swab_{name}', 'reason': 'Rules: at standoff, sample for contamination'}
     if a.action['id'].startswith('swab_') and a.swab_contact is None:
         return {'action_id': 'continue_patrol', 'reason': 'Rules: sample complete'}
+    for name in kinds:
+        if f'better_view_{name}' in ids:
+            return {'action_id': f'better_view_{name}', 'reason': 'Rules: low-confidence finding, get a better view'}
     for name in kinds:
         if f'inspect_{name}' in ids and not any(f'swab_{d}' in a.findings for d, e in DRUMS.items() if e['display_id'] == name):
             return {'action_id': f'inspect_{name}', 'reason': 'Rules: inspect new finding'}
@@ -149,6 +156,16 @@ def apply_action(a, choice, t, p_est):
         a.status, a.hold, a.speed = 'INVESTIGATE', False, SPEED_NEAR_DRUMS
         a.route = [standoff_for(drum)]
         a.face = a.look = np.array([drum['x'], drum['y']])
+    elif action_id.startswith('better_view_'):
+        tries = a.data.setdefault('better_view', {})
+        tries[drum['id']] = tries.get(drum['id'], 0) + 1
+        target = standoff_for(drum)
+        if np.linalg.norm(p_est[:2] - target) < 0.35:  # Already here: second angle along the aisle.
+            target = target + [0.8 if p_est[0] <= drum['x'] else -0.8, 0.0]
+        a.status, a.hold, a.speed = 'INVESTIGATE', False, SPEED_NEAR_DRUMS
+        a.route = [target]
+        a.face = a.look = np.array([drum['x'], drum['y']])
+        a.data['reread'] = drum['id']
     elif action_id.startswith('swab_'):
         a.status, a.hold = 'SAMPLING', True
         centre = np.array([drum['x'], drum['y']])
@@ -193,35 +210,46 @@ def decide(a, t, frame_rgb, p_est, reading):
     a.last_decision_t, a.pending_decision = t, False
 
 
+def read_plate_for(a, drum, t, p, yaw):
+    """Point the PTZ at a drum's plate using the estimated pose and let Cosmos read it."""
+    a.plates_tried.add(drum['id'])
+    aim_from_estimate(PTZ, p, yaw, a.nav.fused, plate_world(drum))
+    for _ in range(3):
+        world.render()
+    answer = cosmos_call('read_plate', _rgb(PTZ))
+    readability = answer.get('readability', 'unreadable')
+    expected = a.scene['records'].get(drum['id'])  # What the inventory says is at this map position.
+    plate_text = f"{answer['drum_id']} {answer['category']}" if readability == 'readable' else None
+    a.ids_read[drum['id']] = plate_text
+    a.data.setdefault('readability', {})[drum['id']] = readability
+    unclear = f"plate_{drum['id']}"
+    if plate_text is None:
+        a.add_finding(t, unclear, kind='plate_unclear', drum=drum['id'], readability=readability,
+                      raw_read=answer.get('raw_read'), confidence='low')
+        a.event(t, f"Plate at {drum['display_id']} position {readability}: {answer.get('raw_read')}")
+        return
+    if unclear in a.findings:
+        a.findings.pop(unclear)
+        a.event(t, f"Plate {plate_text} read on second view")
+    if plate_text != expected:
+        a.add_finding(t, f"record_{drum['id']}", kind='inventory_mismatch', drum=drum['id'],
+                      plate_read=plate_text, record=expected, confidence='high')
+        a.event(t, f"Plate reads {plate_text}, record says {expected}!")
+    else:
+        a.event(t, f"Plate {plate_text} matches record")
+
+
 def read_plates(a, t, p, yaw):
-    """Spot CAM+-style PTZ zoom on the nearest unread aisle-facing plate; Cosmos reads it."""
+    """Spot CAM+-style PTZ zoom on the nearest unread aisle-facing plate ahead (one per frame)."""
     for drum in inventory:
         if drum['id'] in a.plates_tried or drum['row'] not in STANDOFF:
             continue
-        plate = plate_world(drum)
-        rel = plate[:2] - a.nav.fused[:2]
+        rel = plate_world(drum)[:2] - a.nav.fused[:2]
         dist = float(np.linalg.norm(rel))
         ahead = math.cos(a.nav.fused[2]) * rel[0] + math.sin(a.nav.fused[2]) * rel[1]
-        if not (1.0 < dist < 3.2 and ahead > 0.3):
-            continue
-        a.plates_tried.add(drum['id'])
-        aim_from_estimate(PTZ, p, yaw, a.nav.fused, plate)
-        for _ in range(3):
-            world.render()
-        answer = cosmos_call('read_plate', _rgb(PTZ))
-        read = answer.get('drum_id')
-        expected = a.scene['records'].get(drum['id'])  # What the inventory says is at this map position.
-        plate_text = f"{read} {answer.get('category')}" if read else None
-        a.ids_read[drum['id']] = plate_text
-        if read is None:
-            a.event(t, f"Plate at {drum['display_id']} position unreadable")
-        elif plate_text != expected:
-            a.add_finding(t, f"record_{drum['id']}", kind='inventory_mismatch', drum=drum['id'],
-                          plate_read=plate_text, record=expected)
-            a.event(t, f"Plate reads {plate_text}, record says {expected}!")
-        else:
-            a.event(t, f"Plate {plate_text} matches record")
-        return  # One plate read per frame.
+        if 1.0 < dist < 3.2 and ahead > 0.3:
+            read_plate_for(a, drum, t, p, yaw)
+            return
 
 
 def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_seconds=3.0):
@@ -275,9 +303,20 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         for f in thermal_findings(perception['thermal'], onboard.get_depth(), reading['temperature_c'], (p, yaw), est,
                                   rise=HEAT_RISE_C):
             if f['drum_id']:
-                if a.add_finding(t, f"thermal_{f['drum_id']}", kind='thermal_hotspot', drum=f['drum_id'],
-                                 surface_temp_c=round(f['temp_c'], 1), air_temp_c=round(reading['temperature_c'], 1)):
-                    a.event(t, f"Thermal hotspot {DRUMS[f['drum_id']]['display_id']} {f['temp_c']:.0f} C!")
+                confidence = 'high' if f['pixels'] >= 400 and f['range_m'] <= 4.0 else 'low'
+                fid = f"thermal_{f['drum_id']}"
+                previous = a.findings.get(fid, {}).get('confidence')
+                if a.add_finding(t, fid, kind='thermal_hotspot', drum=f['drum_id'], surface_temp_c=round(f['temp_c'], 1),
+                                 air_temp_c=round(reading['temperature_c'], 1), range_m=round(f['range_m'], 1),
+                                 confidence=confidence):
+                    a.event(t, f"Thermal hotspot {DRUMS[f['drum_id']]['display_id']} {f['temp_c']:.0f} C"
+                               f" ({confidence} conf, {f['range_m']:.0f} m)!")
+                elif previous == 'low' and confidence == 'high':
+                    a.findings[fid]['confidence'] = 'high'
+                    a.pending_decision = True
+                    a.event(t, f"Thermal on {DRUMS[f['drum_id']]['display_id']} confirmed up close!")
+                elif previous == 'high':
+                    a.findings[fid]['confidence'] = 'high'
         rust = a.data.setdefault('rust_pct', {})
         for drum_id, px in perception['corrosion_px'].items():
             body = perception['drum_px'].get(drum_id, 0) + px
@@ -315,7 +354,9 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         if a.status == 'PATROL':
             read_plates(a, t, p, yaw)
         # Decisions: on new findings, completed actions, or periodically while findings are open.
-        arrived = a.action['id'].startswith(('inspect_', 'retreat_alert_')) and not a.route and not a.hold
+        arrived = a.action['id'].startswith(('inspect_', 'retreat_alert_', 'better_view_')) and not a.route and not a.hold
+        if arrived and a.data.get('reread'):
+            read_plate_for(a, DRUMS[a.data.pop('reread')], t, p, yaw)
         if arrived and a.action['id'].startswith('retreat_alert_'):
             a.status, a.hold = 'ALERT', True
         if a.pending_decision or arrived or (a.findings and t - a.last_decision_t >= DECIDE_EVERY_S and a.swab_contact is None):
@@ -400,7 +441,7 @@ def build_report(a):
         measured = {'temperature_c': float(np.median(temps)), 'relative_humidity_pct': float(np.median(rhs))}
         plate = a.ids_read.get(drum_id, 'not attempted')
         if drum_id in a.ids_read:
-            measured['label_readability'] = 'readable' if plate else 'unreadable'
+            measured['label_readability'] = a.data.get('readability', {}).get(drum_id, 'readable' if plate else 'unreadable')
         if drum_id in a.data.get('rust_pct', {}):
             measured['rust_pct'] = round(a.data['rust_pct'][drum_id], 1)
         swab = a.findings.get(f'swab_{drum_id}')

@@ -19,7 +19,7 @@ import modal
 MODEL = 'nvidia/Cosmos-Reason2-2B'
 SERVED_NAME = 'cosmos'
 image = (modal.Image.debian_slim(python_version='3.12')
-         .uv_pip_install('vllm==0.11.0', 'huggingface_hub[hf_transfer]')
+         .uv_pip_install('vllm==0.11.0', 'transformers==4.57.3', 'huggingface_hub[hf_transfer]')
          .env({'HF_HUB_ENABLE_HF_TRANSFER': '1'}))
 app = modal.App('agentverse-cosmos-vllm')
 hf_cache = modal.Volume.from_name('cosmos-hf-cache', create_if_missing=True)

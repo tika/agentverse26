@@ -225,6 +225,7 @@ def thermal_findings(thermal, depth, ambient, body_truth, estimate, rise=6.0, mi
     drum = min(inventory, key=lambda e: math.dist(centre, (e['x'], e['y'])))
     offset = math.dist(centre, (drum['x'], drum['y']))
     return [{'kind': 'thermal_hotspot', 'temp_c': float(np.percentile(thermal[hot], 90)), 'pixels': int(hot.sum()),
+             'range_m': float(np.median(d[ok])),
              'position_m': centre.tolist(), 'drum_id': drum['id'] if offset < drum['radius'] + 0.6 else None,
              'map_offset_m': offset}]
 
@@ -338,7 +339,14 @@ def cosmos_call(method, rgb, snapshot=None):
         if method == 'read_plate':
             text = cosmos_chat([_image_part(rgb), {'type': 'text', 'text': PLATE_PROMPT}], max_tokens=256)
             answer = extract_json(text)
-            result = {'drum_id': answer.get('drum_id'), 'category': answer.get('category')}
+            drum_id, category = answer.get('drum_id'), answer.get('category')
+            import re as _re
+            valid_id = isinstance(drum_id, str) and _re.fullmatch(r'[A-Z][0-9]{2}', drum_id) is not None
+            valid_cat = category in ('LLW', 'ILW')
+            # A misread never becomes an ID: anything off-format is partial (some text) or unreadable.
+            result = {'drum_id': drum_id if valid_id else None, 'category': category if valid_cat else None,
+                      'readability': 'readable' if valid_id and valid_cat else ('partial' if drum_id or category else 'unreadable'),
+                      'raw_read': [drum_id, category]}
         else:
             text = cosmos_chat([_image_part(rgb), {'type': 'text', 'text': json.dumps(snapshot)}], system=DECIDE_PROMPT)
             answer = extract_json(text)
