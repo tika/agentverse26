@@ -18,7 +18,7 @@
     "source_params": {
       "gamma_dose_rate_uSv_h_at_1m": 42.0,
       "gamma_source_location_m": [
-        1.0,
+        2.0,
         6.0,
         0.55
       ],

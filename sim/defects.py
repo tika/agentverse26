@@ -6,7 +6,9 @@ from defect_geometry import surface_mesh, floor_mesh
 
 def corrosion_specs(entry,seed,severity):
     rng=np.random.default_rng(seed)
-    face=(-1 if entry['row'] in ('A','C') else 1)*math.pi/2
+    # Dense stage-2 inventory uses row IDs like A-L / B-R and stores the actual
+    # aisle-facing normal explicitly. Fall back for the original A/B/C layout.
+    face=float(entry.get('face_sign',(-1 if entry['row'] in ('A','C') else 1)))*math.pi/2
     features=[]
     for _ in range(int(rng.integers(1,4))):
         angle=face+float(rng.uniform(-.65,.65))
@@ -44,13 +46,13 @@ def corrosion_specs(entry,seed,severity):
     return features
 
 
-def build_corrosion(stage,entry,seed,severity):
+def build_corrosion(stage,entry,seed,severity,specifications=None):
     from geometry import mesh
     from materials import material
     from fault_textures import fault_bank
     bank=fault_bank(entry['scene_seed'])
     result=[]
-    for index,spec in enumerate(corrosion_specs(entry,seed,severity)):
+    for index,spec in enumerate(specifications if specifications is not None else corrosion_specs(entry,seed,severity)):
         path=f"/World/Defects/{entry['id']}/Corrosion_{index}"
         subtype=spec['subtype']
         texture_kind='stage2' if subtype=='runoff' else 'stage4' if subtype=='rust_flakes' else subtype
@@ -77,7 +79,8 @@ def build_release(stage,entry,fault,seed):
     kind='wet' if wet else 'residue'
     textures=release_maps(entry['category'],wet,entry['scene_seed'])
     paint=material(stage,f"Release_{entry['id']}_{fault}",(1,1,1),.09 if wet else .9,textures=textures)
-    angle=(-1 if entry['row'] in ('A','C') else 1)*math.pi/2+float(rng.uniform(-.25,.25))
+    face=float(entry.get('face_sign',(-1 if entry['row'] in ('A','C') else 1)))*math.pi/2
+    angle=face+float(rng.uniform(-.25,.25))
     length=float(rng.uniform(.45,.8)); width=length/float(rng.uniform(1.6,2.3))
     # Long axis points away from the drum; rear edge just overlaps the base.
     distance=entry['radius']+length/2-.035

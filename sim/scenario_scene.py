@@ -26,8 +26,17 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
             if float(defect.get('visible_fraction', 0.0)) <= 0:
                 continue
             if kind == 'corrosion':
+                severity = int(defect.get('severity', 2))
+                width, height = map(float, defect.get('dimensions_m', [.22, .10]))
+                region = defect.get('surface_region', 'lower_chime')
+                z_center = float(defect.get('center_z_m', .08 if region == 'lower_chime' else entry['height']*.68))
+                face = float(entry.get('face_sign', 1))*math.pi/2
+                subtype = f"stage{min(4,max(1,severity))}" if entry['category']=='LLW' else 'pitting'
+                specs = [{'type':'corrosion','subtype':subtype,'location':region,'z':z_center,
+                          'angle':face,'size':[width,height],'variant':int(scenario['seed'])%2,
+                          'mesh_seed':int(scenario['seed'])+idx*991,'severity':severity}]
                 built = build_corrosion(stage, entry, int(scenario['seed']) + idx*991,
-                                        int(defect.get('severity', 2)))
+                                        severity, specifications=specs)
                 for mesh in built:
                     add_labels(stage.GetPrimAtPath(mesh['prim_path']), labels=['corrosion'], taxonomy='class')
                     add_labels(stage.GetPrimAtPath(mesh['prim_path']), labels=[entry['id']], taxonomy='drum_id')
@@ -41,7 +50,8 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
                     raise RuntimeError(f"missing body mesh for {entry['id']}")
                 points_attr = body.GetPointsAttr()
                 points = points_attr.Get()
-                theta_center = float(defect.get('angle_rad', entry.get('yaw', 0.0)))
+                theta_center = float(defect.get('angle_rad',
+                    float(entry.get('face_sign',1))*math.pi/2-float(entry.get('yaw',0.0))))
                 z_center = float(defect.get('center_z_m', entry['height']*.42))
                 deformed = []
                 max_delta = 0.0
@@ -64,11 +74,13 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
                     deformed.append(Gf.Vec3f(x*new_radius/max(radius, 1e-6),
                                               y*new_radius/max(radius, 1e-6), z))
                 points_attr.Set(deformed)
-                observed_delta = (2*max_delta if kind == 'bulge' else -2*max_delta)
-                result['measured_shape'][entry['id']] = {'kind': kind,
-                    'observed_diameter_change_m': round(observed_delta, 5),
+                # Bulge dimensions_m[-1] is a radial expansion; diameter change
+                # is twice the maximum mesh displacement. A dent is local depth.
+                observed = (2*max_delta if kind == 'bulge' else max_delta)
+                metric = 'observed_diameter_increase_m' if kind == 'bulge' else 'observed_dent_depth_m'
+                result['measured_shape'][entry['id']] = {'kind': kind, metric: round(observed, 5),
                     'nominal_diameter_m': round(2*float(entry['radius']), 5),
-                    'measurement_source': 'scene mesh geometry'}
+                    'measurement_source': 'maximum local mesh displacement from undeformed mesh'}
                 result['visible_defects'].append({'kind': kind, 'asset_id': entry['id'],
                     'region': defect.get('surface_region'), 'visible_fraction': defect.get('visible_fraction'),
                     'dimensions_m': defect['dimensions_m']})
@@ -90,6 +102,8 @@ def apply_visual_scenario(stage, scenario, inventory_path=None):
             center = (float(source[0]), float(source[1]))
             wet_mesh = mesh(stage, f"/World/Defects/{entry['id']}/Wet_{scenario['scenario_id']}",
                             *floor_mesh(np.random.default_rng(int(scenario['seed'])), center, .42, .68, z=.003), paint)
+            from isaacsim.core.experimental.utils.semantics import add_labels
+            add_labels(wet_mesh.GetPrim(), labels=['spill'], taxonomy='class')
             result['visible_defects'].append({'kind':'wet_surface','prim_path':str(wet_mesh.GetPath()),
                                                'mechanism':wet['mechanism'],'fluid_kind':wet['fluid_kind']})
 

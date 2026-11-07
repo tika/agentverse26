@@ -115,11 +115,12 @@ def build_scene(seed=42, include_drums=True):
     ambient.CreateColorAttr(Gf.Vec3f(1.0, 1.0, 1.0))
     UsdLux.ShadowAPI.Apply(ambient.GetPrim()).CreateShadowEnableAttr(False)
     write_aisles()
+    drum_count = 0
     if include_drums:
         from drums import build_drums
-        build_drums(seed)
+        drum_count = len(build_drums(seed))
     return {'seed':seed,'build_seconds':round(time.perf_counter()-started,3),
-            'drum_count':28 if include_drums else 0,
+            'drum_count':drum_count,
             'hall_interior':[20,12,6],'extra_detail_meshes':32,'failed_fixture':'Row2_L04',
             'camera_exposure':{'iso':400,'f_number':2.8,'shutter_reciprocal_seconds':60}}
 

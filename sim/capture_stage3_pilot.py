@@ -29,7 +29,7 @@ if __name__ == '__main__':
     app = SimulationApp({'headless': True, 'fast_shutdown': True,
                          'extra_args': ['--enable', 'isaacsim.sensors.camera']})
     import omni.usd
-    from pxr import Gf
+    from pxr import Gf, UsdLux, UsdGeom
     from isaacsim.core.api import World
     from isaacsim.sensors.camera import Camera
     from build_hall import build_scene
@@ -56,18 +56,37 @@ if __name__ == '__main__':
         entry = next((e for e in entries if e['id'] == scenario.get('asset_id')), None)
         if entry:
             face = int(entry.get('face_sign', 1))
-            target = (entry['x'], entry['y'], entry.get('base_z',0)+entry['height']*.45)
+            defect = next(iter(scenario['runtime'].get('defects', [])), {})
+            if defect.get('kind') == 'corrosion' and defect.get('surface_region') == 'lower_chime':
+                local_z = float(defect.get('center_z_m', .08))
+            else:
+                local_z = float(defect.get('center_z_m', entry['height']*.42))
+            target = (entry['x'], entry['y'], entry.get('base_z',0)+local_z)
             eye = (entry['x']-.42, entry['y']+face*(entry['radius']+1.0), target[2]+.18)
             plans.append((eye, target, 52.0, scenario['scenario_id']))
+        wet = scenario['runtime'].get('wet_case')
+        if wet:
+            center = wet.get('location_m', [entry['x'], entry['y']-entry['radius']-.45, 0.0]) if entry else [5.4,.7,0.0]
+            normal = (int(entry.get('face_sign',-1)) if entry and wet.get('fluid_kind') != 'external_water' else 1)
+            plans.append(((center[0], center[1]+normal*1.25, 1.0), (center[0],center[1],.01), 40.0,
+                          scenario['scenario_id']+'_wet_patch'))
         obstruction = scenario['runtime'].get('obstruction')
         if obstruction:
             center = obstruction['geometry_m']['center']
-            plans.append(((center[0]-1.8, center[1]-2.0, 1.2), center, 45.0, scenario['scenario_id']+'_obstruction'))
+            # Keep the review camera inside the marked cross-aisle, clear of drum rows.
+            plans.append(((8.8, 6.0, 1.45), (center[0], center[1], center[2]), 38.0,
+                          scenario['scenario_id']+'_obstruction'))
 
     cam = Camera('/World/Stage3ReviewCamera', resolution=RES)
     cam.prim.GetAttribute('horizontalAperture').Set(36.0)
     cam.prim.GetAttribute('verticalAperture').Set(36.0*RES[1]/RES[0])
     cam.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(.05, 40.0))
+    # Small neutral inspection lamp attached to the camera rig for defect close-ups.
+    fill = UsdLux.SphereLight.Define(stage, '/World/Stage3ReviewCamera/InspectionFill')
+    fill.CreateIntensityAttr(1800.0)
+    fill.CreateRadiusAttr(.035)
+    fill.CreateColorAttr(Gf.Vec3f(1.0,1.0,1.0))
+    UsdGeom.Xformable(fill).AddTranslateOp().Set(Gf.Vec3d(0,0,0))
     world.reset(); cam.initialize(); cam.add_distance_to_image_plane_to_frame()
 
     def aim(eye, target, focal):
@@ -89,7 +108,9 @@ if __name__ == '__main__':
 
     frames=[]
     for i,(eye,target,focal,label) in enumerate(plans):
-        aim(eye,target,focal); fixed_exposure(); world.render(); world.render()
+        aim(eye,target,focal); fixed_exposure()
+        for _ in range(14):
+            world.render()
         pixels=rgb_now()
         if pixels is None: raise RuntimeError(f'camera returned no RGB at pilot frame {i}')
         Image.fromarray(pixels).save(OUT/'frames'/f'{i:05d}.jpg',quality=92)
@@ -109,6 +130,7 @@ if __name__ == '__main__':
     (OUT/'sensor_traces.json').write_text(json.dumps(traces,indent=2)+'\n')
     report={'renderer':'RayTracedLighting (RTX)','resolution':list(RES),'warmup_renders':warm,
             'scene_metrics':metrics,'frame_count':len(frames),'frames':frames,
+            'camera_fill_light':{'type':'neutral sphere inspection lamp on review camera','intensity':1800.0},
             'note':'scenario truth is excluded from sensor_traces; no leak/source conclusion is inferred from a visual defect'}
     (OUT/'manifest.json').write_text(json.dumps(report,indent=2)+'\n')
     print('STAGE3_PILOT_OK',len(frames),'frames',flush=True)
