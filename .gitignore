@@ -3,3 +3,4 @@ __pycache__/
 .venv/
 .runtime/
 sim/out/
+/out/
