@@ -164,8 +164,9 @@ if __name__ == '__main__':
     for i, (eye, target, focal, label) in enumerate(plan):
         aim(eye, target, focal)
         fixed_exposure()
-        world.render()
-        world.render()
+        for _ in range(4):
+            app.update()
+            world.render()
         pixels = rgb_now()
         for _ in range(20):
             if pixels is not None:

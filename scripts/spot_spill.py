@@ -279,8 +279,9 @@ def run():
                     position, yaw, sensor_position = pose()
                     phase = perf_counter()
                     basis = camera_basis(position, yaw)
-                    world.render()
-                    world.render()
+                    for _ in range(4):
+                        app.update()
+                        world.render()
                     rgb, side_rgb = pixels(front), pixels(side)
                     if rgb is None or side_rgb is None:
                         raise RuntimeError("Camera dropped out")
