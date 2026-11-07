@@ -15,7 +15,7 @@ if __name__=='__main__':
     from materials import material
     from geometry import box,mesh
     from profiles import make_drum_mesh,drum_profile
-    from corrosion_preview import weathered_maps,build_oxide,swollen_profile,dome_lid
+    from corrosion_preview import weathered_maps,build_oxide,swollen_profile,dome_lid,add_preview_label
     from capture_hall import capture_views
     OUT.mkdir(parents=True,exist_ok=True)
     context=omni.usd.get_context()
@@ -42,7 +42,7 @@ if __name__=='__main__':
     materials['faded_yellow']=material(stage,'PreviewWeatheredPaint',(1,1,1),.5,textures=base_maps)
     materials['faded_yellow_lid']=materials['faded_yellow']
     details=[]
-    for name,x,bulged in [('Normal',-.62,False),('Bulged',.62,True)]:
+    for name,x,bulged,rusty,tag in [('NormalRusted',-.95,False,True,'A3'),('BulgedClean',0.,True,False,'B1'),('BulgedRusted',.95,True,True,'C2')]:
         entry=copy.deepcopy(make_inventory()[2])
         entry.update(x=x,y=0,yaw=0.,prim_path='/World/'+name)
         create_drum(stage,entry,materials)
@@ -58,7 +58,7 @@ if __name__=='__main__':
                 prim=stage.GetPrimAtPath(entry['prim_path']+'/'+part)
                 ops=UsdGeom.Xformable(prim).GetOrderedXformOps()
                 t=ops[0].Get(); r=(xy[0]**2+xy[1]**2)**.5
-                t[2]+=.040*(1-(r/.269)**2)**1.5
+                t[2]+=.070*(1-(r/.269)**2)**1.5
                 ops[0].Set(t)
             # Plate stays on the outside of the swollen body, never buried in steel.
             plate=UsdGeom.Mesh(stage.GetPrimAtPath(entry['prim_path']+'/Plate'))
@@ -69,10 +69,11 @@ if __name__=='__main__':
                 factor=(radius_at(profile,p[2])+.002)/old
                 p[0]*=factor;p[1]*=factor
             plate.GetPointsAttr().Set(pts)
-        build_oxide(stage,entry,oxide_maps,alpha,profile)
-        details.append({'name':name,'nominal_radius_m':.29,'height_m':.88,
-                        'radial_swelling_fraction':.04 if bulged else 0,
-                        'lid_dome_rise_m':.04 if bulged else 0})
+        add_preview_label(stage,entry,profile,tag)
+        if rusty: build_oxide(stage,entry,oxide_maps,alpha,profile)
+        details.append({'name':name,'display_label':tag,'rusted':rusty,'nominal_radius_m':.29,'height_m':.88,
+                        'radial_swelling_fraction':.08 if bulged else 0,
+                        'lid_dome_rise_m':.07 if bulged else 0})
     # Reapply fixed exposure after creating assets and materials.
     settings=carb.settings.get_settings()
     settings.set_bool('/app/viewport/grid/enabled',False)
@@ -81,9 +82,11 @@ if __name__=='__main__':
     settings.set_float('/rtx/post/tonemap/filmIso',200.)
     settings.set_float('/rtx/post/tonemap/fNumber',4.)
     settings.set_float('/rtx/post/tonemap/cameraShutter',60.)
-    views={'rust_barrel':((.25,-2.0,1.25),(-.62,0,.44),48),
-           'normal_vs_bulged':((0,-3.2,1.45),(0,0,.46),49),
-           'bulged_lid':((.92,-1.5,1.12),(.62,0,.76),56)}
+    views={'rust_barrel':((-.60,-2.0,1.25),(-.95,0,.44),49),
+           'normal_vs_bulged':((0,-4.3,1.6),(0,0,.46),49),
+           'bulged_clean':((.20,-1.9,1.20),(0,0,.46),49),
+           'bulged_rusted':((1.20,-1.9,1.20),(.95,0,.46),49),
+           'bulged_lid':((1.2,-1.5,1.12),(.95,0,.76),56)}
     report={'seed':74,'scope':'isolated appearance study; full hall not changed',
             'barrels':details,'views':capture_views(app,stage,views,OUT),
             'limits':['Bulge is an illustrative pressure/expansion cue, not a confirmed gas measurement',

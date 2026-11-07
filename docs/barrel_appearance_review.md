@@ -12,16 +12,17 @@ Run `python3 tools/run_barrel_preview.py` on Modal or, locally:
 /path/to/isaac-sim/python.sh sim/render_barrel_preview.py --allow-root
 ```
 
-The render compares two versions of the same painted LLW barrel: nominal and
-bulged. Both use the same seeded thin surface-corrosion pattern. Paint wear is
+The render compares three versions of the same painted LLW barrel: nominal rusted,
+bulged clean and bulged rusted. The two rusted variants use the same seeded
+thin surface-corrosion pattern. Bulging and rust are independent switches. Paint wear is
 grey, oxidation is a separate conforming mesh, the fresh oxide is restricted to
 small edges, and damage concentrates at the chimes and rolling-hoop ridges.
 The old large raised orange strips are not used. No liquid spill is included.
 All new files remain in the `agentverse26` repository.
 
-The proposed bulge uses a smooth 4% local radial expansion field (peak in the
-middle of the body) and a 40 mm lid rise relative to the recessed nominal lid.
-The largest diameter increase is not exactly 4% because the nominal chimes are
+The proposed bulge uses a smooth 8% local radial expansion field (peak in the
+middle of the body) and a 70 mm lid rise relative to the recessed nominal lid.
+The largest diameter increase is not exactly 8% because the nominal chimes are
 already wider than the cylindrical shell. The metadata records the deformation
 parameter, not an assertion that a camera measured that parameter.
 This is kinematic geometry, not pressure-vessel, gas, corrosion or rupture physics.
@@ -65,3 +66,5 @@ probe. The hall's ambient thermometer does not read the drum. Reflective metal
 requires emissivity/reflected-temperature correction; see [FLIR's guidance](https://www.flir.com/en-gb/discover/professional-tools/how-does-emissivity-affect-thermal-imaging/).
 A gas-specific measurement would be needed to identify a gas; this screening
 module does not simulate one.
+
+Sample tags are **A3** (nominal rusted), **B1** (bulged clean), **C2** (bulged rusted). These review tags do not rename any Dxx package in the hall inventory.
