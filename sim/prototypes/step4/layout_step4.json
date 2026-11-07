@@ -1,0 +1,19 @@
+{
+  "seed": 42,
+  "drums": {
+    "D10": {
+      "faults": [
+        "corrosion",
+        "leak"
+      ],
+      "severity": 3
+    },
+    "D25": {
+      "faults": [
+        "corrosion",
+        "residue"
+      ],
+      "severity": 2
+    }
+  }
+}
