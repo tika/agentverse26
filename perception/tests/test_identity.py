@@ -95,6 +95,23 @@ class Association(unittest.TestCase):
         r = ident.associate(stacked, observed_xyz=(base["x"], base["y"], top_z))
         self.assertEqual((r["status"], r["candidates"]), ("unread", ["D29"]))
 
+    def test_location_code_plates(self):
+        # Codex stage-2 plate format: display_id == location_code; upper tiers D29+.
+        base = dict(self.by_id["D01"], display_id="A-L-01-T1", base_z=0.0)
+        upper = dict(base, id="D29", legacy_id="D01", display_id="A-L-01-T2", base_z=base["height"] + 0.15)
+        stacked = {"map_version": am.MAP_VERSION, "drums": [base, upper]}
+        self.assertEqual(am.map_errors(stacked), [])
+        self.assertEqual(am.display_id_collisions(stacked), [])
+        top = (base["x"], base["y"], upper["base_z"] + base["height"] / 2)
+        r = ident.associate(stacked, plate_text="A-L-01-T2", observed_xyz=top)
+        self.assertEqual((r["status"], r["candidates"]), ("confirmed", ["D29"]))
+        # Plate says bottom tier but the box is at the top tier: conflict, both kept.
+        r = ident.associate(stacked, plate_text="A-L-01-T1", observed_xyz=top)
+        self.assertEqual(r["status"], "conflict")
+        self.assertEqual(r["candidates"], ["D01", "D29"])
+        for bad in ("A-L-1-T1", "D-L-01-T1", "A-L-01-T4"):
+            self.assertEqual(ident.associate(stacked, plate_text=bad)["status"], "unread")
+
     def test_unreadable_or_malformed_plate(self):
         r = ident.associate(self.map, plate_text="??", observed_xyz=self.at("D05"))
         self.assertEqual(r["status"], "unread")

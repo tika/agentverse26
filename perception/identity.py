@@ -11,7 +11,9 @@ with status in confirmed / ambiguous / unread / conflict (perception/contracts.p
 import math
 import re
 
-PLATE_RE = re.compile(r"^[A-Z][0-9]{2}$")
+# Stage 2 (Codex 20:28): plates print the location code, e.g. "A-L-01-T1".
+# Legacy row+slot plates ("A03") are still accepted for the original 28 drums.
+PLATE_RE = re.compile(r"^(?:[A-Z][0-9]{2}|[ABC]-[LR]-[0-9]{2}-T[123])$")
 
 DEFAULT_GATE_M = 0.6      # max distance from a nominal drum centre to accept it as a candidate
 DEFAULT_MARGIN_M = 0.25   # second candidate must be this much farther for a unique geometric match
