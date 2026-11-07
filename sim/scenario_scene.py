@@ -1,0 +1,196 @@
+"""Apply a scenario's visible defects to an already built hall and drum inventory."""
+import json
+import math
+from pathlib import Path
+
+
+def _refined_profile(profile, step_m=.015):
+    """Insert real sidewall vertices so a deformation is spatially resolved."""
+    dense=[]
+    for (r0,z0),(r1,z1) in zip(profile,profile[1:]):
+        steps=max(1,int(math.ceil(abs(z1-z0)/step_m)))
+        for i in range(steps):
+            t=i/steps
+            dense.append((r0+(r1-r0)*t,z0+(z1-z0)*t))
+    dense.append(profile[-1])
+    return dense
+
+
+def apply_visual_scenario(stage, scenario, inventory_path=None):
+    """Build only runtime-visible geometry; hidden faults stay in scenario['truth']."""
+    from pxr import Gf, UsdGeom
+    from drums import INVENTORY
+
+    entries = json.loads(Path(inventory_path or INVENTORY).read_text())
+    by_id = {entry['id']: entry for entry in entries}
+    asset_id = scenario.get('asset_id')
+    entry = by_id.get(asset_id)
+    if not entry and scenario.get('runtime', {}).get('defects'):
+        raise KeyError(f"scenario asset {asset_id!r} is absent from the current inventory")
+    result = {'scenario_id': scenario['scenario_id'], 'visible_defects': [], 'measured_shape': {},
+              'obstructions': [], 'truth_exposed': False}
+
+    if entry:
+        from defects import build_corrosion, build_release
+        from isaacsim.core.experimental.utils.semantics import add_labels
+        for idx, defect in enumerate(scenario['runtime'].get('defects', [])):
+            kind = defect['kind']
+            if float(defect.get('visible_fraction', 0.0)) <= 0:
+                continue
+            if kind == 'corrosion':
+                severity = int(defect.get('severity', 2))
+                width, height = map(float, defect.get('dimensions_m', [.22, .10]))
+                region = defect.get('surface_region', 'lower_chime')
+                z_center = float(defect.get('center_z_m', .08 if region == 'lower_chime' else entry['height']*.68))
+                face = float(entry.get('face_sign', 1))*math.pi/2
+                subtype = f"stage{min(4,max(1,severity))}" if entry['category']=='LLW' else 'pitting'
+                seed0 = int(scenario['seed'])+idx*991
+                specs = [{'type':'corrosion','subtype':subtype,'location':region,'z':z_center,
+                          'angle':face,'size':[width,height],'variant':seed0%2,
+                          'mesh_seed':seed0,'severity':severity}]
+                if severity >= 3 and region == 'lower_chime':
+                    # Layer an irregular dark oxide bed, red-brown scale, small
+                    # active orange areas and two narrow downward runoffs.
+                    specs = [
+                        {**specs[0], 'subtype':'stage4', 'size':[width,height], 'mesh_seed':seed0+1},
+                        {**specs[0], 'subtype':'stage3', 'z':z_center+.018, 'radial_offset_m':.004,
+                         'size':[width*.76,height*.72], 'mesh_seed':seed0+2},
+                        {**specs[0], 'subtype':'stage2', 'z':z_center+.025, 'radial_offset_m':.008,
+                         'size':[width*.34,height*.48], 'mesh_seed':seed0+3},
+                        {**specs[0], 'subtype':'runoff', 'z':z_center+.065, 'radial_offset_m':.010,
+                         'size':[.035,height*.70], 'angle':face-.16, 'mesh_seed':seed0+4},
+                        {**specs[0], 'subtype':'runoff', 'z':z_center+.055, 'radial_offset_m':.012,
+                         'size':[.024,height*.52], 'angle':face+.21, 'mesh_seed':seed0+5},
+                    ]
+                built = build_corrosion(stage, entry, int(scenario['seed']) + idx*991,
+                                        severity, specifications=specs)
+                for mesh in built:
+                    add_labels(stage.GetPrimAtPath(mesh['prim_path']), labels=['corrosion'], taxonomy='class')
+                    add_labels(stage.GetPrimAtPath(mesh['prim_path']), labels=[entry['id']], taxonomy='drum_id')
+                    result['visible_defects'].append(mesh)
+            elif kind in ('bulge', 'dent'):
+                magnitude = float(defect['dimensions_m'][-1])
+                vertical_extent = float(defect['dimensions_m'][0])
+                angular_extent = float(defect['dimensions_m'][1])
+                body = UsdGeom.Mesh.Get(stage, entry['prim_path'] + '/Body')
+                if not body:
+                    raise RuntimeError(f"missing body mesh for {entry['id']}")
+                # The stock drum has only a few profile rings. Add fine vertical
+                # resolution to this one affected asset, preserving its paint and
+                # collision, so the declared shape change is really represented.
+                from pxr import UsdPhysics, UsdShade
+                from geometry import mesh as define_mesh
+                from profiles import drum_profile, make_drum_mesh
+                binding = body.GetPrim().GetRelationship('material:binding')
+                targets = binding.GetTargets() if binding else []
+                if not targets:
+                    raise RuntimeError(f"body has no material binding: {entry['id']}")
+                paint = UsdShade.Material.Get(stage, targets[0])
+                data = make_drum_mesh(_refined_profile(drum_profile(entry['category'])))
+                body_path = entry['prim_path'] + '/Body_Stage3'
+                old_prim=body.GetPrim()
+                body = define_mesh(stage, body_path, data['points'], data['faces'], data['uv'], paint)
+                body.CreateNormalsAttr(data['normals'])
+                body.SetNormalsInterpolation('faceVarying')
+                UsdPhysics.CollisionAPI.Apply(body.GetPrim())
+                UsdGeom.Imageable(old_prim).MakeInvisible()
+                UsdPhysics.CollisionAPI.Apply(old_prim).CreateCollisionEnabledAttr(False)
+                points_attr = body.GetPointsAttr()
+                points = points_attr.Get()
+                theta_center = float(defect.get('angle_rad',
+                    float(entry.get('face_sign',1))*math.pi/2-float(entry.get('yaw',0.0))))
+                z_center = float(defect.get('center_z_m', entry['height']*.42))
+                deformed = []
+                max_delta = 0.0
+                for point in points:
+                    x, y, z = float(point[0]), float(point[1]), float(point[2])
+                    radius = math.hypot(x, y)
+                    theta = math.atan2(y, x)
+                    da = math.atan2(math.sin(theta-theta_center), math.cos(theta-theta_center))
+                    vertical = math.exp(-.5*((z-z_center)/max(vertical_extent*.42,.015))**2)
+                    if kind == 'bulge':
+                        # Broad circumferential expansion with a smooth measured profile.
+                        scale = magnitude * vertical
+                    else:
+                        # A local inward dent, with its extent defined as arc length in metres.
+                        arc_extent = max(angular_extent, .015)
+                        lateral = math.exp(-.5*((da*max(radius,.01))/(arc_extent*.42))**2)
+                        scale = -magnitude * vertical * lateral
+                    new_radius = radius + scale
+                    max_delta = max(max_delta, abs(scale))
+                    deformed.append(Gf.Vec3f(x*new_radius/max(radius, 1e-6),
+                                              y*new_radius/max(radius, 1e-6), z))
+                points_attr.Set(deformed)
+                # Expose deformation in the visible stencil/plate band so the
+                # label builder can offset overlays in a follow-up hook.
+                band = (0.30*entry['height'], 0.84*entry['height'])
+                band_delta = 0.0
+                for original, changed in zip(data['points'], deformed):
+                    if band[0] <= float(original[2]) <= band[1]:
+                        band_delta = max(band_delta, math.hypot(float(changed[0]-original[0]),
+                                                                float(changed[1]-original[1])))
+                result.setdefault('deformation_hooks', {})[entry['id']] = {
+                    'max_radial_offset_in_label_band_m': round(band_delta, 5),
+                    'label_band_z_m': list(band),
+                    'recommended_label_clearance_m': round(band_delta + .004, 5)}
+                from drums import relabel_deformed
+                relabel_deformed(stage, entry,
+                    result['deformation_hooks'][entry['id']]['recommended_label_clearance_m'])
+                # Bulge dimensions_m[-1] is a radial expansion; diameter change
+                # is twice the maximum mesh displacement. A dent is local depth.
+                observed = (2*max_delta if kind == 'bulge' else max_delta)
+                metric = 'observed_diameter_increase_m' if kind == 'bulge' else 'observed_dent_depth_m'
+                result['measured_shape'][entry['id']] = {'kind': kind, metric: round(observed, 5),
+                    'nominal_diameter_m': round(2*float(entry['radius']), 5),
+                    'measurement_source': 'maximum local mesh displacement from undeformed mesh'}
+                result['visible_defects'].append({'kind': kind, 'asset_id': entry['id'],
+                    'region': defect.get('surface_region'), 'visible_fraction': defect.get('visible_fraction'),
+                    'dimensions_m': defect['dimensions_m']})
+            else:
+                raise ValueError(f'unsupported visible defect kind: {kind}')
+
+        wet = scenario['runtime'].get('wet_case')
+        if wet:
+            # A visible wet patch is evidence of moisture only. The mechanism is
+            # recorded in the scenario; it never changes dose or proves contamination.
+            source = wet.get('location_m', [entry['x'], entry['y']-entry['radius']-.45, .002])
+            from geometry import mesh
+            from materials import material
+            import numpy as np
+            from defect_geometry import floor_mesh
+            external_water = wet.get('fluid_kind') == 'external_water'
+            if external_water:
+                paint = material(stage, 'ScenarioWet_'+scenario['scenario_id'],
+                                 (.31,.34,.32), .42)
+            else:
+                paint = material(stage, 'ScenarioWet_'+scenario['scenario_id'],
+                                 (.28,.21,.15), .56)
+            center = (float(source[0]), float(source[1]))
+            wet_mesh = mesh(stage, f"/World/Defects/{entry['id']}/Wet_{scenario['scenario_id']}",
+                            *floor_mesh(np.random.default_rng(int(scenario['seed'])), center, .42, .68, z=.003), paint)
+            from isaacsim.core.experimental.utils.semantics import add_labels
+            add_labels(wet_mesh.GetPrim(), labels=['spill'], taxonomy='class')
+            result['visible_defects'].append({'kind':'wet_surface','prim_path':str(wet_mesh.GetPath()),
+                                               'mechanism':wet['mechanism'],'fluid_kind':wet['fluid_kind']})
+
+    obstruction = scenario['runtime'].get('obstruction')
+    if obstruction:
+        from geometry import box
+        from materials import material
+        geom = obstruction['geometry_m']
+        center, size = geom['center'], geom['size']
+        paint = material(stage, 'ScenarioObstruction', (.14,.22,.27), .72)
+        obstruction_path = '/World/Obstructions/Scenario_'+scenario['scenario_id']
+        prim = box(stage, obstruction_path, center, size, paint, collision=True)
+        # Handles and a reinforced rim make the equipment recognizable as a tote.
+        from geometry import box as make_box
+        dark = material(stage, 'ScenarioObstructionTrim', (.055,.07,.075), .82)
+        cx, cy, cz = map(float, center); sx, sy, sz = map(float, size)
+        for side, side_name in ((-1, 'Left'), (1, 'Right')):
+            make_box(stage, f'{obstruction_path}_Handle_{side_name}',
+                     (cx+side*sx*.38,cy,cz+sz*.50+.03), (.035,sy*.52,.10), dark)
+            make_box(stage, f'{obstruction_path}_Rim_{side_name}',
+                     (cx+side*sx*.5,cy,cz+sz*.42), (.045,sy*1.02,.055), dark)
+        result['obstructions'].append({'path':str(prim.GetPath()), 'route_id':obstruction['route_id'],
+                                       'geometry_m':geom})
+    return result

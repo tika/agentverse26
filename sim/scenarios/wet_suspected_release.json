@@ -1,0 +1,87 @@
+{
+  "scenario_id": "wet_suspected_release",
+  "seed": 20261117,
+  "case_tags": [
+    "wet_suspected_release"
+  ],
+  "asset_id": "D10",
+  "truth": {
+    "faults": [
+      "suspected_external_release"
+    ],
+    "internal_corrosion": false,
+    "true_shape": {
+      "nominal_diameter_m": 0.58,
+      "diameter_change_m": 0.0,
+      "lid_rise_m": 0.0
+    },
+    "source_params": {
+      "gamma_dose_rate_uSv_h_at_1m": 0.8,
+      "hydrogen_source_ppm": 0.0,
+      "surface_temperature_c": 18.0
+    },
+    "calibration": "synthetic",
+    "contamination": true
+  },
+  "runtime": {
+    "defects": [],
+    "channels": {
+      "gamma": {
+        "enabled": true,
+        "units": "uSv/h",
+        "sample_period_s": 1.0,
+        "noise": 0.1,
+        "detection_limit": 0.1,
+        "saturation": 1000.0,
+        "response_lag_s": 0.0,
+        "calibration": "synthetic",
+        "mount_height_m": 0.55,
+        "cause": "unchanged background and package gamma; visual wetness alone does not prove a radioactive release",
+        "anomaly": false
+      },
+      "hydrogen": {
+        "enabled": true,
+        "measures": "ambient",
+        "units": "ppm",
+        "sample_period_s": 2.0,
+        "noise": 2.0,
+        "detection_limit": 10.0,
+        "saturation": 10000.0,
+        "response_lag_s": 3.0,
+        "calibration": "synthetic",
+        "mount_height_m": 0.55,
+        "cause": "ambient baseline; no area source",
+        "anomaly": false
+      },
+      "thermal": {
+        "enabled": true,
+        "units": "degC",
+        "sample_period_s": 1.0,
+        "noise": 0.3,
+        "detection_limit": 0.5,
+        "saturation": 150.0,
+        "response_lag_s": 4.0,
+        "calibration": "synthetic",
+        "mount_height_m": 0.55,
+        "cause": "surface radiance proxy; ambient reference 18 degC",
+        "anomaly": false
+      }
+    },
+    "wet_case": {
+      "mechanism": "scenario-specific suspected release with independent virtual swab confirmation",
+      "fluid_kind": "unknown_process_residue",
+      "location_m": [
+          4.65,
+          6.62,
+        0.0
+      ]
+      },
+      "swab": {
+        "alpha_bq_cm2": 0.62,
+        "beta_gamma_bq_cm2": 6.4,
+        "t_s": 12.0,
+        "calibration": "synthetic",
+        "cause": "independent virtual contact sample taken after the wet observation"
+    }
+  }
+}

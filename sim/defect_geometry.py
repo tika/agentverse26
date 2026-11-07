@@ -37,7 +37,7 @@ def surface_mesh(entry, spec):
                 intersections.append(float(a[0]+(b[0]-a[0])*(local_z-a[1])/(b[1]-a[1])))
         left,right=(min(intersections),max(intersections)) if intersections else (0,0)
         z=local_z+z0
-        radius=radius_at(profile,z)+.003
+        radius=radius_at(profile,z)+.003+float(spec.get('radial_offset_m',0.0))
         for j in range(columns+1):
             arc=left+(right-left)*j/columns
             angle=spec['angle']+arc/entry['radius']
