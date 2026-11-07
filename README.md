@@ -223,3 +223,44 @@ The one-step GPU check needs approved access to Cosmos Reason 2 and an HF_TOKEN
 in the Modal secret named `huggingface`. The adapter and timing report are
 written to the `spot-cosmos-training` Volume. Use separate layouts and decision
 labels for an evaluation run.
+
+### Spot radiation walk
+
+```sh
+modal run isaac_sim_modal.py --script scripts/spot_spill.py --args=--radiation --output out/radiation-demo
+ffmpeg -framerate 8 -i out/radiation-demo/spot-radiation/radiation/%05d.jpg \
+  -c:v libx264 -pix_fmt yuv420p -movflags +faststart out/spot-radiation.mp4
+```
+
+This mode uses the full hall inventory. Each drum has simulator-side USD
+attributes for source strength at one metre and source height. The scenario
+raises one source to make the transition visible during a short walk. The
+body-mounted gamma detector samples the existing dose and environment
+backend. The controller uses measured dose only to veto the forward path
+and back off toward a previously sampled location. The overlay shows the
+dose-rate history and configured thresholds in simulation units, with air
+temperature and humidity alongside. The event log records dose, position,
+accumulated exposure and the veto. This is a simulated gamma survey, and
+the overlay reports dose at the sampled position.
+
+### Read a drum plate with Cosmos
+
+The four drum rows are A to D. Plates use slots 01 to 07 in order of
+increasing hall X. `sim/drums.json` maps the printed `display_id` to the
+stable internal ID used by existing scene layouts and training labels.
+
+On a CUDA machine with a local Cosmos Reason 2 checkpoint, pass a camera
+image with one clearly visible plate. Use `--box` to isolate a drum or plate
+from a larger frame. Coordinates refer to the original image in pixels.
+
+```sh
+python tools/read_drum_plate.py frame.png --model /path/to/cosmos-reason2-2b \
+  --box LEFT TOP RIGHT BOTTOM
+```
+
+Cosmos reads the crop and returns a printed ID or `null` for an unreadable
+or ambiguous plate. The reader receives image pixels without simulator
+inventory. Use the returned ID to associate evidence with an inventory
+record after the read. The reader is separate from the current walking demo.
+
+See [how to integrate the proposed sensor payloads](docs/spot_development.md#adding-sensor-payloads).

@@ -16,6 +16,18 @@ def load_config():
     return json.loads(CONFIG.read_text())
 
 
+def author_gamma_source(prim, entry):
+    """Publish simulator-only source parameters on the drum prim."""
+    from pxr import Sdf
+
+    prim.CreateAttribute("inspection:gammaDoseRateAt1mUSvH", Sdf.ValueTypeNames.Double).Set(
+        float(entry["source_strength"])
+    )
+    prim.CreateAttribute("inspection:gammaSourceHeightM", Sdf.ValueTypeNames.Double).Set(
+        float(entry["height"]) / 2
+    )
+
+
 def intersects_drum(start, end, drum):
     """Segment intersection with a finite vertical nominal cylinder (toy shielding)."""
     dx, dy, dz = (end[i]-start[i] for i in range(3))

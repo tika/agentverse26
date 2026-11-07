@@ -73,3 +73,33 @@ references come from the deterministic spill demo. They exercise data wiring.
 A meaningful training run needs reviewed choices across independent layouts,
 including ambiguous findings, competing safe actions and cases that warrant
 holding. A one-step check does not establish accuracy.
+
+## Adding sensor payloads
+
+On physical Spot, payloads use the robot's power and data interfaces.
+Sensor services provide their data with acquisition timestamps. Synchronize
+the payload clock and record where each sensor is mounted relative to the
+robot. That lets the system put detections from different sensors on the same
+hall map. Use the Isaac simulation clock and known mount poses to follow
+the same pattern in the demo.
+
+[Boston Dynamics payload data acquisition](https://dev.bostondynamics.com/docs/concepts/writing_services_for_data_acquisition.html) ·
+[Time synchronization](https://dev.bostondynamics.com/docs/concepts/base_services.html) ·
+[Coordinate frames](https://dev.bostondynamics.com/docs/concepts/geometry_and_frames)
+
+| Payload | First simulation task | What the planner receives |
+| --- | --- | --- |
+| Thermal camera | Make an aligned synthetic surface-temperature image. Give one drum a repeatable warm patch and respect occlusion. Compare a drum with its own previous views and with nearby drums. | Surface temperature, change from baseline, image crop and a quality flag. The WIPP analysis modeled about 70 days to runaway and only about a 1 °C wall change at runaway, so visible warming is a scenario to test. |
+| Downward camera and swab | Detect a floor patch in RGB and use depth or a floor-plane projection to locate it. Use the existing virtual swab for loose contamination. If simulating pH and conductivity, return those as separate results from a reachable sampling point. | Suspected wet area, possible source drum IDs, sample location and measurement results. |
+| Acoustic sensing | Add simulated sustained hiss and short impulse events, with fan, footsteps and impact sounds as controls. Use an acoustic detector to turn short audio windows into timestamped findings. | A candidate acoustic event, confidence, and a bearing only if supported by the sensor. A gas-specific sensor would supply concentration. |
+
+[WIPP technical assessment](https://www.wipp.energy.gov/special/technical_assessment_team_report.pdf) ·
+[Sellafield acoustic research](https://www.gov.uk/government/publications/annual-research-and-development-review-202122/annual-research-and-development-review-202122) ·
+[Sellafield swab trial](https://www.gov.uk/government/news/new-robot-swabbing-technology-trialled-for-the-first-time-at-sellafield)
+
+Give each finding a timestamp, location, sensor, units and evidence ID.
+Associate it with a drum when there is a credible ID or spatial match.
+The safety loop keeps checking dose and clearance independently. Cosmos
+gets the recent findings and safe options when it needs to choose an action.
+Keep raw images, audio and sample readings available for replay and the
+end-of-run report.

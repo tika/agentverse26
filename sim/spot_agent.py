@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import re
 import math
 from pathlib import Path
 
@@ -115,6 +116,39 @@ class CosmosPlanner:
             rgb = frame.convert("RGB")
         rgb.thumbnail((640, 480))
         messages = planner_messages(snapshot, rgb)
+        return self.generate_json(messages)
+
+    def read_drum_plate(self, rgb_path, box=None):
+        """Read a single visible plate from a camera frame or detector crop."""
+        from PIL import Image
+
+        with Image.open(rgb_path) as frame:
+            rgb = frame.convert("RGB")
+        if box is not None:
+            left, top, right, bottom = box
+            if not (0 <= left < right <= rgb.width and 0 <= top < bottom <= rgb.height):
+                raise ValueError("Crop must be a nonempty box inside the original frame")
+            rgb = rgb.crop(box)
+        rgb.thumbnail((640, 640))
+        result = self.generate_json([
+            {"role": "user", "content": [
+                {"type": "image", "image": rgb},
+                {"type": "text", "text": (
+                    'Read the waste drum ID on the printed plate. It is one uppercase letter '
+                    'followed by two digits. Read only visible characters. If the plate is '
+                    'unreadable or more than one drum ID is visible, return null. Return only '
+                    'JSON with the key "drum_id".'
+                )},
+            ]},
+        ])
+        drum_id = result["drum_id"]
+        if drum_id is not None and (
+            not isinstance(drum_id, str) or re.fullmatch(r"[A-Z][0-9]{2}", drum_id) is None
+        ):
+            raise ValueError("Cosmos returned an invalid drum ID")
+        return drum_id
+
+    def generate_json(self, messages):
         inputs = self.processor.apply_chat_template(
             messages, tokenize=True, add_generation_prompt=True,
             return_dict=True, return_tensors="pt",
