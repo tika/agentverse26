@@ -362,3 +362,68 @@ def cosmos_call(method, rgb, snapshot=None):
         result = {'error': repr(error)[-300:], 'valid': False}
     result['latency_s'] = _time.perf_counter() - started
     return result
+
+
+def detector_available():
+    import os as _os
+    return all(_os.environ.get(k) for k in ('DETECTOR_API_URL', 'DETECTOR_API_KEY', 'DETECTOR_API_SECRET'))
+
+
+def detect_frame(rgb, band='suspect', timeout_s=180):
+    """YOLO26s drum/corrosion/bulge detector (detector-training branch API). Returns the API JSON or {'error'}."""
+    import io as _io
+    import os as _os
+    import time as _time
+    import urllib.request as _url
+    import uuid as _uuid
+    from PIL import Image as _Image
+    buffer = _io.BytesIO()
+    _Image.fromarray(rgb).save(buffer, format='JPEG', quality=92)
+    boundary = _uuid.uuid4().hex
+    body = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="frame.jpg"\r\n'
+            f'Content-Type: image/jpeg\r\n\r\n').encode() + buffer.getvalue() + f'\r\n--{boundary}--\r\n'.encode()
+    request = _url.Request(_os.environ['DETECTOR_API_URL'].rstrip('/') + '/predict?band=' + band, data=body, method='POST',
+                           headers={'Modal-Key': _os.environ['DETECTOR_API_KEY'],
+                                    'Modal-Secret': _os.environ['DETECTOR_API_SECRET'],
+                                    'Content-Type': 'multipart/form-data; boundary=' + boundary})
+    started = _time.perf_counter()
+    try:
+        with _url.urlopen(request, timeout=timeout_s) as response:
+            result = json.loads(response.read())
+    except Exception as error:
+        return {'error': repr(error)[-300:], 'detections': []}
+    result['wall_s'] = _time.perf_counter() - started
+    return result
+
+
+def associate_detections(detections, depth, body_truth, estimate):
+    """Place each box on the map via depth at its centre and the estimated pose; match faults to drums spatially."""
+    per_drum = {}
+    if depth is None:
+        return per_drum
+    h, w = depth.shape
+    for det in detections:
+        x0, y0, x1, y1 = det['bbox_xyxy']
+        u, v = int(np.clip((x0 + x1) / 2, 0, w - 1)), int(np.clip((y0 + y1) / 2, 0, h - 1))
+        patch = depth[max(0, v - 3):v + 4, max(0, u - 3):u + 4]
+        patch = patch[np.isfinite(patch) & (patch > 0.2)]
+        if not patch.size:
+            continue
+        centre = camera_rays_to_world(onboard, np.array([[u, v]], float), np.array([float(np.median(patch))]),
+                                      body_truth, estimate)[0]
+        drum = min(inventory, key=lambda e: math.dist(centre, (e['x'], e['y'])))
+        if math.dist(centre, (drum['x'], drum['y'])) > drum['radius'] + 0.45:
+            continue
+        entry = per_drum.setdefault(drum['id'], {'drum_area': 0.0, 'corrosion_area': 0.0, 'corrosion': [], 'bulge': [],
+                                                 'drum_conf': 0.0})
+        area = max(0.0, (x1 - x0) * (y1 - y0))
+        if det['class_name'] == 'drum':
+            entry['drum_area'] = max(entry['drum_area'], area)
+            entry['drum_conf'] = max(entry['drum_conf'], det['confidence'])
+        elif det['class_name'] in ('corrosion', 'bulge'):
+            entry[det['class_name']].append({'confidence': det['confidence'], 'band': det.get('decision_band', 'suspect')})
+            if det['class_name'] == 'corrosion':
+                entry['corrosion_area'] += area
+    for entry in per_drum.values():  # Box-area proxy for visible rust; boxes overlap the drum, not pixels.
+        entry['rust_pct'] = min(100.0, 100.0 * entry['corrosion_area'] / entry['drum_area']) if entry['drum_area'] else None
+    return per_drum

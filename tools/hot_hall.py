@@ -52,7 +52,11 @@ def _encode(folder):
 
 
 @app.function(image=image, gpu=['L40S', 'L4', 'A10G'], cpu=8, memory=32768, timeout=4 * 60 * 60,
-              secrets=[modal.Secret.from_name('cosmos-vllm', required_keys=['VLLM_API_KEY'])])
+              secrets=[modal.Secret.from_name('cosmos-vllm', required_keys=['VLLM_API_KEY'])]
+              # Optional YOLO26s detector access: `HOT_DETECTOR=1 hot up` once the drum-detector secret exists.
+              + ([modal.Secret.from_name('drum-detector', required_keys=['DETECTOR_API_URL', 'DETECTOR_API_KEY',
+                                                                         'DETECTOR_API_SECRET'])]
+                 if os.environ.get('HOT_DETECTOR') else []))
 def serve():
     hot = Path('/tmp/hot')
     log = open('/tmp/hot.log', 'w')

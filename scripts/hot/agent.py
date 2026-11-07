@@ -1,7 +1,8 @@
 # Cosmos-driven inspection agent. Load after sensing.py and scenario_lib.py, then a scenario file
 # that only authors the world (hot drum, contamination, wrong records) and calls run_agent(...).
 # Perception and navigation use onboard sensors; Cosmos Reason 2 chooses every action from the set the
-# safety layer offers. Corrosion uses simulator segmentation until the YOLO detector lands.
+# safety layer offers. Corrosion and bulge come from the YOLO26s detector API when configured
+# (DETECTOR_API_URL/KEY/SECRET), otherwise from a labelled simulator-segmentation stand-in.
 import time as _time
 
 AISLE_Y = 6.0
@@ -12,6 +13,7 @@ DOSE_AMBER, DOSE_BACKOFF = CONFIG['thresholds']['controlled_zone'], CONFIG['thre
 SPEED_NEAR_DRUMS = CONFIG['robot']['max_speed_near_drums_mps']
 H2_DETECTED_PPM = 10.0                  # Reporting floor above sensor noise; the docs set no H2 alarm level.
 FOLLOWUP_TIMEOUT_S = 8.0
+DETECT_EVERY_FRAMES = 6                 # 2 Hz at 12 fps; the detector API is not called every frame.
 
 if 'ptz' not in state:
     ptz = Camera('/World/SpotCamPTZ', resolution=(640, 480))
@@ -60,6 +62,8 @@ class Agent:
         self.data = {}
         job = scene.get('job_drums') or [d['id'] for d in inventory if d['row'] in STANDOFF and d['category'] == 'ILW']
         self.memory = InspectionMemory(job)
+        self.detector = detector_available()
+        self.detections = []
 
     def event(self, t, text):
         self.events.append((t, text))
@@ -105,6 +109,9 @@ class InspectionMemory:
                     bad.append(f"rust {vis['rust_pct']:.0f}%")
                 elif vis['rust_pct'] >= rust['tolerable']:
                     attention.append(f"rust {vis['rust_pct']:.0f}%")
+            if vis and vis.get('bulge'):
+                (bad if th and th['delta_c'] >= HEAT_RISE_C else attention).append(
+                    'bulge' + (' with heat: suspected pressurisation' if th and th['delta_c'] >= HEAT_RISE_C else ''))
             ident = c.get('id')
             if ident:
                 if ident['result'] == 'mismatch':
@@ -143,12 +150,53 @@ def observe_for_memory(a, t, perception, reading, est):
             if previous is None or distance < previous['range_m']:  # Keep the closest view.
                 a.memory.record(drum_id, 'thermal', t, surface_c=round(surface, 1), apparent_c=round(apparent, 1),
                                 delta_c=round(surface - reading['temperature_c'], 1), range_m=round(distance, 1))
+        if a.detector:
+            continue  # Visual check comes from the detector (observe_detections).
         if distance < 3.5 and px >= 1500:
             rust = a.data.get('rust_pct', {}).get(drum_id, 0.0)
             previous = a.memory.drums[drum_id]['checks'].get('visual')
             if previous is None or rust > previous['rust_pct']:
                 a.memory.record(drum_id, 'visual', t, rust_pct=round(rust, 1), range_m=round(distance, 1),
                                 detector='segmentation placeholder')
+
+
+def observe_detections(a, t, per_drum, est):
+    """YOLO26s results -> findings and the memory's visual check (close, clear drum box)."""
+    for drum_id, entry in per_drum.items():
+        d = DRUMS[drum_id]
+        name = d['display_id']
+        distance = math.dist(est[:2], (d['x'], d['y']))
+        for kind in ('corrosion', 'bulge'):
+            if entry[kind]:
+                best = max(entry[kind], key=lambda e: e['confidence'])
+                confidence = 'high' if any(e['band'] == 'confirm' for e in entry[kind]) else 'low'
+                fid = f'{kind}_{drum_id}'
+                extra = {'rust_pct_box_proxy': round(entry['rust_pct'] or 0, 1)} if kind == 'corrosion' else {}
+                fresh = a.add_finding(t, fid, kind='visible_corrosion' if kind == 'corrosion' else 'bulge', drum=drum_id,
+                                      detector='YOLO26s', detector_confidence=round(best['confidence'], 2),
+                                      confidence=confidence, range_m=round(distance, 1), **extra)
+                if fresh:
+                    a.event(t, f"YOLO: {kind} on {name} ({best['confidence']:.2f}, {confidence})!")
+                elif confidence == 'high':
+                    a.findings[fid]['confidence'] = 'high'
+        if drum_id in a.memory.drums and entry['drum_area'] >= 4000 and distance < 3.5:
+            previous = a.memory.drums[drum_id]['checks'].get('visual')
+            rust, bulge = entry['rust_pct'] or 0.0, bool(entry['bulge'])
+            if previous is None or rust > previous['rust_pct'] or (bulge and not previous.get('bulge')):
+                a.memory.record(drum_id, 'visual', t, rust_pct=round(rust, 1), bulge=bulge, range_m=round(distance, 1),
+                                detector='YOLO26s', drum_confidence=round(entry['drum_conf'], 2))
+
+
+def draw_detections(canvas, detections):
+    """Detector boxes on the first-person panel (the robot's own perception output)."""
+    draw = ImageDraw.Draw(canvas)
+    colors = {'drum': '#7cc4ff', 'corrosion': '#ff9f5e', 'bulge': '#ff6767'}
+    for det in detections:
+        x0, y0, x1, y1 = det['bbox_xyxy']
+        color = colors.get(det['class_name'], 'white')
+        width = 3 if det.get('decision_band') == 'confirm' else 1
+        draw.rectangle((1280 + x0, y0, 1280 + x1, y1), outline=color, width=width)
+        draw.text((1282 + x0, max(0, y0 - 15)), f"{det['class_name']} {det['confidence']:.2f}", font=FONT[14], fill=color)
 
 
 def project_camera(camera, points):
@@ -564,7 +612,7 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
             peak = a.data.setdefault('peak_dose', {})
             peak[nearest['id']] = max(peak.get(nearest['id'], 0.0), reading['dose_rate_uSv_h'])
         a.data.setdefault('env', []).append((reading['temperature_c'], reading['relative_humidity_pct']))
-        for drum_id, px in perception['corrosion_px'].items():   # Stand-in until YOLO.
+        for drum_id, px in ({} if a.detector else perception['corrosion_px']).items():   # Stand-in when no detector.
             if px > 150 and a.add_finding(t, f'corrosion_{drum_id}', kind='visible_corrosion', drum=drum_id,
                                           detector='simulator segmentation placeholder (no trained detector yet)'):
                 a.event(t, f"Corrosion on {DRUMS[drum_id]['display_id']}!")
@@ -593,6 +641,12 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                 a.swab_text = f"a {result['alpha_bq_cm2']:.2f}  b/g {result['beta_gamma_bq_cm2']:.1f} Bq/cm2"
                 a.event(t, f"Swab {DRUMS[drum_id]['display_id']}: alpha {result['alpha_bq_cm2']:.2f} Bq/cm2" + ('!' if positive else ''))
                 a.swab_contact = None
+        if a.detector and index % DETECT_EVERY_FRAMES == 0:
+            result = detect_frame(frames['first'])
+            if result.get('error'):
+                a.event(t, f"Detector error: {result['error'][:60]}")
+            a.detections = result.get('detections', [])
+            observe_detections(a, t, associate_detections(a.detections, onboard.get_depth(), (p, yaw), est), est)
         observe_for_memory(a, t, perception, reading, est)
         a.memory.update_status(a)
         mark = lap('sensing_findings', mark)
@@ -654,6 +708,8 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
     a.nav.landmarks = round(a.nav.icp_inliers * 100)
     canvas = compose(a, frames, perception, reading, a.nav.errors(p, yaw), p, yaw, roll, pitch, t)
     draw_memory_overlay(canvas, a, p)
+    if a.detector:
+        draw_detections(canvas, a.detections)
     draw = ImageDraw.Draw(canvas)
     y0 = 728
     draw.rectangle((0, y0, 480, y0 + 200), fill='#111822')
@@ -682,7 +738,8 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
                   fill='#ff9f9f' if '!' in text else 'white')
     draw.rectangle((0, H - 28, W, H), fill='#111822')
     draw.text((16, H - 26), 'Onboard: RTX LiDAR, physics IMU, joint encoders, RGB-D, PTZ, synthetic LWIR/H2/mic/swab. '
-              'Decisions: Cosmos Reason 2 over safety-checked actions. Corrosion: segmentation stand-in until YOLO.',
+              'Decisions: Cosmos Reason 2 over safety-checked actions. Corrosion/bulge: '
+              + ('YOLO26s detector API.' if a.detector else 'segmentation stand-in (detector API not configured).'),
               font=FONT[14], fill='#6f8396')
     return canvas
 
