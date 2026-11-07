@@ -1,0 +1,8 @@
+{
+  "status": "Simulation arrangement for a visual concept; not certified storage engineering.",
+  "enabled": true,
+  "tiers": {"LLW": 3, "ILW": 2},
+  "pallet": {"size_m": 0.9, "deck_m": 0.04, "runner_m": 0.104, "height_m": 0.144},
+  "lanes_by_aisle": {"1": "A", "2": "B", "3": "C"},
+  "first_upper_id": 29
+}

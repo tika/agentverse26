@@ -24,7 +24,7 @@ def author_gamma_source(prim, entry):
         float(entry["source_strength"])
     )
     prim.CreateAttribute("inspection:gammaSourceHeightM", Sdf.ValueTypeNames.Double).Set(
-        float(entry["height"]) / 2
+        float(entry.get("base_z", 0.0)) + float(entry["height"]) / 2
     )
 
 
@@ -44,8 +44,9 @@ def intersects_drum(start, end, drum):
     if lo > hi:
         return False
     if abs(dz) < 1e-12:
-        return 0 <= start[2] <= drum['height']
-    zl, zh = sorted(((0-start[2])/dz, (drum['height']-start[2])/dz))
+        return drum.get('base_z', 0.0) <= start[2] <= drum.get('base_z', 0.0)+drum['height']
+    z0 = drum.get('base_z', 0.0)
+    zl, zh = sorted(((z0-start[2])/dz, (z0+drum['height']-start[2])/dz))
     return max(lo, zl) <= min(hi, zh)
 
 
@@ -66,7 +67,7 @@ class SensorWorld:
     def _sources(self, position):
         cfg = self.config['radiation']
         for drum in self._drums:
-            source = (drum['x'], drum['y'], drum['height']/2)
+            source = (drum['x'], drum['y'], drum.get('base_z', 0.0)+drum['height']/2)
             distance2 = max(sum((position[i]-source[i])**2 for i in range(3)), cfg['distance_floor_m']**2)
             blockers = sum(intersects_drum(position, source, other) for other in self._drums if other['id'] != drum['id'])
             yield source, drum['source_strength']/distance2*cfg['shielding_per_drum']**blockers

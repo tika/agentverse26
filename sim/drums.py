@@ -92,7 +92,7 @@ def create_drum(stage,entry,materials):
     if stage.GetPrimAtPath(path): stage.RemovePrim(path)
     root=UsdGeom.Xform.Define(stage,path)
     author_gamma_source(root.GetPrim(),entry)
-    root.AddTranslateOp().Set(Gf.Vec3d(entry['x'],entry['y'],0))
+    root.AddTranslateOp().Set(Gf.Vec3d(entry['x'],entry['y'],entry.get('base_z',0.0)))
     root.AddRotateZOp().Set(math.degrees(entry['yaw']))
     profile=drum_profile(entry['category'])
     data=make_drum_mesh(profile)
@@ -119,11 +119,32 @@ def build_drums(seed=42):
     stage=get_current_stage()
     if stage.GetPrimAtPath('/World/Drums'): stage.RemovePrim('/World/Drums')
     UsdGeom.Xform.Define(stage,'/World/Drums')
-    entries=make_inventory(seed)
+    from stacking import stack_inventory, load_config, pallets
+    config=load_config()
+    entries=stack_inventory(make_inventory(seed),config)
     materials=drum_materials(stage,seed)
     for entry in entries: create_drum(stage,entry,materials)
+    if config.get('enabled',True): build_pallets(stage,entries,config)
     write_inventory(entries)
     return entries
+
+
+def build_pallets(stage,entries,config):
+    """Galvanised steel pallets: deck plus three runners under every drum (visual load path)."""
+    from pxr import UsdGeom
+    from geometry import box
+    from materials import material
+    from stacking import pallets
+    root='/World/Pallets'
+    if stage.GetPrimAtPath(root): stage.RemovePrim(root)
+    UsdGeom.Xform.Define(stage,root)
+    steel=material(stage,'PalletGalvanised',(.42,.44,.45),.55,.6)
+    for stack_id,tier,(x,y,z0),p in pallets(entries,config):
+        name=f"{root}/P_{stack_id.replace('-','_')}_T{tier}"
+        s,deck,run=p['size_m'],p['deck_m'],p['runner_m']
+        box(stage,name+'_Deck',(x,y,z0+run+deck/2),(s,s,deck),steel,collision=True)
+        for i,dy in enumerate((-s/2+.05,0,s/2-.05)):
+            box(stage,f'{name}_Runner{i}',(x,y+dy,z0+run/2),(s,.1,run),steel,collision=True)
 
 
 def set_drum_category(drum_id,category):

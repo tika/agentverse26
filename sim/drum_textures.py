@@ -55,7 +55,9 @@ def clean_surfaces(seed=42):
 
 
 def plate_texture(entry):
-    path=ASSETS/f'plate_{entry["id"]}_{entry["category"]}_v2.png'
+    # Cache key includes the printed text: stage-2 plates print the location code.
+    safe=entry['display_id'].replace('-','')
+    path=ASSETS/f'plate_{entry["id"]}_{entry["category"]}_{safe}_v3.png'
     if path.exists(): return {'diffuseColor':path}
     ASSETS.mkdir(parents=True,exist_ok=True)
     background=(225,190,45)

@@ -41,7 +41,7 @@ def surface_mesh(entry, spec):
         for j in range(columns+1):
             arc=left+(right-left)*j/columns
             angle=spec['angle']+arc/entry['radius']
-            points.append((entry['x']+radius*math.cos(angle),entry['y']+radius*math.sin(angle),z))
+            points.append((entry['x']+radius*math.cos(angle),entry['y']+radius*math.sin(angle),z+entry.get('base_z',0.0)))
     for row in range(len(zs)-1):
         for j in range(columns):
             k=row*(columns+1)+j
