@@ -8,9 +8,11 @@ The earlier one-image benchmark is complete; do not repeat it or launch duplicat
 generation jobs. First check the active run and release as described below.
 No second account or cross-account workflow is involved.
 
-Full run launched 7 November 2026: **`20261107T213255Z_26d31d`**, Modal app
-`ap-ur84IBTFBexuI9dXtq2eyX`. Check this run before launching another:
-`python detector/status.py 20261107T213255Z_26d31d`.
+Current full run: **`20261107T214004Z_e5a5b9`**, Modal app
+`ap-e9DVp4wSjl85LhTUYVoEYg`. Check this run before launching another:
+`python detector/status.py 20261107T214004Z_e5a5b9`.
+The earlier `20261107T213255Z_26d31d` attempt failed its annotation gate after
+eight frames; those captures are preserved, but are not part of this release.
 
 Code branch: **`detector-training`** in `https://github.com/tika/agentverse26`.
 This branch includes the latest merged main at the time of publication. Preserve
