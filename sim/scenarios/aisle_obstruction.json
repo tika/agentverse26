@@ -1,0 +1,87 @@
+{
+  "scenario_id": "aisle_obstruction",
+  "seed": 20261108,
+  "case_tags": [
+    "obstruction"
+  ],
+  "asset_id": "D01",
+  "truth": {
+    "faults": [
+      "loose_equipment_obstruction"
+    ],
+    "internal_corrosion": false,
+    "true_shape": {
+      "nominal_diameter_m": 0.58,
+      "diameter_change_m": 0.0,
+      "lid_rise_m": 0.0
+    },
+    "source_params": {
+      "gamma_dose_rate_uSv_h_at_1m": 0.8,
+      "hydrogen_source_ppm": 0.0,
+      "surface_temperature_c": 18.0
+    },
+    "calibration": "synthetic",
+    "contamination": false
+  },
+  "runtime": {
+    "defects": [],
+    "channels": {
+      "gamma": {
+        "enabled": true,
+        "units": "uSv/h",
+        "sample_period_s": 1.0,
+        "noise": 0.1,
+        "detection_limit": 0.1,
+        "saturation": 1000.0,
+        "response_lag_s": 0.0,
+        "calibration": "synthetic",
+        "mount_height_m": 0.55,
+        "cause": "background and healthy package source",
+        "anomaly": false
+      },
+      "hydrogen": {
+        "enabled": true,
+        "measures": "ambient",
+        "units": "ppm",
+        "sample_period_s": 2.0,
+        "noise": 2.0,
+        "detection_limit": 10.0,
+        "saturation": 10000.0,
+        "response_lag_s": 3.0,
+        "calibration": "synthetic",
+        "mount_height_m": 0.55,
+        "cause": "ambient baseline; no area source",
+        "anomaly": false
+      },
+      "thermal": {
+        "enabled": true,
+        "units": "degC",
+        "sample_period_s": 1.0,
+        "noise": 0.3,
+        "detection_limit": 0.5,
+        "saturation": 150.0,
+        "response_lag_s": 4.0,
+        "calibration": "synthetic",
+        "mount_height_m": 0.55,
+        "cause": "surface radiance proxy; ambient reference 18 degC",
+        "anomaly": false
+      }
+    },
+    "obstruction": {
+      "geometry_m": {
+        "center": [
+          9.7,
+          6.0,
+          0.45
+        ],
+        "size": [
+          0.8,
+          0.55,
+          0.9
+        ]
+      },
+      "route_id": "middle_cross_aisle",
+      "cause": "dropped maintenance tote; route clearance reduced"
+    }
+  }
+}
