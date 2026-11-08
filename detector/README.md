@@ -1,4 +1,13 @@
-# Barrel detector pilot
+# CANIS barrel detector
+
+**Latest selected model: YOLO26s, four whole-barrel conditions (8 November 2026).**
+Use [the current API instructions](v2/API_USAGE.md),
+[measured comparison results](v2/RUN_RESULTS.md), and
+[the new dataset/training pipeline](v2/README.md). Nano's comparison API has
+been retired. The older patch detector described below is a separate legacy
+service; its three-class IDs and rust-area semantics do not apply to v2.
+
+## Earlier patch-detector pilot and releases
 
 For the prepared **single-workspace 1,200-image / 10 RTX PRO 6000** run, start with
 [the complete agent handoff](../docs/dataset_generation_handoff.md). It includes

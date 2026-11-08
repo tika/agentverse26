@@ -1,0 +1,17 @@
+{
+  "model": "yolo26s",
+  "comparison_id": "compare_20261108T043410Z",
+  "dataset_id": "canis_conditions_1500_20261108T043410Z",
+  "checkpoint": "/condition_v2/compare_20261108T043410Z/yolo26s/best.pt",
+  "best_sha256": "96bdf7160d7c4f17bf2d36727da51ecbe65f320cfeaa51b543311147db9a031a",
+  "api_url": "https://paramsachdeva07--canis-conditions-yolo26s-conditiondetector-web.us-east.modal.run",
+  "classes": [
+    "normal",
+    "rust",
+    "bulge",
+    "rust_and_bulge"
+  ],
+  "input_size": 384,
+  "selected_utc": "2026-11-08T05:01:26.471144+00:00",
+  "nano_api": "retired; checkpoint and reports retained"
+}
