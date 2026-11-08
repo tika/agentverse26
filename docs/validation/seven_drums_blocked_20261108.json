@@ -1,0 +1,9 @@
+{
+  "run_id": "015937-agent_seven_drums-513a",
+  "status": "aborted because external Cosmos workspace disabled",
+  "cosmos_http_status": 404,
+  "service_message": "workspace is disabled",
+  "model_fallback": "Rules; not a successful live-Cosmos recording",
+  "gpu_count": 2,
+  "gpu_type": "RTX PRO 6000 Blackwell Server Edition"
+}

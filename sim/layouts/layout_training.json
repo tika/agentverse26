@@ -1,6 +1,7 @@
 {
   "seed": 42,
-  "description": "Fixed 28-drum Step 3/4 training handoff; all unlisted drums clean",
+  "description": "Fixed 28-drum hall with reviewed v2 LLW appearance; A03 rust, B01 bulge, C02 rust+bulge; other authored conditions preserved",
+  "appearance_version": "reviewed_llw_v2",
   "robot_start": [
     1.0,
     6.0,
@@ -12,7 +13,7 @@
         "corrosion"
       ],
       "severity": 1,
-      "seed": 11
+      "seed": 74
     },
     "D04": {
       "faults": [
@@ -20,6 +21,11 @@
       ],
       "severity": 2,
       "seed": 0
+    },
+    "D05": {
+      "faults": ["bulge"],
+      "severity": 2,
+      "seed": 74
     },
     "D06": {
       "faults": [
@@ -30,10 +36,11 @@
     "D10": {
       "faults": [
         "corrosion",
+        "bulge",
         "leak"
       ],
       "severity": 3,
-      "seed": 36
+      "seed": 74
     },
     "D12": {
       "faults": [

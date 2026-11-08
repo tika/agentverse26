@@ -15,31 +15,9 @@ H2_DETECTED_PPM = 10.0                  # Reporting floor above sensor noise; th
 FOLLOWUP_TIMEOUT_S = 8.0
 SCAN_DWELL_S = 1.0                      # Hold each scan heading long enough for a fresh detector frame.
 
-if 'ptz' not in state:
-    ptz = Camera('/World/SpotCamPTZ', resolution=(640, 480))
-    ptz.initialize()
-    ptz.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(0.05, 40))
-    state['ptz'] = ptz
-PTZ = state['ptz']
-PTZ.prim.GetAttribute('focalLength').Set(45.0)  # Keep the entire location code in frame at aisle standoff.
-
-
 def plate_world(drum):
     facing = drum['face_sign']
     return np.array([drum['x'], drum['y'] + facing * drum['radius'], drum['base_z'] + drum['height'] * 0.3])
-
-
-def aim_from_estimate(camera, p_true, yaw_true, estimate, target_world, mount=(0.35, 0.0, 0.45)):
-    """Physical camera sits on the real body; it points using the robot's *estimated* pose."""
-    c, s = math.cos(yaw_true), math.sin(yaw_true)
-    eye = p_true + [c * mount[0] - s * mount[1], s * mount[0] + c * mount[1], mount[2]]
-    ce_, se_ = math.cos(estimate[2]), math.sin(estimate[2])
-    eye_est = estimate[:2] + [ce_ * mount[0] - se_ * mount[1], se_ * mount[0] + ce_ * mount[1]]
-    rel = target_world[:2] - eye_est  # From the camera's own (estimated) position, not the body centre.
-    ce, se = math.cos(-estimate[2]), math.sin(-estimate[2])
-    body_dir = np.array([ce * rel[0] - se * rel[1], se * rel[0] + ce * rel[1]])
-    world_dir = np.array([c * body_dir[0] - s * body_dir[1], s * body_dir[0] + c * body_dir[1]])
-    _aim(camera, eye, eye + [world_dir[0], world_dir[1], target_world[2] - eye[2]])
 
 
 class Agent:
@@ -63,6 +41,8 @@ class Agent:
         self.data = {}
         job = scene.get('job_drums') or [d['id'] for d in inventory if d['row'] in STANDOFF and d['category'] == 'ILW']
         self.memory = InspectionMemory(job)
+        self.detector = detector_available() and not state.get('yolo_vision')
+        self.detections = []
 
     def event(self, t, text):
         self.events.append((t, text))
@@ -134,12 +114,23 @@ class InspectionMemory:
     def progress(self):
         """Compact view for Cosmos: what is done, what is missing, what is wrong."""
         return {DRUMS[d]['display_id']: {'status': e['status'], 'missing_checks': e.get('missing', list(CHECKS)),
-                                         'issues': e['reasons']}
+                                         'issues': e['reasons'],
+                                         'observations':{k:v for k,v in e['checks'].items()
+                                             if k in ('id','thermal','visual','radiation_nearby','gas_nearby','swab')}}
                 for d, e in self.drums.items()}
 
 
 def observe_for_memory(a, t, perception, reading, est):
     """Opportunistic checks while working: thermal and visual need a close enough, clear view."""
+    for drum_id,entry in a.memory.drums.items():
+        d=DRUMS[drum_id];distance=math.dist(est[:2],(d['x'],d['y']))
+        prior=entry['checks'].get('radiation_nearby')
+        if distance<=2. and (prior is None or distance<prior['range_m']):
+            common=dict(range_m=round(distance,3),robot_position_m=list(map(float,est[:2])),
+                        attribution='Ambient measurement near inventory location; source not isolated')
+            a.memory.record(drum_id,'radiation_nearby',t,dose_rate_uSv_h=round(reading['dose_rate_uSv_h'],3),**common)
+            a.memory.record(drum_id,'gas_nearby',t,hydrogen_ppm=round(reading.get('hydrogen_ppm',0.),3),
+                            methane_ppm=round(reading.get('methane_ppm',0.),3),**common)
     for drum_id, px in perception['drum_px'].items():
         if drum_id not in a.memory.drums:
             continue
@@ -152,7 +143,7 @@ def observe_for_memory(a, t, perception, reading, est):
             if previous is None or distance < previous['range_m']:  # Keep the closest view.
                 a.memory.record(drum_id, 'thermal', t, surface_c=round(surface, 1), apparent_c=round(apparent, 1),
                                 delta_c=round(surface - reading['temperature_c'], 1), range_m=round(distance, 1))
-        if not perception.get('yolo') and distance < 3.5 and px >= 1500:
+        if not a.detector and not perception.get('yolo') and distance < 3.5 and px >= 1500:
             rust = a.data.get('rust_pct', {}).get(drum_id, 0.0)
             previous = a.memory.drums[drum_id]['checks'].get('visual')
             if previous is None or rust > previous['rust_pct']:
@@ -223,6 +214,47 @@ def update_station_scan(a, t, p, yaw, perception, reading):
     a.action = {'id': 'continue_patrol', 'since': t}
     if a.data['scan_queue'] and abs(a.nav.fused[0] - DRUMS[a.data['scan_queue'][0]]['x']) < 0.2:
         update_station_scan(a, t, p, yaw, perception, reading)
+
+
+def observe_detections(a, t, per_drum, est):
+    """YOLO26s results -> findings and the memory's visual check (close, clear drum box)."""
+    for drum_id, entry in per_drum.items():
+        d = DRUMS[drum_id]
+        name = d['display_id']
+        distance = math.dist(est[:2], (d['x'], d['y']))
+        for kind in ('corrosion', 'bulge'):
+            if entry[kind]:
+                best = max(entry[kind], key=lambda e: e['confidence'])
+                confidence = 'high' if any(e['band'] == 'confirm' for e in entry[kind]) else 'low'
+                fid = f'{kind}_{drum_id}'
+                extra = {'rust_pct_box_proxy': round(entry['rust_pct'] or 0, 1)} if kind == 'corrosion' else {}
+                fresh = a.add_finding(t, fid, kind='visible_corrosion' if kind == 'corrosion' else 'bulge', drum=drum_id,
+                                      detector='YOLO26s', detector_confidence=round(best['confidence'], 2),
+                                      confidence=confidence, range_m=round(distance, 1), **extra)
+                if fresh:
+                    a.event(t, f"YOLO: {kind} on {name} ({best['confidence']:.2f}, {confidence})!")
+                elif confidence == 'high':
+                    a.findings[fid]['confidence'] = 'high'
+        if drum_id in a.memory.drums and entry['drum_area'] >= 4000 and distance < 3.5:
+            previous = a.memory.drums[drum_id]['checks'].get('visual')
+            previous=previous or {}
+            a.memory.record(drum_id, 'visual', t,
+                            rust_observed=bool(entry['corrosion']) or previous.get('rust_observed',False),
+                            bulge_observed=bool(entry['bulge']) or previous.get('bulge_observed',False),
+                            coverage_measured=False, range_m=round(distance,1),
+                            detector='YOLO26s', drum_confidence=round(entry['drum_conf'],2))
+
+
+def draw_detections(canvas, detections):
+    """Detector boxes on the first-person panel (the robot's own perception output)."""
+    draw = ImageDraw.Draw(canvas)
+    colors = {'drum': '#7cc4ff', 'corrosion': '#ff9f5e', 'bulge': '#ff6767'}
+    for det in detections:
+        x0, y0, x1, y1 = det['bbox_xyxy']
+        color = colors.get(det['class_name'], 'white')
+        width = 3 if det.get('decision_band') == 'confirm' else 1
+        draw.rectangle((1280 + x0, y0, 1280 + x1, y1), outline=color, width=width)
+        draw.text((1282 + x0, max(0, y0 - 15)), f"{det['class_name']} {det['confidence']:.2f}", font=FONT[14], fill=color)
 
 
 def project_camera(camera, points):
@@ -429,14 +461,26 @@ def decide(a, t, frame_rgb, p_est, reading):
 
 
 def read_plate_for(a, drum, t, p, yaw):
-    """Point the PTZ at a drum's plate using the estimated pose and let Cosmos read it."""
+    """Digitally crop a visible plate from the one fixed front-camera frame."""
+    from front_camera import project_points,crop_from_frame
+    packet=state['front_frame'];rgb=packet['rgb'];height,width=rgb.shape[:2]
+    centre=plate_world(drum)
+    points=np.array([centre+[dx,0,dz] for dx in (-.14,.14) for dz in (-.10,.10)])
+    uv,forward=project_points(points,onboard.get_intrinsics_matrix(),a.nav.fused,
+                              a.nav.roll,a.nav.pitch,getattr(a.nav,'height',.5))
+    if (forward<=.05).any() or not np.isfinite(uv).all():
+        a.event(t,'Plate outside fixed front view; body must turn')
+        return
+    low=np.floor(uv.min(0)).astype(int);high=np.ceil(uv.max(0)).astype(int)
+    pad=np.maximum((high-low)//2,[20,12]);low=np.maximum(low-pad,0);high=np.minimum(high+pad,[width,height])
+    if (high-low<[32,16]).any():
+        a.event(t,'Plate too small or outside fixed front view; reposition required')
+        return
+    box=tuple(map(int,(*low,*high)))
+    crop=crop_from_frame(rgb,box)
     a.plates_tried.add(drum['id'])
-    aim_from_estimate(PTZ, p, yaw, a.nav.fused, plate_world(drum))
-    for _ in range(3):
-        world.render()
-    crop = _rgb(PTZ)
-    Image.fromarray(crop).save(OUT / f"ptz_{drum['display_id']}_{t:04.1f}.jpg", quality=85)
-    answer = cosmos_call('read_plate', crop)
+    Image.fromarray(crop).save(OUT/f"front_plate_{drum['display_id']}_{packet['info']['frame_id']}.jpg",quality=92)
+    answer=cosmos_call('read_plate',crop,structured=bool(getattr(a,'mission',None)),crop_box=box)
     readability = answer.get('readability', 'unreadable')
     expected = a.scene['records'].get(drum['id'])  # What the inventory says is at this map position.
     plate_text = answer['drum_id'] if readability == 'readable' else None
@@ -473,7 +517,7 @@ def read_plate_for(a, drum, t, p, yaw):
 
 
 def read_plates(a, t, p, yaw):
-    """Spot CAM+-style PTZ zoom on the nearest unread aisle-facing plate ahead (one per frame)."""
+    """Read a plate only when it is inside the fixed front-camera image."""
     for drum in inventory:
         if drum['id'] not in a.memory.drums:
             continue
@@ -569,7 +613,7 @@ def drive(a, est, t):
 
 def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_seconds=3.0):
     zero = np.zeros(3, dtype=np.float32)
-    show_spills(False)
+    show_spills(a.scene.get('show_spills',False))
     a.use_cosmos = state.get('use_cosmos', True) if use_cosmos is None else use_cosmos
     config = copy.deepcopy(load_config())
     config['robot']['swab_duration_s'] = a.scene.get('swab_duration_s', 4.0)
@@ -586,12 +630,18 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
     a.nav = RealNav([p[0], p[1], yaw])  # Known docking pose at start; estimated from sensors afterwards.
     if a.scene.get('verify_at_stops'):
         a.data['scan_queue'] = sorted(a.memory.drums, key=lambda drum_id: DRUMS[drum_id]['x'])
+    mission=getattr(a,'mission',None)
+    if mission:mission.start(a,OUT/name)
+    mission_done_at=None
     lagged = LaggedGas()
     frames_dir = OUT / name / 'frames'
     frames_dir.mkdir(parents=True, exist_ok=True)
     dt = spot.physics_dt
     stride = max(1, round(1 / (FPS * dt)))
     frame_dt = stride * dt
+    if mission:
+        (OUT/name/'runtime.json').write_text(json.dumps(dict(physics_dt_s=dt,policy_decimation=spot.decimation,
+            observation_frame_dt_s=frame_dt,video_fps=FPS,mission_max_s=duration),indent=2))
     cam_yaw = yaw
     log = []
     timing = {}
@@ -612,27 +662,34 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         if incident and t >= incident.get('clear_at_s', math.inf):
             a.scene['drum_offsets_c'].pop(incident['drum_id'], None)
         p, yaw, roll, pitch = full_pose()
-        place_cameras(p, cam_yaw, a.scene, onboard_yaw=yaw)
         cam_yaw += 0.25 * wrap(yaw - cam_yaw)
+        if state.get('presentation_camera'):update_presentation()
         world.render()
         world.render()
         mark = lap('render', mark)
         a.nav.lidar_update(frame_dt, use_lidar=a.scene.get('use_lidar', True))
+        if not a.trail or math.dist(a.trail[-1],a.nav.fused[:2])>.04:
+            a.trail.append(tuple(map(float,a.nav.fused[:2])))
         mark = lap('lidar_icp', mark)
-        frames = {'third': _rgb(THIRD), 'first': _rgb(onboard)}
+        packet=capture_front(index,t)
+        frames={'first':packet['rgb'],'frame_info':packet['info']}
+        if state.get('presentation_camera'):frames['presentation']=presentation_pixels()
+        a.data['frame_info']=packet['info']
         mark = lap('camera_readback', mark)
         reading = a.sensor.sample(np.array([p[0], p[1], 0.6]), t)   # Physical sensor at the real robot.
         a.scene['ambient_c'] = reading['temperature_c']
+        a.scene['sensor_zone'] = reading['zone']
         a.gas = lagged.update(reading, frame_dt)
         reading = {**reading, **a.gas}
         perception = perceive(a.scene)
         if state.get('yolo_vision'):
-            perception['yolo']=state['yolo_vision'].observe(frames['first'],onboard.get_depth(),p,yaw,a.nav.fused,t)
+            perception['yolo']=state['yolo_vision'].observe(frames['first'],packet['depth'],p,yaw,a.nav.fused,t)
             # Segmentation remains inside the synthetic thermal sensor backend.
             # It supplies no visual corrosion evidence to the planner.
             perception['corrosion_px']={}
         mark = lap('perception', mark)
-        audio = robot_audio((p[0], p[1], 0.6), t, frame_dt, a.scene.get('acoustic', []), a.nav.touchdowns)
+        audio = robot_audio((p[0], p[1], 0.6), t, frame_dt,
+                            a.sensor.acoustic_sources()+a.scene.get('acoustic', []), a.nav.touchdowns)
         a.hiss = hiss_detector(audio)
         a.mic_db = a.hiss['level_dbfs']
         a.history['gamma'].append(reading['dose_rate_uSv_h'])
@@ -642,7 +699,7 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         nearest = min(inventory, key=lambda d: math.dist(est[:2], (d['x'], d['y'])))
         a.nearest = (nearest['display_id'], math.dist(est[:2], (nearest['x'], nearest['y'])))
         # Findings from onboard sensing
-        for f in thermal_findings(perception['thermal'], onboard.get_depth(), reading['temperature_c'], (p, yaw), est,
+        for f in thermal_findings(perception['thermal'], packet['depth'], reading['temperature_c'], (p, yaw), est,
                                   rise=HEAT_RISE_C):
             if f['drum_id']:
                 confidence = 'high' if f['pixels'] >= 400 and f['range_m'] <= 4.0 else 'low'
@@ -712,21 +769,26 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                               alpha_limit=limits['alpha'], positive=positive)
                 if drum_id in a.memory.drums:
                     a.memory.record(drum_id, 'swab', t, alpha_bq_cm2=round(result['alpha_bq_cm2'], 2),
-                                    beta_gamma_bq_cm2=round(result['beta_gamma_bq_cm2'], 1), positive=positive)
+                                    beta_gamma_bq_cm2=round(result['beta_gamma_bq_cm2'], 1), positive=positive,
+                                    **{k:result[k] for k in ('ph','conductivity_us_cm','chloride_mg_m2') if k in result})
                 a.swab_text = f"a {result['alpha_bq_cm2']:.2f}  b/g {result['beta_gamma_bq_cm2']:.1f} Bq/cm2"
                 a.event(t, f"Swab {DRUMS[drum_id]['display_id']}: alpha {result['alpha_bq_cm2']:.2f} Bq/cm2" + ('!' if positive else ''))
                 a.swab_contact = None
         observe_for_memory(a, t, perception, reading, est)
         a.memory.update_status(a)
+        if mission:mission.observe(a,t,perception.get('yolo'),est,frames['first'])
         mark = lap('sensing_findings', mark)
         # Keep plate perception shared when comparing the high-level planners.
-        if a.status != 'RETREAT':
+        if not mission and a.status != 'RETREAT':
             read_plates(a, t, p, yaw)
         mark = lap('plate_reads', mark)
         # Finish a follow-up before considering another. The hard dose stop can interrupt it.
         arrived = a.status in ('INVESTIGATE', 'RETREAT') and not a.route
         facing_target = a.face is None or abs(wrap(math.atan2(a.face[1] - est[1], a.face[0] - est[0]) - est[2])) < 0.25
-        if reading['dose_rate_uSv_h'] > DOSE_BACKOFF and a.status not in ('RETREAT', 'ALERT', 'DOSE STOP'):
+        if mission:
+            if not mission.finished:mission.tick(a,t,frames,perception,reading,p,yaw)
+            if mission.finished and mission_done_at is None:mission_done_at=t
+        elif reading['dose_rate_uSv_h'] > DOSE_BACKOFF and a.status not in ('RETREAT', 'ALERT', 'DOSE STOP'):
             a.status, a.hold = 'DOSE STOP', True
             a.event(t, 'Dose limit exceeded. Motion stopped and operator review required!')
         elif a.scene.get('verify_at_stops') and (
@@ -752,7 +814,7 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         mark = lap('cosmos_decide', mark)
         compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t).save(frames_dir / f'{index:05d}.jpg', quality=90)
         mark = lap('compose_write', mark)
-        command = drive(a, est, t) if not a.hold else zero
+        command = mission.command(a,est) if mission else drive(a, est, t) if not a.hold else zero
         log.append({'t': round(t, 3), 'truth': p.tolist(), 'estimate': est.tolist(), 'odometry': a.nav.odom.tolist(), 'status': a.status, 'patrol_stops_completed': a.patrol_index,
                     'action': a.action['id'], 'h2': a.gas.get('hydrogen_ppm', 0.0), 'hiss': a.hiss['hiss_score'],
                     'gamma_uSv_h': reading['dose_rate_uSv_h'], 'goal_xy_m': a.route[0].tolist() if a.route else None, 'velocity_command': command.tolist(),
@@ -760,6 +822,7 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                     'yolo': None if not perception.get('yolo') or not perception['yolo']['fresh'] else
                             {'status': perception['yolo']['status'], 'boxes': len(perception['yolo']['detections']),
                              'drums': {o['display_id']: o['faults'] for o in perception['yolo']['associations']}}})
+        if mission:log[-1]['coverage']=mission.ledger.counts()
         for k in range(stride):
             spot.step(dt, command)
             world.step(render=False)
@@ -769,6 +832,10 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
             break
         if index % 24 == 0:
             print(f'[hot] frame {index} t={t:.1f}s ' + ' '.join(f'{k}={v:.0f}s' for k, v in timing.items()), flush=True)
+        if mission_done_at is not None and t-mission_done_at>=2.:break
+    if mission:
+        if not mission.finished:a.status='TIME LIMIT';a.hold=True
+        mission.checkpoint(a,t,True)
     (OUT / name / 'scenario_truth.json').write_text(json.dumps({'incident_at_s': a.data.get('incident_at_s'),
         'incident': a.scene.get('timed_incident'), 'dose_source_scale': dose_scale}, indent=2))
     (OUT / name / 'timing.json').write_text(json.dumps({k: round(v, 1) for k, v in timing.items()}, indent=2))
@@ -778,7 +845,7 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
     (OUT / name / 'memory.json').write_text(json.dumps(a.memory.drums, indent=2, default=float))
     state.setdefault('memory_log', []).append({'run': name, 'drums': a.memory.drums})  # For comparing rounds later.
     last = Image.open(frames_dir / f'{index:05d}.jpg')
-    card = report_card(last, report)
+    card = mission.report_card(last, report) if mission else report_card(last, report)
     for k in range(int(report_seconds * FPS)):
         card.save(frames_dir / f'{index + 1 + k:05d}.jpg', quality=90)
     (OUT / name / 'log.jsonl').write_text(''.join(json.dumps(r, default=float) + '\n' for r in log))
@@ -794,10 +861,10 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
     if vision:
         frames=dict(frames)
         view=Image.fromarray(frames['first']);vd=ImageDraw.Draw(view)
-        for item in vision['detections']:
+        for item in (vision['detections'] if vision.get('source_frame_id')==frames['frame_info']['frame_id'] else []):
             color={'drum':'#35d7ff','corrosion':'#ff9829','bulge':'#ed67f5'}[item['class_name']]
             vd.rectangle(item['bbox_xyxy'],outline=color,width=2)
-        for item in vision['associations']:
+        for item in (vision['associations'] if vision.get('source_frame_id')==frames['frame_info']['frame_id'] else []):
             x,y,_,_=item['box']
             vd.text((x,max(25,y)),f"map {item['display_id']} {'/'.join(item['faults']) or 'drum'}",font=FONT[14],fill='#ffffff',stroke_width=1,stroke_fill='black')
         frames['first']=np.asarray(view)
@@ -817,18 +884,19 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
              f'Mic hiss {a.hiss["hiss_score"]:.2f} ({a.hiss["band_margin_db"]:4.1f} dB over floor)']
     for i, line in enumerate(lines):
         draw.text((16, y0 + 40 + 26 * i), line, font=FONT[18], fill='white')
-    draw.rectangle((1460, y0 + 84, W, H - 30), fill='#111822')
+    draw.rectangle((1460, y0 + 84, W, H - 28), fill='#111822')
     draw.text((16, y0 + 197), f'ROUND  {a.patrol_index}/{len(a.patrol)} aisle stops  |  {a.status}',
               font=FONT[16], fill='white')
     if a.cosmos:
         c = a.cosmos
         draw.text((1460, y0 + 86), f"{c['source']} decision @ {c['t']:.1f}s", font=FONT[14], fill='#7cc4ff')
         draw.text((1460, y0 + 106), f"-> {c['action_id']}", font=FONT[18], fill='white')
-        reason = c['reason']
-        for i in range(3):
-            draw.text((1460, y0 + 130 + 19 * i), reason[i * 50:(i + 1) * 50], font=FONT[14], fill='#d6e2ee')
-    for i, (et, text) in enumerate(a.events[-5:]):
-        draw.text((1460, y0 + 196 + 24 * i), f'{et:4.1f}s  {text}'[:54], font=FONT[16],
+        import textwrap
+        for i,line in enumerate(textwrap.wrap(c['reason'],width=54,max_lines=3,placeholder='...')):
+            draw.text((1460, y0 + 130 + 19 * i), line, font=FONT[14], fill='#d6e2ee')
+        draw.text((1460,y0+192),f"Decision latency {c['latency_s']:.2f}s | decisions {len(a.decisions)}",font=FONT[14],fill='#9fb2c4')
+    for i, (et, text) in enumerate(a.events[-4:]):
+        draw.text((1460, y0 + 218 + 22 * i), f'{et:4.1f}s  {text}'[:54], font=FONT[16],
                   fill='#ff9f9f' if '!' in text else 'white')
     draw.rectangle((0, H - 28, W, H), fill='#111822')
     if vision:
@@ -839,11 +907,14 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
               'Navigation: estimated pose on known map. '
               'LWIR/H2/mic/swab are simulated sensors. Cosmos chooses safety-checked actions; fallback is labelled.',
               font=FONT[14], fill='#6f8396')
+    if vision:
+        draw.text((16,1026),f"Front frame {frames['frame_info']['frame_id']} | YOLO frame {vision.get('source_frame_id','unavailable')}",font=FONT[14],fill='#9fb2c4')
+    if getattr(a,'mission',None):a.mission.draw_map(canvas,a,t)
     return canvas
 
 
 def build_report(a):
-    """Grade each inspected drum with sim/criteria.py; Cosmos writes the summary from the structured result."""
+    """Build a factual report from measured inspection memory and recorded decisions."""
     temps = [e[0] for e in a.data.get('env', [])] or [float('nan')]
     rhs = [e[1] for e in a.data.get('env', [])] or [float('nan')]
     a.memory.update_status(a)
@@ -876,8 +947,7 @@ def build_report(a):
               'decisions': [{k: d[k] for k in ('t', 'action_id', 'reason', 'source')} for d in a.decisions],
               'not_inspected': [DRUMS[d]['display_id'] for d, e in a.memory.drums.items() if not e.get('complete',False)]}
     report['summary'] = factual_summary(report)
-
-    return report
+    return a.mission.final_report(a,report) if getattr(a,'mission',None) else report
 
 
 def factual_summary(r):

@@ -1,0 +1,84 @@
+{
+  "run_id": "001937-agent_yolo_round-3730",
+  "recorded_utc": "2026-11-08",
+  "wall_round_trip_s": 162.5,
+  "simulation_execution_wall_s": 136.34,
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 12.0,
+    "frames": 420,
+    "duration_s": 35.0,
+    "local_path": "out/recordings/agentverse26_full_sim_yolo_cosmos.mp4",
+    "bytes": 54843951,
+    "sha256": "0d141750a32c39a2ca904ea377913350daf82b96656a130fea8b4daf6a04b786",
+    "codec": "H.264",
+    "pixel_format": "yuv420p",
+    "faststart": true,
+    "audio": false
+  },
+  "hall_drums": 28,
+  "active_job_drums": 8,
+  "job_summary": "8/8 drums fully inspected: 4 good, 3 need attention, 1 bad. B01 attention: YOLO visible bulge; needs corroboration. C01 attention: YOLO visible rust; coverage not measured, YOLO visible bulge; needs corroboration. C02 attention: YOLO visible rust; coverage not measured, YOLO visible bulge; needs corroboration. C04 bad: alert raised, surface 32 C, +14 C vs air. Also seen outside the job: D01 (visible_bulge seen (outside this job), visible_corrosion seen (outside this job)); D04 (visible_corrosion seen (outside this job), visible_bulge seen (outside this job)). H2 peaked at 392 ppm, gamma at 10.1 uSv/h.",
+  "yolo": {
+    "successful_requests": 64,
+    "failures": 0,
+    "model_run": "yolo26s_20261107T225757Z_d625ef",
+    "model_sha256": "63dc5dfd9933aff58bc0cfc5a759de4b78ef9f25b6c7b74f3f818bceb72e6f04",
+    "api_wall_median_ms": 115.3
+  },
+  "planner": {
+    "decisions": 4,
+    "sources": {
+      "Cosmos Reason 2": 4
+    },
+    "actions": [
+      "inspect_C02",
+      "swab_C02",
+      "inspect_C04",
+      "retreat_alert_C04"
+    ]
+  },
+  "robot": {
+    "min_body_z_m": 0.48478278517723083,
+    "max_body_z_m": 0.5746808052062988,
+    "travelled_m": 8.725440643430339,
+    "end_status": "ALERT"
+  },
+  "sensors": {
+    "air_temp_c": 18.0,
+    "rh_pct": 45,
+    "max_h2_ppm": 392,
+    "max_gamma_uSv_h": 10.1
+  },
+  "visual_qa_frames_s": [
+    0,
+    1,
+    6,
+    16,
+    20,
+    28,
+    34
+  ],
+  "source_sha256": {
+    "scripts/hot/sensing.py": "ce102fdb252092ad9332ff1f1d818413dbf0be80f069c9be45a6427ee22f8c36",
+    "scripts/hot/scenario_lib.py": "b0d3f688a94918f101ba65b3c93897a6c032982a60b534d6811110a449da12f4",
+    "scripts/hot/prepare_robot_visuals.py": "be2fe07066e31c0dd991c7380b87fce7e6269f66cb947ca5d054f5abf36e28f3",
+    "scripts/hot/yolo.py": "2d2f48a1a602040b8efaa3a109b5427a4f02e5ee1c020698893e94893e6f578d",
+    "scripts/hot/agent.py": "da21bd3c7755e8f83b74513a50eed64f2b6cf6dba654769b77bd40bfebf74063",
+    "scripts/hot/agent_yolo_round.py": "ba7f7e7f3aba72bca0b34faaa3ff130ecb09b1adcb6db30b1c467d56dfbd68bd",
+    "sim/layouts/layout_training.json": "169b02ef490520116ab6f3b56107e7d40c1f8dc7f39d4bfe24c0701e7f21ccf3",
+    "sim/drums.py": "40217fbe2f8d3a7a357fac2e58df29a2604e87f084a0584325d4d2bd729ae4ba",
+    "sim/barrel_appearance.py": "f8ac0cc3cec8cb444d622c22755f28aa8a6a9fa5bd99a9235b8a963c4ed6d245",
+    "sim/corrosion_preview.py": "f4762873746eefd408fd3b89b55b265e6d3ebf447b52ef7f2cfb5c39d46f2297",
+    "sim/hot_server.py": "f69358fe82ade99fffe6efbdf3b1ea59fbf94ae996c9d4baaed42ab7f30cdeb8",
+    "tools/hot_hall.py": "76b9d8ef1cbc4a2805c6ac953973f0b4347f28e5852df0d922238d77509a576f"
+  },
+  "limitations": [
+    "Only the eight-drum LLW job is inspected; the hall contains 28 drums.",
+    "Detector false positives are retained; conditions need corroboration.",
+    "Sensor channels are simulated. A swab measures surface contamination, not structural integrity.",
+    "Cosmos explanations are verbatim generated text, not verified measurements; the first explanation includes an unsupported C02 temperature claim and another describes retreat while selecting inspection.",
+    "The API calls run synchronously while simulation time is paused; this is not a real-time latency benchmark."
+  ]
+}

@@ -30,13 +30,17 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
          .entrypoint([])
          .pip_install('imageio[ffmpeg]')
          .env({'ACCEPT_EULA': 'Y', 'PRIVACY_CONSENT': 'N', 'NVIDIA_DRIVER_CAPABILITIES': 'all',
+               'HOT_GPU_COUNT':os.environ.get('HOT_GPU_COUNT','1'),
                'HOT_SPAWN_X':os.environ.get('HOT_SPAWN_X','10'), 'HOT_SPAWN_Y':os.environ.get('HOT_SPAWN_Y','6')})
          .add_local_dir(ROOT / 'sim', '/workspace/sim', copy=True,
                         ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc', '*.usda']))
+HOT_GPU_COUNT=int(os.environ.get('HOT_GPU_COUNT','1'))
+if HOT_GPU_COUNT not in (1,2,4):raise ValueError('HOT_GPU_COUNT must be 1, 2 or 4')
 app = modal.App('agentverse-dense-hot-hall')
 requests = modal.Queue.from_name('agentverse-dense-hot-requests', create_if_missing=True)
 results = modal.Dict.from_name('agentverse-dense-hot-results', create_if_missing=True)
 services = modal.Dict.from_name('agentverse-hot-services', create_if_missing=True)
+mission_runs = modal.Volume.from_name('agentverse-mission-runs', create_if_missing=True)
 
 
 def _encode(folder):
@@ -45,7 +49,7 @@ def _encode(folder):
         images = sorted(frames.glob('*.jpg'))
         if images:
             with imageio.get_writer(frames.parent.with_suffix('.mp4'), fps=12, codec='libx264',
-                                    quality=8, macro_block_size=1) as writer:
+                                    quality=7, macro_block_size=1, ffmpeg_params=['-movflags','+faststart']) as writer:
                 for path in images:
                     writer.append_data(imageio.imread(path))
         for path in images:
@@ -53,12 +57,10 @@ def _encode(folder):
         frames.rmdir()
 
 
-@app.function(image=image, gpu=['L40S', 'RTX-PRO-6000', 'L4'], cpu=8, memory=32768, timeout=4 * 60 * 60,
-              # Must be unconditional: Modal rebuilds this definition inside the container, so a
-              # local-only condition gives the container a different dependency list and it crash-loops.
-              secrets=[modal.Secret.from_name('cosmos-vllm', required_keys=['VLLM_API_KEY']),
-                       modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL', 'DETECTOR_API_KEY',
-                                                                               'DETECTOR_API_SECRET'])])
+@app.function(image=image, gpu=([f'RTX-PRO-6000:{HOT_GPU_COUNT}',f'L40S:{HOT_GPU_COUNT}'] if HOT_GPU_COUNT>1 else ['RTX-PRO-6000','L40S','L4']), cpu=16, memory=32768, timeout=4 * 60 * 60,
+              volumes={'/mission-runs':mission_runs},
+              # Unconditional dependency; external Cosmos credentials are refreshed from the private Dict.
+              secrets=[modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL','DETECTOR_API_KEY','DETECTOR_API_SECRET'])])
 def serve():
     hot = Path('/tmp/hot')
     log = open('/tmp/hot.log', 'w')
@@ -72,7 +74,9 @@ def serve():
         with os.fdopen(fd,'w') as output:json.dump(config,output)
     refresh_services()
     # Default Cosmos endpoint: our vLLM deployment (tools/cosmos_vllm.py); `cosmos-config` can override it.
-    cosmos_url = modal.Function.from_name('agentverse-cosmos-vllm', 'serve').get_web_url()
+    cosmos_url = (services.get('cosmos') or {}).get('COSMOS_URL') or os.environ.get('COSMOS_URL','')
+    if not cosmos_url:
+        cosmos_url = modal.Function.from_name('agentverse-cosmos-vllm', 'serve').get_web_url()
     process = subprocess.Popen(['/isaac-sim/python.sh', '/workspace/sim/hot_server.py', '--allow-root'],
                                cwd='/workspace/sim', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                env={**os.environ, 'COSMOS_URL': cosmos_url,
@@ -102,17 +106,22 @@ def serve():
         staged.write_text(request['source'])
         staged.rename(staged.with_suffix('.py'))
         done = hot / 'out' / rid / 'done'
+        committed=0.
         while not done.exists() and process.poll() is None:
+            # Isaac writes atomic checkpoints. Commit them without importing Modal
+            # or ML dependencies into Isaac's bundled Python interpreter.
+            if time.monotonic()-committed>15:
+                mission_runs.commit();committed=time.monotonic()
             time.sleep(0.2)
         folder = hot / 'out' / rid
         if folder.exists():
             _encode(folder)
-        buffer = io.BytesIO()
-        with tarfile.open(fileobj=buffer, mode='w:gz') as archive:
-            if folder.exists():
-                archive.add(folder, arcname=rid)
+            import shutil
+            shutil.copytree(folder,Path('/mission-runs/runs')/rid,dirs_exist_ok=True)
+            mission_runs.commit()
         tail = Path('/tmp/hot.log').read_text(errors='replace')[-6000:]
-        results[rid] = {'archive': buffer.getvalue(), 'alive': process.poll() is None, 'log_tail': tail}
+        # Keep long recordings on the volume rather than serializing a large MP4 into a Dict.
+        results[rid] = {'volume_path': '/runs/'+rid, 'alive': process.poll() is None, 'log_tail': tail}
     results['_status'] = {'ready': False, 'exited': process.returncode,
                           'log_tail': Path('/tmp/hot.log').read_text(errors='replace')[-9000:]}
 
@@ -135,7 +144,7 @@ def up():
         time.sleep(10)
 
 
-def run(*scripts, timeout_s=1800):
+def run(*scripts, timeout_s=7200):
     rid = time.strftime('%H%M%S-') + Path(scripts[-1]).stem + '-' + uuid.uuid4().hex[:4]
     status = results.get('_status') or {}
     if not status.get('ready'):
@@ -148,9 +157,22 @@ def run(*scripts, timeout_s=1800):
         time.sleep(1)
     results.pop(rid)
     OUT.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(fileobj=io.BytesIO(result['archive'])) as archive:
-        archive.extractall(OUT, **({'filter': 'data'} if sys.version_info >= (3, 12) else {}))
     folder = OUT / rid
+    if 'volume_path' in result:
+        from modal.volume import FileEntryType
+        folder.mkdir(parents=True,exist_ok=True)
+        for entry in mission_runs.iterdir(result['volume_path'],recursive=True):
+            relative=Path(entry.path.lstrip('/')).relative_to(result['volume_path'].lstrip('/'))
+            target=folder/relative
+            if entry.type==FileEntryType.DIRECTORY:
+                target.mkdir(parents=True,exist_ok=True)
+            elif entry.type==FileEntryType.FILE:
+                target.parent.mkdir(parents=True,exist_ok=True)
+                with target.open('wb') as output:
+                    for chunk in mission_runs.read_file(entry.path):output.write(chunk)
+    else:  # Compatibility with an already-running worker from the earlier recording.
+        with tarfile.open(fileobj=io.BytesIO(result['archive'])) as archive:
+            archive.extractall(OUT, **({'filter': 'data'} if sys.version_info >= (3, 12) else {}))
     print(f'{rid}: {time.perf_counter() - started:.1f}s round trip -> {folder}')
     error = folder / 'error.txt'
     if error.exists():
