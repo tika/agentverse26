@@ -32,6 +32,10 @@ The replay demonstrates:
 
 **Mission ledger.** In offline or live mode, Inspection → *Load mission ledger checkpoint…* reads a `WarehouseObservations` checkpoint (`scripts/hot/warehouse_observations.py`) locally and shows real coverage.
 
+## Simulation tab layout
+
+On desktop windows (≥ 1100 × 680) the Simulation tab fits one screen with no page scroll. The third-person view is in the centre. The first-person camera (RGB, or depth via a toggle) is on the left, with the bird's-eye coverage map on the right. Map stacks brighten as ledger records arrive (blue ring = seen, green = inspected, n/3 tiers, ✓ when all three are done). Apparent LWIR thermal sits under the first-person view. Robot status, sensors and alerts are in a strip along the bottom. Images scale to both width and height, and detection overlays stay aligned. The full 420-drum table is on the Inspection tab. Phones get the same order as a stacked page.
+
 ## Scripts
 
 | Script | Purpose |

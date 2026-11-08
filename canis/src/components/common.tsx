@@ -20,6 +20,20 @@ export function Panel(props: {
   );
 }
 
+/**
+ * Scales its child to the largest box of the given aspect ratio that fits the
+ * available width AND height (CSS container query units), so images and their
+ * overlays stay aligned without page scrolling. Disabled → normal width-driven flow.
+ */
+export function Fit({ ratio, enabled = true, children }: { ratio: number; enabled?: boolean; children: ReactNode }) {
+  if (!enabled) return <>{children}</>;
+  return (
+    <div className="fit">
+      <div className="fit-box" style={{ width: `min(100cqw, calc(100cqh * ${ratio}))`, aspectRatio: String(ratio) }}>{children}</div>
+    </div>
+  );
+}
+
 export function FixtureBadge({ label = 'FIXTURE' }: { label?: string }) {
   return <span className="badge badge-fixture" title="Fictional demo fixture data, not an observation">◆ {label}</span>;
 }

@@ -4,24 +4,26 @@ import type { Received } from '../state/types';
 import { formatAge } from '../lib/values';
 import { ageSeconds } from '../ingest/freshness';
 import { useConsole, useConsoleState } from '../state/context';
-import { FixtureBadge } from './common';
+import { Fit, FixtureBadge } from './common';
 
 /** Shows one timestamped frame and only the detections tied to that exact camera + frame ID. */
-export function FrameView({ frame, stale, compact }: { frame: Received<CameraFrame>; stale: boolean; compact?: boolean }) {
+export function FrameView({ frame, stale, compact, fit }: { frame: Received<CameraFrame>; stale: boolean; compact?: boolean; fit?: boolean }) {
   const state = useConsoleState();
   const { selectPackage } = useConsole();
   const f = frame.msg;
   const overlays = state.detections.filter((d) => d.msg.camera_id === f.camera_id && d.msg.frame_id === f.frame_id);
   const age = ageSeconds({ tSimS: f.t_sim_s, recvMs: frame.recvMs }, { simS: state.simClockS, wallMs: Date.now() });
   return (
-    <figure className={`frame ${stale ? 'frame-stale' : ''}`}>
-      <div className="frame-img" style={{ aspectRatio: `${f.width} / ${f.height}` }}>
-        <img src={f.uri} alt={`${f.camera_id} frame ${f.frame_id}`} />
-        <svg className="overlay" viewBox={`0 0 ${f.width} ${f.height}`} preserveAspectRatio="none" aria-hidden={!overlays.length}>
-          {overlays.map((d) => <Box key={d.msg.detection_id} det={d} onSelect={selectPackage} />)}
-        </svg>
-        {stale && <div className="stale-stamp">STALE · {formatAge(age)}</div>}
-      </div>
+    <figure className={`frame ${stale ? 'frame-stale' : ''} ${fit ? 'frame-fit' : ''}`}>
+      <Fit ratio={f.width / f.height} enabled={Boolean(fit)}>
+        <div className="frame-img" style={{ aspectRatio: `${f.width} / ${f.height}` }}>
+          <img src={f.uri} alt={`${f.camera_id} frame ${f.frame_id}`} />
+          <svg className="overlay" viewBox={`0 0 ${f.width} ${f.height}`} preserveAspectRatio="none" aria-hidden={!overlays.length}>
+            {overlays.map((d) => <Box key={d.msg.detection_id} det={d} onSelect={selectPackage} />)}
+          </svg>
+          {stale && <div className="stale-stamp">STALE · {formatAge(age)}</div>}
+        </div>
+      </Fit>
       <figcaption className={compact ? 'frame-meta compact' : 'frame-meta'}>
         <span className="num">{f.frame_id}</span>
         <span>src <span className="mono">{f.source.id}</span></span>

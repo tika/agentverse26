@@ -6,7 +6,7 @@ import { packageStatuses, statusOf } from '../lib/inspection';
 
 const PAD = 1.6;
 
-export function NavMap({ tall }: { tall?: boolean }) {
+export function NavMap({ tall, fill }: { tall?: boolean; fill?: boolean }) {
   const { map, selectDrum, selectedDrumId, selectRack, selectedRackId } = useConsole();
   const state = useConsoleState();
   const [picked, setPicked] = useState<Stack | null>(null);
@@ -32,11 +32,27 @@ export function NavMap({ tall }: { tall?: boolean }) {
   const poseStale = Boolean(state.stale.pose);
   const trail = state.poseHistory.filter((p) => !p.late).map((p) => p.msg.xyz_m);
   const scale = scaleBarMetres(W);
+  const counts = { inspected: 0, seen: 0, unseen: 0, flagged: 0 };
+  for (const d of map.drums) {
+    const st = covOf(d);
+    counts[st.coverage] += 1;
+    if (st.finding === 'inconclusive' || st.finding === 'finding') counts.flagged += 1;
+  }
   const spawn = map.nodes.spawn ?? [map.robot_start_m[0], map.robot_start_m[1]];
 
   return (
-    <Panel title="Navigation map (bird's-eye)" id="navmap" className={`map-panel ${tall ? 'map-tall' : ''}`}
-      right={<span className="num dim">warehouse-v3 · {W.toFixed(2)} × {H.toFixed(2)} m · world frame</span>}>
+    <Panel title={fill ? "Bird's-eye · coverage" : "Bird's-eye map · coverage"} id="navmap" className={`map-panel ${tall ? 'map-tall' : ''} ${fill ? 'map-fill' : ''}`}
+      right={<span className="num dim">{fill ? `${W} × ${H} m` : `${W.toFixed(2)} × ${H.toFixed(2)} m · world frame`}</span>}>
+      <div className="coverage-bar" data-testid="coverage-bar" aria-label="Inspection coverage from ledger records">
+        <span className="cov cov-inspected">✓ {counts.inspected} inspected</span>
+        <span className="cov cov-seen">◐ {counts.seen} seen</span>
+        <span className="cov cov-unseen">○ {counts.unseen} unseen</span>
+        {counts.flagged > 0 && <span className="cov cov-flag">? {counts.flagged} flagged</span>}
+        <span className="cov-track" aria-hidden>
+          <span style={{ width: `${(100 * counts.inspected) / map.drums.length}%` }} className="trk-inspected" />
+          <span style={{ width: `${(100 * counts.seen) / map.drums.length}%` }} className="trk-seen" />
+        </span>
+      </div>
       <div className="map-wrap">
         <svg className="navmap" viewBox={`${-PAD} ${-PAD} ${W + 2 * PAD} ${H + 2 * PAD + 1.6}`} role="img"
           aria-label={`Warehouse map ${W} by ${H} metres with ${map.racks.length} racks and ${map.drums.length} drums`}>
@@ -93,19 +109,26 @@ export function NavMap({ tall }: { tall?: boolean }) {
           {stacks.map((s) => {
             const [x, y] = S(s.x_m, s.y_m);
             const r = s.drums[0].radius_m;
-            const anyInspected = s.drums.some((d) => covOf(d).coverage !== 'unseen');
-            const anyFlag = s.drums.some((d) => ['inconclusive', 'finding'].includes(covOf(d).finding));
             const isSel = s.drums.some((d) => d.id === selectedDrumId);
+            const covs = s.drums.map((d) => covOf(d).coverage);
+            const nInspected = covs.filter((c) => c === 'inspected').length;
+            const anyInspected = covs.some((c) => c !== 'unseen');
+            const allInspected = nInspected === covs.length;
+            const anySeen = covs.some((c) => c === 'seen');
+            const anyFlag = s.drums.some((d) => ['inconclusive', 'finding'].includes(covOf(d).finding));
+            const ring = isSel ? '#fff' : anyFlag ? 'var(--warn)' : nInspected ? 'var(--ok)' : anySeen ? 'var(--info)' : '#111';
             const inRack = selectedRackId && s.drums[0].stack_id === selectedRackId;
             return (
               <g key={`${s.x_m},${s.y_m}`} className="stack" onClick={() => setPicked(s)} role="button" tabIndex={0}
                 aria-label={`Stack at ${s.x_m.toFixed(2)}, ${s.y_m.toFixed(2)}: ${s.drums.map((d) => d.id).join(', ')}`}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setPicked(s); }}>
-                <circle cx={x} cy={y} r={r * 0.92} fill={s.category === 'ILW' ? '#4d8f99' : '#c9a93a'}
-                  fillOpacity={inRack ? 1 : 0.8} stroke={isSel ? '#fff' : anyFlag ? 'var(--warn)' : anyInspected ? 'var(--ok)' : '#111'}
-                  strokeWidth={isSel || anyFlag || anyInspected ? 0.1 : 0.03} />
+                {/* Unseen stacks are dimmed; coverage brightens them. Ring: green inspected, blue seen, amber flagged. */}
+                <circle cx={x} cy={y} r={r * 0.92} fill={allInspected ? 'var(--ok)' : s.category === 'ILW' ? '#4d8f99' : '#c9a93a'}
+                  fillOpacity={inRack ? 1 : anyInspected ? 0.95 : 0.4} stroke={ring}
+                  strokeWidth={isSel || anyFlag || anyInspected ? 0.12 : 0.03} />
                 {anyFlag && <text x={x} y={y + 0.16} textAnchor="middle" className="map-glyph" fill="#111">?</text>}
-                {!anyFlag && anyInspected && <text x={x} y={y + 0.16} textAnchor="middle" className="map-glyph" fill="#111">✓</text>}
+                {!anyFlag && anyInspected && <text x={x} y={y + 0.16} textAnchor="middle" className="map-glyph" fill="#111">{allInspected ? '✓' : nInspected ? `${nInspected}` : '◐'}</text>}
+                <title>{s.drums.map((d) => `T${d.tier} ${d.location_code}: ${covOf(d).coverage}`).join('\n')}</title>
               </g>
             );
           })}
@@ -170,6 +193,19 @@ export function NavMap({ tall }: { tall?: boolean }) {
           </div>
         )}
       </div>
+      {fill ? (
+        <ul className="legend legend-compact" aria-label="Map legend">
+          <li><span className="lg lg-llw" />LLW</li>
+          <li><span className="lg lg-ilw" />ILW</li>
+          <li><span className="lg lg-ring-seen" />seen</li>
+          <li><span className="lg lg-ring-ok" />inspected (n/3, ✓ all)</li>
+          <li><span className="lg-glyph warn">?</span>inconclusive</li>
+          <li><span className="lg lg-robot" />robot</li>
+          <li><span className="lg lg-spawn" />spawn</li>
+          <li><span className="lg lg-planned" />planned</li>
+          <li><span className="lg lg-route" />route graph</li>
+        </ul>
+      ) : (
       <ul className="legend" aria-label="Map legend">
         <li><span className="lg lg-llw" />LLW stack (zone A)</li>
         <li><span className="lg lg-ilw" />ILW stack (zone B)</li>
@@ -179,9 +215,11 @@ export function NavMap({ tall }: { tall?: boolean }) {
         <li><span className="lg lg-spawn" />Spawn (static, map)</li>
         <li><span className="lg lg-robot" />Observed robot pose</li>
         <li><span className="lg lg-staging" />Staging area</li>
-        <li><span className="lg-glyph">✓</span>Seen / inspected (ledger)</li>
-        <li><span className="lg-glyph warn">?</span>Inconclusive finding</li>
+        <li><span className="lg lg-ring-seen" />Seen (1 view)</li>
+        <li><span className="lg lg-ring-ok" />Inspected (n of 3 tiers; ✓ all)</li>
+        <li><span className="lg-glyph warn">?</span>Inconclusive</li>
       </ul>
+      )}
       <div className="map-foot faint">
         {pose ? '' : 'No robot pose feed — spawn shown from map only. '}Click a rack to highlight it; click a stack to choose a tier (3 drums share each XY).
       </div>

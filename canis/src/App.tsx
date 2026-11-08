@@ -111,7 +111,7 @@ function Console({ map }: { map: PublicMap }) {
 
   return (
     <ConsoleContext.Provider value={value}>
-      <div className="app">
+      <div className={`app ${tab === 'simulation' ? 'app-one-screen' : ''}`}>
         <Header tab={tab} onTab={openTab} />
         <ReplayBanner />
         <OfflineBanner />
