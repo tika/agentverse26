@@ -134,7 +134,7 @@ if __name__ == '__main__':
         (hud or default_hud)(ImageDraw.Draw(canvas), t, position, reading)
         return canvas, reading
 
-    def walk(route, name='walk', fps=12, max_s=40.0, speed=0.78, hud=None):
+    def walk(route, name='walk', fps=12, max_s=40.0, speed=0.78, hud=None, final_yaw=None):
         """Walk Spot from the spawn point through (x, y) waypoints; save frames under OUT/name/frames."""
         frames = OUT / name / 'frames'
         frames.mkdir(parents=True, exist_ok=True)
@@ -143,27 +143,47 @@ if __name__ == '__main__':
         path = [np.array(p, dtype=float) for p in route]
         stride = max(1, round(1 / (fps * dt)))
         readings = []
+        settled_s = 0.0
+        ready = False
         for index in range(int(max_s * fps)):
             t = index * stride * dt
             position, yaw = pose()
             place_cameras(position, yaw)
             canvas, reading = snapshot(t, position, hud)
             canvas.save(frames / f'{index:05d}.jpg', quality=88)
-            readings.append({'time_s': t, 'position_m': position.tolist(), **reading})
             if path and np.linalg.norm(position[:2] - path[0]) < 0.26:
                 path.pop(0)
-            if not path:
+            phase = 'approach'
+            if path:
+                delta = path[0] - position[:2]
+                velocity = delta * min(1.4, speed / max(np.linalg.norm(delta), 0.01))
+                c, s = math.cos(yaw), math.sin(yaw)
+                command = np.array([c * velocity[0] + s * velocity[1],
+                                    -s * velocity[0] + c * velocity[1], 0], dtype=np.float32)
+            elif final_yaw is None:
+                ready = True
+            else:
+                error = math.remainder(final_yaw - yaw, math.tau)
+                if abs(error) > math.radians(8):
+                    phase = 'turn_to_target'
+                    settled_s = 0.0
+                    command = np.array([0, 0, np.clip(1.5 * error, -0.6, 0.6)], dtype=np.float32)
+                else:
+                    phase = 'hold_for_capture'
+                    command = zero
+                    settled_s += stride * dt
+                    ready = settled_s >= 0.75
+            readings.append({'time_s': t, 'position_m': position.tolist(),
+                             'yaw_rad': yaw, 'phase': phase, **reading})
+            if ready:
                 break
-            delta = path[0] - position[:2]
-            velocity = delta * min(1.4, speed / max(np.linalg.norm(delta), 0.01))
-            c, s = math.cos(yaw), math.sin(yaw)
-            command = np.array([c * velocity[0] + s * velocity[1], -s * velocity[0] + c * velocity[1], 0],
-                               dtype=np.float32)
             for _ in range(stride):
                 spot.step(dt, command)
                 world.step(render=False)
         (OUT / name / 'readings.jsonl').write_text(''.join(json.dumps(r) + '\n' for r in readings))
-        summary = {'frames': index + 1, 'reached': not path, 'final_xy': pose()[0][:2].tolist()}
+        final_position, actual_yaw = pose()
+        summary = {'frames': index + 1, 'reached': not path, 'ready_for_capture': ready,
+                   'final_xy': final_position[:2].tolist(), 'final_yaw_rad': actual_yaw}
         print('[hot] walk', name, summary, flush=True)
         return summary
 
