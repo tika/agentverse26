@@ -176,4 +176,16 @@ def generate_inventory(layout, seed):
             rust = float(rng.beta(2, 2)) if i in rusted else 0.0
             bulge = float(rng.beta(2, 2)) if i in deformed else 0.0
             records.append(_drum_record(drum, profile, cases.get(i, "ordinary"), rust, bulge, rng))
+    _apply_forced_faults(layout, records)
     return {"schema_version": 1, "seed": seed, "drums": records, "sensor_config": config["sensor"]}
+
+
+def _apply_forced_faults(layout, records):
+    """Demo option: HOT_FORCE_FAULTS='{"A-L-01-T1": {"corrosion_severity": 0.85}}' pins a drum's appearance by display id."""
+    import json as _json
+    import os as _os
+    forced = _json.loads(_os.environ.get("HOT_FORCE_FAULTS") or "{}")
+    ids = {d["display_id"]: d["id"] for d in layout["drums"]}
+    by_id = {r["drum_id"]: r for r in records}
+    for display_id, plan in forced.items():
+        by_id[ids[display_id]]["visual_plan"].update(plan)
