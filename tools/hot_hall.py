@@ -54,6 +54,7 @@ def _encode(folder):
 
 
 @app.function(image=image, gpu=['RTX-PRO-6000','L40S','L4'], cpu=8, memory=32768, timeout=4 * 60 * 60,
+              # Unconditional dependency; external Cosmos credentials are refreshed from the private Dict.
               secrets=[modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL','DETECTOR_API_KEY','DETECTOR_API_SECRET'])])
 def serve():
     hot = Path('/tmp/hot')
