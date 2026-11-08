@@ -23,10 +23,10 @@ class DenseLayout(unittest.TestCase):
         cls.by_id = {e['id']: e for e in cls.out}
 
     def test_counts(self):
-        self.assertEqual(len(self.out), 360)
+        self.assertEqual(len(self.out), 200)  # Aisle 2 widened: wall rows and tier 3 removed.
         self.assertEqual(Counter((e['category'], e['location']['tier']) for e in self.out),
-                         {('LLW', 1): 112, ('LLW', 2): 112, ('LLW', 3): 80, ('ILW', 1): 28, ('ILW', 2): 28})
-        self.assertEqual(len(stacking.pallets(self.out)), 132)
+                         {('LLW', 1): 80, ('LLW', 2): 80, ('ILW', 1): 20, ('ILW', 2): 20})
+        self.assertEqual(len(stacking.pallets(self.out)), 80)
 
     def test_ids_and_codes_unique_and_deterministic(self):
         self.assertEqual(len(self.by_id), len(self.out))
@@ -40,13 +40,13 @@ class DenseLayout(unittest.TestCase):
             self.assertEqual((s['category'], s['legacy_id'], s['location']['tier'], s['location']['depth']),
                              (e['category'], e['id'], 1, 1))
             self.assertEqual((s['legacy_x'], s['legacy_y']), (e['x'], e['y']))
-            self.assertLess(math.hypot(s['x'] - e['x'], s['y'] - e['y']), 0.6)
+            self.assertLess(math.hypot(s['x'] - e['x'], s['y'] - e['y']), 2.1)  # Wall rows removed and rows moved to widen aisle 2.
         self.assertEqual({e['id'] for e in self.out if e['legacy_id'] is None},
-                         {f'D{n:02d}' for n in range(29, 361)})
+                         {f'D{n:02d}' for n in range(29, 201)})
 
     def test_all_yellow(self):  # F11
-        self.assertTrue(all(e['paint_color'] in YELLOWS for e in self.out))
-        self.assertEqual(set(Counter(e['paint_color'] for e in self.out)), set(YELLOWS))
+        # Every drum wears the detector's training paint.
+        self.assertEqual({e['paint_color'] for e in self.out}, {'faded_yellow'})
 
     def test_dense_packing(self):  # F12
         llw = [e for e in self.out if e['category'] == 'LLW']
@@ -121,7 +121,7 @@ class StackedSensors(unittest.TestCase):
 
     def test_upper_source_is_higher(self):
         out = stacking.stack_inventory(INVENTORY)
-        top = next(e for e in out if e['location']['tier'] == 3)
+        top = next(e for e in out if e['location']['tier'] == 2)
         cfg = load_config()
         cfg['radiation']['noise_fraction'] = 0.0
         world = SensorWorld([top], cfg)

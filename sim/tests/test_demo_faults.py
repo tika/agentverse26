@@ -17,7 +17,7 @@ IDS = {d['id'] for d in SECTION}
 
 class DemoFaults(unittest.TestCase):
     def test_section_size(self):
-        self.assertEqual((len(SECTION_ALL), len(SECTION)), (120, 60))
+        self.assertEqual((len(SECTION_ALL), len(SECTION)), (80, 40))
 
     def test_deterministic(self):
         self.assertEqual(df.assign_faults(SECTION, 1), df.assign_faults(SECTION, 1))
@@ -44,7 +44,7 @@ class DemoFaults(unittest.TestCase):
         for seed in range(200):
             faults = df.assign_faults(SECTION, seed)
             located = [d['location'] for d in SECTION if d['id'] in faults]
-            self.assertEqual({l['tier'] for l in located}, {1, 2, 3})
+            self.assertEqual({l['tier'] for l in located}, {1, 2})
             self.assertEqual({l['side'] for l in located}, {'L', 'R'})
             doubles += any(len(f['kinds']) > 1 for f in faults.values())
         self.assertTrue(20 < doubles < 180)
@@ -89,7 +89,7 @@ class DemoFaults(unittest.TestCase):
                 self.assertIn('dimensions_m', defect)
 
     def test_layout_resets(self):
-        self.assertEqual(df.layout_resets(IDS), ['D05', 'D06', 'D10', 'D12'])
+        self.assertEqual(df.layout_resets(IDS), ['D03', 'D04', 'D05', 'D06', 'D10', 'D12'])
 
     def test_scene_overrides(self):
         for seed in range(50):

@@ -28,7 +28,8 @@ def _aisle_facing(drums):
 def assign_faults(section_drums, seed, count=(4, 6)):
     """drum_id -> {'kinds': [...], <kind>: params}. Deterministic per seed.
 
-    One drum per (side, tier) stratum, so 4-6 faults always cover tiers 1-3 and both sides,
+    One drum per (side, tier) stratum, so faults always cover every tier and both sides (4 strata
+    with tiers 1-2, which caps the count at 4),
     and the first four drums get rust, bulge, heat and h2 in a shuffled order."""
     rng = np.random.default_rng(np.random.SeedSequence([int(seed), 4]))
     drums = sorted(_aisle_facing(section_drums), key=lambda d: d['id'])

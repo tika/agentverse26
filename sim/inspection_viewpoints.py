@@ -105,7 +105,7 @@ def drum_in_frame(drum, view, body_z=BODY_Z, margin=FRAME_MARGIN_PX):
                 and np.all(uv[:, 1] >= y0 + margin) and np.all(uv[:, 1] <= y1 - margin))
 
 
-MAX_INCIDENCE = math.radians(70)  # Steeper than this, the drum face is too oblique to inspect.
+MAX_INCIDENCE = math.radians(45)  # Training views are near face-on; steeper is out of domain.
 
 
 def _blocked(eye, target, drum, others):
@@ -169,22 +169,22 @@ def _point_polygon_distance(point, poly):
     return 0.0 if inside else best
 
 
-def aisle_clearance(stop_xy, yaw, inventory=None):
+def aisle_clearance(stop_xy, yaw, inventory):
     """Smallest gap (m) between Spot's footprint and the section's front drums; negative = collision."""
-    if inventory is None:
-        xs = [2.791, 3.411, 4.091, 4.711, 5.391, 6.011, 6.691, 7.311, 7.991, 8.611]
-        drums = [(x, y, 0.299) for x in xs for y in (4.949, 7.051)]
-    else:
-        drums = {(round(d['x'], 3), round(d['y'], 3), d['radius']) for d in section_drums(inventory)}
+    drums = {(round(d['x'], 3), round(d['y'], 3), d['radius']) for d in section_drums(inventory)}
     poly = _footprint(stop_xy, yaw)
     return min(_point_polygon_distance(np.array([x, y]), poly) - r for x, y, r in drums)
 
 
+ROUTE_Y = (5.2, 6.8)            # Across the 3 m aisle: stand near one row to look square-on at the other.
+
+
 def _candidates():
-    for x in np.arange(ROUTE_X[0], ROUTE_X[1] + 1e-9, 0.1):
-        for sign in (-1.0, 1.0):
-            for deg in np.arange(10.0, 172.5, 2.5):
-                yield (round(float(x), 2), AISLE_Y), sign * math.radians(deg)
+    for x in np.arange(ROUTE_X[0], ROUTE_X[1] + 1e-9, 0.2):
+        for y in np.arange(ROUTE_Y[0], ROUTE_Y[1] + 1e-9, 0.2):
+            for sign in (-1.0, 1.0):
+                for deg in np.arange(45.0, 137.5, 5.0):
+                    yield (round(float(x), 2), round(float(y), 2)), sign * math.radians(deg)
 
 
 def inspection_views(inventory, body_z=BODY_Z):
@@ -212,9 +212,8 @@ def inspection_views(inventory, body_z=BODY_Z):
     views = []
     # Out and back: forward-facing views going up the aisle, then turn once and do the
     # backward-facing views coming back.
-    def leg(c):
-        forward = abs(c[0]['yaw']) < math.pi / 2
-        return (0, c[0]['stop_xy'][0]) if forward else (1, -c[0]['stop_xy'][0])
+    def leg(c):  # Up the aisle facing row R (yaw < 0), back down facing row L.
+        return (0, c[0]['stop_xy'][0]) if c[0]['yaw'] < 0 else (1, -c[0]['stop_xy'][0])
     for view, ids in sorted(chosen, key=leg):
         side = by_id[ids[0]]['location']['side']
         columns = sorted({by_id[i]['location']['column'] for i in ids})
@@ -233,14 +232,15 @@ def uninspectable(inventory, views):
 def second_look_view(drum, others, body_z=BODY_Z, avoid_yaw=None):
     """A closer view of one drum from a new angle, on the aisle line."""
     best = None
-    for dx in np.arange(-3.0, 3.01, 0.05):
-        stop = (round(float(drum['x'] + dx), 3), AISLE_Y)
-        eye_target = math.atan2(drum['y'] - AISLE_Y, -dx)
+    far_y = AISLE_Y + (0.8 if drum['y'] < AISLE_Y else -0.8)  # Stand near the opposite row.
+    for dx in np.arange(-1.5, 1.51, 0.1):
+        stop = (round(float(drum['x'] + dx), 3), far_y)
+        eye_target = math.atan2(drum['y'] - far_y, -dx)
         for offset in np.radians(np.arange(-20, 21, 2.5)):
             yaw = eye_target + offset
             if avoid_yaw is not None and abs(math.remainder(yaw - avoid_yaw, 2 * math.pi)) < math.radians(15):
                 continue
-            if aisle_clearance(stop, yaw) <= MIN_CLEARANCE_M:
+            if aisle_clearance(stop, yaw, others) <= MIN_CLEARANCE_M:
                 continue
             view = dict(name=f"second-{drum['display_id']}", stop_xy=stop, yaw=yaw, pitch=0.0,
                         side=drum['location']['side'], column=drum['location']['column'],

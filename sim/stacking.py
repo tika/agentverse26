@@ -25,7 +25,7 @@ import numpy as np
 
 SIM = Path(__file__).resolve().parent
 CONFIG = SIM / 'layouts' / 'stacking.json'
-AISLE_Y = {1: 2.0, 2: 6.0, 3: 10.0}
+AISLE_Y = {1: 1.0, 2: 6.0, 3: 11.0}  # Aisle 2 widened to 3 m; aisles 1/3 run along the walls.
 
 
 def load_config(path=CONFIG):

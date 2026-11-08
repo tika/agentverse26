@@ -36,72 +36,44 @@
   ],
   "rows": [
     {
-      "name": "south_wall",
-      "y": 0.72,
-      "aisle": 1,
-      "side": "R",
-      "tiers": {
-        "LLW": 2,
-        "ILW": 2
-      },
-      "skip_x_containing": [
-        6.0,
-        15.0
-      ]
-    },
-    {
       "name": "A-L",
-      "y": 3.38,
+      "y": 2.615,
       "aisle": 1,
       "side": "L",
       "tiers": {
-        "LLW": 3,
+        "LLW": 2,
         "ILW": 2
       }
     },
     {
       "name": "B-R",
-      "y": 4.64,
+      "y": 3.875,
       "aisle": 2,
       "side": "R",
       "tiers": {
-        "LLW": 3,
+        "LLW": 2,
         "ILW": 2
       }
     },
     {
       "name": "B-L",
-      "y": 7.36,
+      "y": 8.125,
       "aisle": 2,
       "side": "L",
       "tiers": {
-        "LLW": 3,
+        "LLW": 2,
         "ILW": 2
       }
     },
     {
       "name": "C-R",
-      "y": 8.62,
+      "y": 9.385,
       "aisle": 3,
       "side": "R",
       "tiers": {
-        "LLW": 3,
-        "ILW": 2
-      }
-    },
-    {
-      "name": "north_wall",
-      "y": 11.28,
-      "aisle": 3,
-      "side": "L",
-      "tiers": {
         "LLW": 2,
         "ILW": 2
-      },
-      "skip_x_containing": [
-        6.0,
-        15.0
-      ]
+      }
     }
   ],
   "lanes_by_aisle": {
@@ -111,8 +83,6 @@
   },
   "aisle_clear_min_m": 1.4,
   "paint_shades": [
-    "safety_yellow",
-    "warm_yellow",
     "faded_yellow"
   ],
   "first_new_id": 29
