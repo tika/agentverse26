@@ -238,7 +238,7 @@ def _sensors(draw, state, box):
     _panel(draw, box, 'SENSORS')
     history = state.get('history', {})
     # Minimum span per channel keeps sensor noise flat instead of autoscaling it into a fake signal.
-    channels = [('gamma', 'Gamma', 'µSv/h', '{:.2f}', '#b38cff', 1.0), ('surface_c', 'Max surface', '°C', '{:.1f}', '#ff8a5c', 8.0),
+    channels = [('gamma', 'Gamma', 'uSv/h', '{:.2f}', '#b38cff', 1.0), ('surface_c', 'Max surface', '°C', '{:.1f}', '#ff8a5c', 8.0),
                 ('h2_ppm', 'Hydrogen', 'ppm', '{:.0f}', '#5cc8ff', 50.0), ('hiss', 'Hiss', 'score', '{:.2f}', '#c9d36a', 1.0)]
     width = (x1 - x0 - 36) / len(channels)
     for i, (key, name, unit, fmt, color, min_span) in enumerate(channels):
@@ -246,7 +246,7 @@ def _sensors(draw, state, box):
         cx1 = cx0 + width - 14
         values = list(history.get(key, []))[-150:]
         draw.text((cx0, y0 + 40), name, font=hud_font(15), fill=HUD_DIM)
-        current = fmt.format(values[-1]) if values else '—'
+        current = fmt.format(values[-1]) if values else '-'
         draw.text((cx0, y0 + 60), current, font=hud_font(30, True), fill=HUD_TEXT)
         draw.text((cx0 + draw.textlength(current, font=hud_font(30, True)) + 6, y0 + 74), unit, font=hud_font(14),
                   fill=HUD_DIM)
@@ -324,10 +324,10 @@ def report_card_demo(state, truth_score=None):
                                   + (f" / {state['second_look_budget']}" if state.get('second_look_budget') else '')),
             ('Faults confirmed', str(state.get('faults_confirmed', 0)))]
     if truth_score:
-        rows += [('Faults in scene', str(truth_score.get('faults_total', '—'))),
-                 ('Found', str(truth_score.get('found', '—'))),
-                 ('False reds', str(truth_score.get('false_red', '—'))),
-                 ('Missed', str(truth_score.get('missed', '—')))]
+        rows += [('Faults in scene', str(truth_score.get('faults_total', '-'))),
+                 ('Found', str(truth_score.get('found', '-'))),
+                 ('False reds', str(truth_score.get('false_red', '-'))),
+                 ('Missed', str(truth_score.get('missed', '-')))]
         if truth_score.get('found') is not None and state.get('second_looks_used'):
             rows.append(('Faults per second look', f"{truth_score['found'] / state['second_looks_used']:.2f}"))
     for i, (name, value) in enumerate(rows):

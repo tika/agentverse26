@@ -100,6 +100,7 @@ for index in range(int(MAX_S * FPS)):
     activity = 'Route complete'
     if view is not None:
         command, aligned = command_to(p, yaw, view)
+        aligned = aligned or settled_at is not None  # Once settled, gait wobble must not restart the dwell.
         activity = f"Walking to view {view_index + 1}/{len(VIEWS)}  ({view['name']})"
         if aligned:
             settled_at = t if settled_at is None else settled_at
