@@ -14,9 +14,9 @@ CANIS is a simulated Spot inspection agent that combines visual findings, sensor
 
 The mission goal is to collect the required evidence for every assigned drum and report what remains unresolved. A separate safety layer constrains the choices available to the reasoning model and can stop motion independently.
 
-![Warehouse-v3 middle- and upper-drum test with a fixed body-mounted camera](docs/previews/canis-banner.jpg)
+![CANIS detecting a bulging drum with elevated surface temperature in warehouse-v3](docs/previews/canis-banner.jpg)
 
-*Latest warehouse-v3 two-drum camera/model test: fixed 15° upward mount, physical body pitch and the expanded YOLO26s. This rules-driven clip is separate from the earlier YOLO/Cosmos mission. [Reproduce the recording](docs/rigid_camera_demos.md).*
+*Frame from the latest six-drum recording: YOLO26s detects a bulging drum with a 38.4°C surface reading (19.0°C air), flagged as suspected pressurisation. The run uses Cosmos Reason 2–8B and a rigid camera mounted 15° upward.*
 
 | What CANIS observes | How it responds |
 |---|---|
