@@ -235,9 +235,24 @@ for name, (eye, target, focal, clip) in views.items():
 # robot standing on the drum's inspection route, camera turned to face the stack.
 icam = Camera(prim_path='/World/ReviewCameras/Inspection', resolution=(640, 640))
 icam.initialize()
+if faults:
+    from warehouse_sensors import WarehouseSensors
+    sensor_backend = WarehouseSensors.from_manifest(manifest)
+    render_path = icam.get_render_product_path()
+    depth_capture = rep.AnnotatorRegistry.get_annotator('distance_to_image_plane')
+    seg_capture = rep.AnnotatorRegistry.get_annotator(
+        'semantic_segmentation', init_params={'semanticTypes': ['class', 'drum_id'], 'colorize': False})
+    depth_capture.attach([render_path])
+    seg_capture.attach([render_path])
+    report['physical_sensors'] = {'inventory_drums': len(sensor_backend._drums), 'frames': {}}
 for _ in range(10):
     world.render()
-for tag, d in (('llw', llw_d), ('ilw', ilw_d)):
+inspection_samples = [('llw', llw_d), ('ilw', ilw_d)]
+if faults:
+    warm = next(d for d in sensor_backend._drums
+                if d['category'] == 'ILW' and d['scenario'] == 'warm_venting')
+    inspection_samples.append(('warm_ilw', by_id[warm['drum_id']]))
+for index, (tag, d) in enumerate(inspection_samples):
     ry = d['inspection_route_y']
     # The robot body is on the route. Its forward-mounted lens is 0.48 m closer.
     eye_y = ry + math.copysign(.48, d['y'] - ry)
@@ -260,6 +275,31 @@ for tag, d in (('llw', llw_d), ('ilw', ilw_d)):
         saved[name] = {'file': f'{name}/rgb.png', 'eye': eye, 'body_xy': [d['x'], ry], 'drum': d['id'], 'display_id': d['display_id'],
                        'label_z': round(label_z(d), 3), 'camera': 'v2 Spot inspection camera: 0.6 m, -10 deg, 78 deg FOV, 640x640'}
         print('VIEW_SAVED', name, flush=True)
+
+    if faults:
+        depth = depth_capture.get_data()
+        seg = seg_capture.get_data()
+        if isinstance(depth, dict):
+            depth = depth['data']
+        thermal = sensor_backend.thermal_from_camera(depth, seg, icam.get_intrinsics_matrix(), mtx.GetInverse())
+        hit_count = sum(int((seg['data'] == int(key)).sum())
+                        for key, label in seg['info']['idToLabels'].items()
+                        if label.get('class') == 'drum' and label.get('drum_id'))
+        if not hit_count or not np.isfinite(thermal).any():
+            raise RuntimeError('Thermal review has no valid package pixels')
+        if tag == 'warm_ilw' and float(np.nanmax(thermal)) <= warm['thermal']['ambient_c'] + 1.0:
+            raise RuntimeError('The warm ILW control was not resolved in the thermal image')
+        file = f'physical_{tag}_apparent_c.npy'
+        np.save(OUT / file, thermal)
+        readings = sensor_backend.sample((d['x'], ry, .6), 2 * index,
+                                         gamma_xyz=eye, gas_xyz=eye)
+        report['physical_sensors']['frames'][tag] = {
+            'file': file, 'package_pixels': hit_count,
+            'finite_pixels': int(np.isfinite(thermal).sum()),
+            'apparent_range_c': [float(np.nanmin(thermal)), float(np.nanmax(thermal))],
+            'observations': readings,
+        }
+
 
 # 30 s RTX tour (24 fps): roof-off overview, entry + ceiling, LLW close pass, ILW close pass, rear gate.
 if '--tour' in sys.argv:

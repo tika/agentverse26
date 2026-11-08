@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "profiles": {
+    "LLW": {
+      "waste_forms": ["dry_soft_waste", "metal_offcuts", "conditioned_filters"],
+      "net_mass_kg": [35, 180],
+      "gamma_activity_mbq": [0.35, 7.5],
+      "alpha_activity_mbq": [0.005, 20],
+      "beta_activity_mbq": [0.1, 80],
+      "cobalt_fraction": [0.1, 0.65],
+      "effective_attenuation_m_inv": [0.7, 3.2],
+      "free_volume_fraction": [0.08, 0.20],
+      "ambient_c": 19.0,
+      "relative_humidity_pct": 62.0,
+      "emissivity": 0.87,
+      "corrosion_fraction": [0.13, 0.22],
+      "bulge_fraction": [0.055, 0.10],
+      "nominal_vent": "sealed",
+      "baseline_h2_ml_day": [0, 0.04],
+      "reactive_h2_ml_day": [2, 18]
+    },
+    "ILW": {
+      "waste_forms": ["grouted_mixed_metal", "immobilised_sludge", "grouted_compacted_pucks"],
+      "net_mass_kg": [560, 1050],
+      "gamma_activity_mbq": [350, 4500],
+      "alpha_activity_mbq": [50, 1800],
+      "beta_activity_mbq": [18000, 55000],
+      "cobalt_fraction": [0.05, 0.45],
+      "effective_attenuation_m_inv": [12, 19],
+      "free_volume_fraction": [0.05, 0.12],
+      "ambient_c": 20.0,
+      "relative_humidity_pct": 66.0,
+      "emissivity": 0.48,
+      "corrosion_fraction": [0.078, 0.132],
+      "bulge_fraction": [0.055, 0.10],
+      "nominal_vent": "filtered",
+      "baseline_h2_ml_day": [0.02, 0.5],
+      "reactive_h2_ml_day": [8, 60]
+    }
+  },
+  "sensor": {
+    "gamma_background_usv_h": 0.10,
+    "gamma_counts_per_usv_h_s": 24,
+    "gamma_integration_s": 2,
+    "gas_t90_s": 5,
+    "gas_detection_ppm": 2,
+    "gas_relative_noise": 0.08,
+    "airflow_xy_m_s": [0.08, 0.025],
+    "gas_diffusivity_m2_s": 0.018,
+    "thermal_noise_c": 0.1,
+    "air_noise_c": 0.12,
+    "rh_noise_pct": 0.6,
+    "swab_dwell_s": 10,
+    "swab_area_cm2": 100,
+    "swab_recovery": 0.55,
+    "swab_alpha_mda_bq_cm2": 0.03,
+    "swab_beta_gamma_mda_bq_cm2": 0.15,
+    "swab_max_reach_m": 0.8
+  }
+}

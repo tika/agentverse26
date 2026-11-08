@@ -39,7 +39,8 @@ if __name__=='__main__':
         warehouse = Path(os.environ.get('AGENTVERSE_WAREHOUSE_DIR', SIM / 'warehouse-v3')).resolve()
         sys.path.insert(0, str(warehouse))
         from drum_faults import generate_session
-        output_path = generate_session(args.output, seed=args.seed, manifest=args.fault_manifest)
+        manifest = args.fault_manifest or (SIM / 'out/environment/evaluator' / f'{uuid4().hex}.json')
+        output_path = generate_session(args.output, seed=args.seed, manifest=manifest)
         if not context.open_stage(str(output_path)):
             raise RuntimeError(f'Could not open {output_path}')
         layout = json.loads((warehouse / 'map.json').read_text())
@@ -49,7 +50,7 @@ if __name__=='__main__':
             for taxonomy, value in (('class', 'drum'), ('drum_id', drum['id']),
                                     ('waste_category', drum['category'])):
                 add_labels(prim, labels=[value], taxonomy=taxonomy)
-        metrics = {'drums': len(layout['drums'])}
+        metrics = {'drums': len(layout['drums']), 'evaluator_manifest': str(manifest.resolve())}
     else:
         # Keep the working layer next to the legacy texture bank.
         working = SIM / 'scene_environment.usda'

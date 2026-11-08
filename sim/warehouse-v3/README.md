@@ -4,7 +4,7 @@ Open [warehouse-v3.usda](warehouse-v3.usda) in Isaac Sim using **File → Open**
 
 The five aisles between rack rows have 3.32 m of clear width. View the [roof-off Isaac RTX overview](review/wide-aisles/overhead.png).
 
-For autonomous runs, use the [randomized defect session launcher](DEFECTS.md).
+For autonomous runs, use the [randomized defect session launcher](DEFECTS.md). See the [physical sensor interface](PHYSICAL_SENSORS.md) for the private package inventory and robot observations.
 
 ## Rebuild and check
 

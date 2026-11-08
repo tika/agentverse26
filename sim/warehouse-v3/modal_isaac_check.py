@@ -24,13 +24,14 @@ if modal.is_local():
     import hashlib, shutil
     SNAP = Path(tempfile.mkdtemp(prefix='warehouse-isaac-'))
     shutil.copytree(WS / 'assets', SNAP / 'assets')
-    for script in ('isaac_check.py', 'drum_faults.py', 'storage.py'):
+    for script in ('isaac_check.py', 'drum_faults.py', 'storage.py', 'warehouse_physics.py',
+                   'warehouse_sensors.py', 'physical_config.json'):
         shutil.copy2(HERE / script, SNAP / script)
     shutil.copy2(HERE.parent / 'build_environment.py', SNAP / 'build_environment.py')
     shutil.copytree(HERE / 'baseline', SNAP / 'baseline', ignore=shutil.ignore_patterns('__pycache__'))
     for f in FILES:
         shutil.copy2(WS / f, SNAP / f)
-    (SNAP / 'snapshot_sha256.json').write_text(json.dumps({f: hashlib.sha256((SNAP / f).read_bytes()).hexdigest() for f in FILES}, indent=1))
+    (SNAP / 'snapshot_sha256.json').write_text(json.dumps({f: hashlib.sha256((SNAP / f).read_bytes()).hexdigest() for f in (*FILES, "physical_config.json", "warehouse_physics.py", "warehouse_sensors.py", "drum_faults.py")}, indent=1))
 image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0', add_python='3.13',
                                    setup_dockerfile_commands=['USER root'])
          .entrypoint([])

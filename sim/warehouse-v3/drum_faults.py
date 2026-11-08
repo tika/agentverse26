@@ -15,6 +15,8 @@ from pxr import Sdf, Usd, UsdGeom, UsdShade, Vt
 
 from storage import PAINT, PRINT_CENTER, drum_profile, make_drum_mesh
 
+from warehouse_physics import generate_inventory
+
 ROOT = Path(__file__).resolve().parent
 DEFAULT_STAGE = ROOT / "warehouse-v3.usda"
 DEFAULT_MAP = ROOT / "map.json"
@@ -241,7 +243,8 @@ def _bind_rust(stage, prim, target):
     UsdShade.MaterialBindingAPI(prim).Bind(material, UsdShade.Tokens.strongerThanDescendants)
 
 
-def generate_session(output, *, seed=None, manifest=None, base_stage=DEFAULT_STAGE, map_path=DEFAULT_MAP):
+def generate_session(output, *, seed=None, manifest=None, base_stage=DEFAULT_STAGE,
+                     map_path=DEFAULT_MAP, inventory=None):
     """Return a session stage path. A supplied seed reproduces the same faults."""
     output = Path(output).resolve()
     base_stage = Path(base_stage).resolve()
@@ -249,7 +252,15 @@ def generate_session(output, *, seed=None, manifest=None, base_stage=DEFAULT_STA
     if output.exists() or (manifest is not None and Path(manifest).exists()):
         raise FileExistsError("Use a fresh session output and manifest path")
     layout = json.loads(Path(map_path).read_text())
-    seed = secrets.randbits(64) if seed is None else seed
+    if inventory is None:
+        seed = secrets.randbits(64) if seed is None else seed
+        inventory = generate_inventory(layout, seed)
+    elif seed is not None and seed != inventory["seed"]:
+        raise ValueError("Supplied inventory and seed disagree")
+    seed = inventory["seed"]
+    by_id = {d["drum_id"]: d for d in inventory["drums"]}
+    if len(by_id) != len(inventory["drums"]) or set(by_id) != {d["id"] for d in layout["drums"]}:
+        raise ValueError("Physical inventory must contain each mapped drum exactly once")
     rng = np.random.default_rng(seed)
     textures = output.parent / f"{output.stem}_textures"
     textures.mkdir(exist_ok=False)
@@ -259,39 +270,35 @@ def generate_session(output, *, seed=None, manifest=None, base_stage=DEFAULT_STA
     UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
     UsdGeom.SetStageMetersPerUnit(stage, 1.0)
     entries = []
-    for category in ("LLW", "ILW"):
-        drums = [d for d in layout["drums"] if d["category"] == category]
-        # Exercise examples in every launch. These are training mix settings,
-        # not estimates of real corrosion prevalence.
-        order = rng.permutation(len(drums))
-        rust_count = round(len(drums) * rng.uniform(.13, .22) * (1 if category == "LLW" else .6))
-        bulge_count = round(len(drums) * rng.uniform(.055, .10))
-        overlap = max(1, bulge_count // 5)
-        rust_indices = set(order[:rust_count])
-        bulge_indices = set(order[:overlap]) | set(order[rust_count:rust_count + bulge_count - overlap])
-        for i in sorted(rust_indices | bulge_indices):
-            drum = drums[i]
-            prim = stage.GetPrimAtPath(drum["prim_path"])
-            entry = {"drum_id": drum["id"], "category": category, "prim_path": drum["prim_path"]}
-            if i in rust_indices:
-                material, _ = UsdShade.MaterialBindingAPI(stage.GetPrimAtPath(drum["prim_path"] + "/Body")).ComputeBoundMaterial()
-                asset = material.GetPrim().GetChild("Print").GetAttribute("inputs:file").Get()
-                target = textures / f'{drum["id"]}.png'
-                severity = float(rng.beta(2, 2))
-                entry["corrosion"] = {"severity": severity, **_rust(asset.resolvedPath, target, drum, severity, rng)}
-                _bind_rust(stage, prim, target)
-            if i in bulge_indices:
-                prim.SetInstanceable(False)
-                body = stage.GetPrimAtPath(drum["prim_path"] + "/Body")
-                severity = float(rng.beta(2, 2))
-                entry["bulging"] = {"severity": severity, **_bulge(body, drum, severity, rng)}
-            entries.append(entry)
+    for drum in layout["drums"]:
+        physical = by_id[drum["id"]]
+        plan = physical["visual_plan"]
+        rust = plan["corrosion_severity"]
+        bulge = plan["bulging_severity"]
+        if not (rust or bulge):
+            continue
+        prim = stage.GetPrimAtPath(drum["prim_path"])
+        entry = {"drum_id": drum["id"], "category": drum["category"], "prim_path": drum["prim_path"]}
+        if rust:
+            body = stage.GetPrimAtPath(drum["prim_path"] + "/Body")
+            material, _ = UsdShade.MaterialBindingAPI(body).ComputeBoundMaterial()
+            asset = material.GetPrim().GetChild("Print").GetAttribute("inputs:file").Get()
+            target = textures / f'{drum["id"]}.png'
+            entry["corrosion"] = {"severity": rust, **_rust(asset.resolvedPath, target, drum, rust, rng)}
+            _bind_rust(stage, prim, target)
+        if bulge:
+            prim.SetInstanceable(False)
+            body = stage.GetPrimAtPath(drum["prim_path"] + "/Body")
+            entry["bulging"] = {"severity": bulge, **_bulge(body, drum, bulge, rng)}
+        physical["appearance"] = {key: value for key, value in entry.items()
+                                  if key in ("corrosion", "bulging")}
+        entries.append(entry)
     stage.GetRootLayer().Save()
     if manifest is not None:
         manifest = Path(manifest)
         manifest.parent.mkdir(parents=True, exist_ok=True)
         with manifest.open("x") as handle:
-            json.dump({"schema_version": 1, "seed": seed, "drums": entries}, handle, indent=2)
+            json.dump({"schema_version": 2, "seed": seed, "drums": entries, "physical_inventory": inventory}, handle, indent=2)
             handle.write("\n")
     return output
 

@@ -24,6 +24,11 @@ def verify():
         path, truth = launch("reference", 42)
         replay, repeated = launch("replay", 42)
         assert truth == repeated
+        inventory = truth["physical_inventory"]["drums"]
+        assert {d["drum_id"] for d in inventory} == set(by_id)
+        assert all(d["appearance"] for d in inventory if any(d["visual_plan"].values()))
+        assert all(not d.get("appearance") for d in inventory if not any(d["visual_plan"].values()))
+        assert all(term not in path.read_text() for term in ("activity_bq", "gauge_pressure_kpa", "headspace_m3"))
         original_textures = sorted(path.parent.glob("*_textures/*.png"))
         replay_textures = sorted(replay.parent.glob("*_textures/*.png"))
         assert len(original_textures) == len(replay_textures)
