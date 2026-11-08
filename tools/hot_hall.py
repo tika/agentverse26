@@ -53,12 +53,12 @@ def _encode(folder):
         frames.rmdir()
 
 
-@app.function(image=image, gpu=['RTX-PRO-6000', 'L40S', 'L4'], cpu=8, memory=32768, timeout=4 * 60 * 60,
-              secrets=[modal.Secret.from_name('cosmos-vllm', required_keys=['VLLM_API_KEY'])]
-              # YOLO26s detector credentials (docs/model_api.md): `HOT_DETECTOR=1 hot up` once drum-inference exists.
-              + ([modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL', 'DETECTOR_API_KEY',
-                                                                          'DETECTOR_API_SECRET'])]
-                 if os.environ.get('HOT_DETECTOR') else []))
+@app.function(image=image, gpu=['L40S', 'RTX-PRO-6000', 'L4'], cpu=8, memory=32768, timeout=4 * 60 * 60,
+              # Must be unconditional: Modal rebuilds this definition inside the container, so a
+              # local-only condition gives the container a different dependency list and it crash-loops.
+              secrets=[modal.Secret.from_name('cosmos-vllm', required_keys=['VLLM_API_KEY']),
+                       modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL', 'DETECTOR_API_KEY',
+                                                                               'DETECTOR_API_SECRET'])])
 def serve():
     hot = Path('/tmp/hot')
     log = open('/tmp/hot.log', 'w')
