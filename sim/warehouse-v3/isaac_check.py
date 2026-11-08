@@ -152,7 +152,7 @@ views = {
     # near clip at z=4.3 m (above the 4.03 m stack tops) strips roof, crane and fixtures.
     'overhead': ((W / 2, D / 2, dist), (W / 2, D / 2 + 1e-3, 0), 36 * dist / (W + 2), (dist - 4.3, 200)),
     'ceiling_from_aisle': ((1.4, main_y, 1.5), (13.0, main_y, 7.4), 14, (.05, 200)),
-    'roof_section': ((1.0, 10.0, 5.7), (7.0, 10.0, 8.0), 15, (.05, 200)),
+    'roof_section': ((1.0, main_y, 5.7), (7.0, main_y, 8.0), 15, (.05, 200)),
     'rear_elevation': ((37.0, main_y, 4.6), (W, main_y, 4.6), 20, (.05, 200)),
     'rear_wall_approach': ((13.6, main_y, 1.7), (W, main_y, 3.0), 16, (.05, 200)),
     'interior_main_aisle': ((1.3, main_y - .3, 1.7), (W - 2, main_y + .6, 4.2), 14, (.05, 200)),
@@ -219,7 +219,7 @@ while rgb_now() is None and time.perf_counter() - t_warm < 300:
     app.update(); world.render(); warm += 1
 for name, (eye, target, focal, clip) in views.items():
     if name == 'overhead':
-        focal = 36 * dist / (W + 4)   # fit 24 m width into the 36 mm aperture
+        focal = 36 * dist / max(W + 4, (D + 4) * 1.6)  # fit both axes
         aim(eye, target, focal, clip, up=(0, 1, 0))
     else:
         aim(eye, target, focal, clip)

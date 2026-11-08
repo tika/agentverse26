@@ -1,7 +1,7 @@
 {
   "floor_area_m2": [
     240,
-    480
+    679.2
   ],
   "v2_drums": {
     "LLW": 304,
@@ -19,10 +19,10 @@
   "maximum_bank_depth_drum_rows": 2,
   "aisle_facing_drums": 420,
   "through_aisle_widths_m": [
-    1.66,
-    1.66,
-    1.66,
-    1.66,
-    1.66
+    3.32,
+    3.32,
+    3.32,
+    3.32,
+    3.32
   ]
 }

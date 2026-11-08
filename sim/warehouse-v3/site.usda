@@ -164,8 +164,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_550_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 4.77, 0.003)
+def Mesh "Stripe_A_716_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 6.43, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -174,8 +174,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_550_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 6.23, 0.003)
+def Mesh "Stripe_A_716_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 7.89, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -184,8 +184,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_550_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (2.35, 5.5, 0.003)
+def Mesh "End_A_716_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (2.35, 7.16, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -194,8 +194,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_550_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (9.65, 5.5, 0.003)
+def Mesh "End_A_716_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (9.65, 7.16, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -204,8 +204,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_550_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 4.77, 0.003)
+def Mesh "Stripe_B_716_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 6.43, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -214,8 +214,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_550_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 6.23, 0.003)
+def Mesh "Stripe_B_716_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 7.89, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -224,8 +224,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_550_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (14.35, 5.5, 0.003)
+def Mesh "End_B_716_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (14.35, 7.16, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -234,8 +234,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_550_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (21.65, 5.5, 0.003)
+def Mesh "End_B_716_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (21.65, 7.16, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -244,8 +244,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_850_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 7.77, 0.003)
+def Mesh "Stripe_A_1182_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 11.09, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -254,8 +254,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_850_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 9.23, 0.003)
+def Mesh "Stripe_A_1182_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 12.55, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -264,8 +264,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_850_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (2.35, 8.5, 0.003)
+def Mesh "End_A_1182_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (2.35, 11.82, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -274,8 +274,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_850_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (9.65, 8.5, 0.003)
+def Mesh "End_A_1182_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (9.65, 11.82, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -284,8 +284,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_850_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 7.77, 0.003)
+def Mesh "Stripe_B_1182_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 11.09, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -294,8 +294,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_850_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 9.23, 0.003)
+def Mesh "Stripe_B_1182_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 12.55, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -304,8 +304,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_850_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (14.35, 8.5, 0.003)
+def Mesh "End_B_1182_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (14.35, 11.82, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -314,8 +314,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_850_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (21.65, 8.5, 0.003)
+def Mesh "End_B_1182_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (21.65, 11.82, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -324,8 +324,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_1150_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 10.77, 0.003)
+def Mesh "Stripe_A_1648_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 15.75, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -334,8 +334,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_1150_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 12.23, 0.003)
+def Mesh "Stripe_A_1648_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 17.21, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -344,8 +344,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_1150_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (2.35, 11.5, 0.003)
+def Mesh "End_A_1648_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (2.35, 16.48, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -354,8 +354,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_1150_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (9.65, 11.5, 0.003)
+def Mesh "End_A_1648_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (9.65, 16.48, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -364,8 +364,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_1150_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 10.77, 0.003)
+def Mesh "Stripe_B_1648_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 15.75, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -374,8 +374,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_1150_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 12.23, 0.003)
+def Mesh "Stripe_B_1648_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 17.21, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -384,8 +384,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_1150_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (14.35, 11.5, 0.003)
+def Mesh "End_B_1648_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (14.35, 16.48, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -394,8 +394,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_1150_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (21.65, 11.5, 0.003)
+def Mesh "End_B_1648_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (21.65, 16.48, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -404,8 +404,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_1450_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 13.77, 0.003)
+def Mesh "Stripe_A_2114_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 20.41, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -414,8 +414,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_1450_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 15.23, 0.003)
+def Mesh "Stripe_A_2114_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 21.87, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -424,8 +424,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_1450_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (2.35, 14.5, 0.003)
+def Mesh "End_A_2114_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (2.35, 21.14, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -434,8 +434,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_1450_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (9.65, 14.5, 0.003)
+def Mesh "End_A_2114_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (9.65, 21.14, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -444,8 +444,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_1450_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 13.77, 0.003)
+def Mesh "Stripe_B_2114_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 20.41, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -454,8 +454,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_1450_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 15.23, 0.003)
+def Mesh "Stripe_B_2114_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 21.87, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -464,8 +464,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_1450_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (14.35, 14.5, 0.003)
+def Mesh "End_B_2114_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (14.35, 21.14, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -474,8 +474,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_1450_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (21.65, 14.5, 0.003)
+def Mesh "End_B_2114_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (21.65, 21.14, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -484,8 +484,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_1750_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 16.77, 0.003)
+def Mesh "Stripe_A_2580_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 25.07, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -494,8 +494,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_A_1750_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 18.23, 0.003)
+def Mesh "Stripe_A_2580_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (6, 26.53, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -504,8 +504,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_1750_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (2.35, 17.5, 0.003)
+def Mesh "End_A_2580_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (2.35, 25.8, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -514,8 +514,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_A_1750_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (9.65, 17.5, 0.003)
+def Mesh "End_A_2580_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (9.65, 25.8, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -524,8 +524,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_1750_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 16.77, 0.003)
+def Mesh "Stripe_B_2580_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 25.07, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -534,8 +534,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "Stripe_B_1750_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 18.23, 0.003)
+def Mesh "Stripe_B_2580_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (18, 26.53, 0.003)
 float3 xformOp:scale = (7.3, 0.052, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -544,8 +544,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_1750_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (14.35, 17.5, 0.003)
+def Mesh "End_B_2580_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (14.35, 25.8, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -554,8 +554,8 @@ int[] faceVertexCounts = [4,4,4,4,4,4]
 int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
-def Mesh "End_B_1750_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (21.65, 17.5, 0.003)
+def Mesh "End_B_2580_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
+double3 xformOp:translate = (21.65, 25.8, 0.003)
 float3 xformOp:scale = (0.052, 1.46, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -565,7 +565,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "CentreDash_3" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (3, 10, 0.003)
+double3 xformOp:translate = (3, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -575,7 +575,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/White>
 }
 def Mesh "CentreDash_5" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (5, 10, 0.003)
+double3 xformOp:translate = (5, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -585,7 +585,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/White>
 }
 def Mesh "CentreDash_7" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (7, 10, 0.003)
+double3 xformOp:translate = (7, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -595,7 +595,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/White>
 }
 def Mesh "CentreDash_9" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (9, 10, 0.003)
+double3 xformOp:translate = (9, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -605,7 +605,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/White>
 }
 def Mesh "CentreDash_11" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (11, 10, 0.003)
+double3 xformOp:translate = (11, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -615,7 +615,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/White>
 }
 def Mesh "CentreDash_13" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (13, 10, 0.003)
+double3 xformOp:translate = (13, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -625,7 +625,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/White>
 }
 def Mesh "CentreDash_15" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (15, 10, 0.003)
+double3 xformOp:translate = (15, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -635,7 +635,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/White>
 }
 def Mesh "CentreDash_17" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (17, 10, 0.003)
+double3 xformOp:translate = (17, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -645,7 +645,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/White>
 }
 def Mesh "CentreDash_19" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (19, 10, 0.003)
+double3 xformOp:translate = (19, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -655,7 +655,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/White>
 }
 def Mesh "CentreDash_21" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (21, 10, 0.003)
+double3 xformOp:translate = (21, 14.15, 0.003)
 float3 xformOp:scale = (0.75, 0.045, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -845,7 +845,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_3" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (3, 19.19, 0.003)
+double3 xformOp:translate = (3, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -855,7 +855,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_5" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (5, 19.19, 0.003)
+double3 xformOp:translate = (5, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -865,7 +865,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_7" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (7, 19.19, 0.003)
+double3 xformOp:translate = (7, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -875,7 +875,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_9" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (9, 19.19, 0.003)
+double3 xformOp:translate = (9, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -885,7 +885,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_11" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (11, 19.19, 0.003)
+double3 xformOp:translate = (11, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -895,7 +895,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_13" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (13, 19.19, 0.003)
+double3 xformOp:translate = (13, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -905,7 +905,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_15" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (15, 19.19, 0.003)
+double3 xformOp:translate = (15, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -915,7 +915,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_17" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (17, 19.19, 0.003)
+double3 xformOp:translate = (17, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -925,7 +925,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_19" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (19, 19.19, 0.003)
+double3 xformOp:translate = (19, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -935,7 +935,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "PerimeterDash_1_21" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (21, 19.19, 0.003)
+double3 xformOp:translate = (21, 27.49, 0.003)
 float3 xformOp:scale = (1.08, 0.048, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1301,7 +1301,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "Crate_1_0" (prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI", "MaterialBindingAPI"]) {
-double3 xformOp:translate = (5.5, 19.62, 0.56)
+double3 xformOp:translate = (5.5, 27.92, 0.56)
 float3 xformOp:scale = (1.4, 0.58, 0.91)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1312,7 +1312,7 @@ uniform token physics:approximation = "boundingCube"
 rel material:binding = </World/StorageMaterials/Blue>
 }
 def Mesh "Skid_1_0_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (4.89, 19.62, 0.055)
+double3 xformOp:translate = (4.89, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1322,7 +1322,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Skid_1_0_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (5.5, 19.62, 0.055)
+double3 xformOp:translate = (5.5, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1332,7 +1332,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Skid_1_0_2" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6.11, 19.62, 0.055)
+double3 xformOp:translate = (6.11, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1342,7 +1342,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Band_1_0_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (5, 19.62, 1.022)
+double3 xformOp:translate = (5, 27.92, 1.022)
 float3 xformOp:scale = (0.07, 0.62, 0.026)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1352,7 +1352,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Frame>
 }
 def Mesh "Band_1_0_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (6, 19.62, 1.022)
+double3 xformOp:translate = (6, 27.92, 1.022)
 float3 xformOp:scale = (0.07, 0.62, 0.026)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1362,7 +1362,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Frame>
 }
 def Mesh "StageLine_1_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (5.5, 19.28, 0.003)
+double3 xformOp:translate = (5.5, 27.58, 0.003)
 float3 xformOp:scale = (1.65, 0.035, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1372,7 +1372,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "Crate_1_1" (prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI", "MaterialBindingAPI"]) {
-double3 xformOp:translate = (8.5, 19.62, 0.56)
+double3 xformOp:translate = (8.5, 27.92, 0.56)
 float3 xformOp:scale = (1.4, 0.58, 0.91)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1383,7 +1383,7 @@ uniform token physics:approximation = "boundingCube"
 rel material:binding = </World/StorageMaterials/Olive>
 }
 def Mesh "Skid_1_1_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (7.89, 19.62, 0.055)
+double3 xformOp:translate = (7.89, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1393,7 +1393,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Skid_1_1_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (8.5, 19.62, 0.055)
+double3 xformOp:translate = (8.5, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1403,7 +1403,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Skid_1_1_2" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (9.11, 19.62, 0.055)
+double3 xformOp:translate = (9.11, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1413,7 +1413,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Band_1_1_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (8, 19.62, 1.022)
+double3 xformOp:translate = (8, 27.92, 1.022)
 float3 xformOp:scale = (0.07, 0.62, 0.026)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1423,7 +1423,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Frame>
 }
 def Mesh "Band_1_1_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (9, 19.62, 1.022)
+double3 xformOp:translate = (9, 27.92, 1.022)
 float3 xformOp:scale = (0.07, 0.62, 0.026)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1433,7 +1433,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Frame>
 }
 def Mesh "StageLine_1_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (8.5, 19.28, 0.003)
+double3 xformOp:translate = (8.5, 27.58, 0.003)
 float3 xformOp:scale = (1.65, 0.035, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1443,7 +1443,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "Crate_1_2" (prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI", "MaterialBindingAPI"]) {
-double3 xformOp:translate = (15.5, 19.62, 0.56)
+double3 xformOp:translate = (15.5, 27.92, 0.56)
 float3 xformOp:scale = (1.4, 0.58, 0.91)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1454,7 +1454,7 @@ uniform token physics:approximation = "boundingCube"
 rel material:binding = </World/StorageMaterials/Red>
 }
 def Mesh "Skid_1_2_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (14.89, 19.62, 0.055)
+double3 xformOp:translate = (14.89, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1464,7 +1464,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Skid_1_2_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (15.5, 19.62, 0.055)
+double3 xformOp:translate = (15.5, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1474,7 +1474,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Skid_1_2_2" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (16.11, 19.62, 0.055)
+double3 xformOp:translate = (16.11, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1484,7 +1484,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Band_1_2_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (15, 19.62, 1.022)
+double3 xformOp:translate = (15, 27.92, 1.022)
 float3 xformOp:scale = (0.07, 0.62, 0.026)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1494,7 +1494,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Frame>
 }
 def Mesh "Band_1_2_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (16, 19.62, 1.022)
+double3 xformOp:translate = (16, 27.92, 1.022)
 float3 xformOp:scale = (0.07, 0.62, 0.026)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1504,7 +1504,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Frame>
 }
 def Mesh "StageLine_1_2" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (15.5, 19.28, 0.003)
+double3 xformOp:translate = (15.5, 27.58, 0.003)
 float3 xformOp:scale = (1.65, 0.035, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1514,7 +1514,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Traffic>
 }
 def Mesh "Crate_1_3" (prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI", "MaterialBindingAPI"]) {
-double3 xformOp:translate = (18.5, 19.62, 0.56)
+double3 xformOp:translate = (18.5, 27.92, 0.56)
 float3 xformOp:scale = (1.4, 0.58, 0.91)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1525,7 +1525,7 @@ uniform token physics:approximation = "boundingCube"
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Skid_1_3_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (17.89, 19.62, 0.055)
+double3 xformOp:translate = (17.89, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1535,7 +1535,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Skid_1_3_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18.5, 19.62, 0.055)
+double3 xformOp:translate = (18.5, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1545,7 +1545,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Skid_1_3_2" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (19.11, 19.62, 0.055)
+double3 xformOp:translate = (19.11, 27.92, 0.055)
 float3 xformOp:scale = (0.11, 0.64, 0.11)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1555,7 +1555,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Plywood>
 }
 def Mesh "Band_1_3_0" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18, 19.62, 1.022)
+double3 xformOp:translate = (18, 27.92, 1.022)
 float3 xformOp:scale = (0.07, 0.62, 0.026)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1565,7 +1565,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Frame>
 }
 def Mesh "Band_1_3_1" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (19, 19.62, 1.022)
+double3 xformOp:translate = (19, 27.92, 1.022)
 float3 xformOp:scale = (0.07, 0.62, 0.026)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"
@@ -1575,7 +1575,7 @@ int[] faceVertexIndices = [3,2,1,0, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7]
 rel material:binding = </World/StorageMaterials/Frame>
 }
 def Mesh "StageLine_1_3" (prepend apiSchemas = ["MaterialBindingAPI"]) {
-double3 xformOp:translate = (18.5, 19.28, 0.003)
+double3 xformOp:translate = (18.5, 27.58, 0.003)
 float3 xformOp:scale = (1.65, 0.035, 0.004)
 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 uniform token subdivisionScheme = "none"

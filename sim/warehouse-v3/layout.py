@@ -10,11 +10,12 @@ sys.path.insert(0, str(ROOT / "baseline"))
 from drums import make_inventory
 from stacking import load_config, stack_inventory
 
-WIDTH, DEPTH, HEIGHT = 24, 20, 10
+WIDTH, DEPTH, HEIGHT = 24, 28.3, 10.36
 RACK_SIZE = 1.34
 ROBOT_RADIUS = 0.40
-ROW_Y = (2.5, 5.5, 8.5, 11.5, 14.5, 17.5)
-ROUTE_Y = (1.3, 4, 7, 10, 13, 16, 18.7)
+AISLE_CLEAR = 3.32
+ROW_Y = tuple(round(2.5 + i * (RACK_SIZE + AISLE_CLEAR), 2) for i in range(6))
+ROUTE_Y = (1.3, *(round((a + b) / 2, 2) for a, b in zip(ROW_Y, ROW_Y[1:])), DEPTH - 1.3)
 COLUMN_X = (3.1, 4.55, 6, 7.45, 8.9, 15.1, 16.55, 18, 19.45, 20.9)
 
 
@@ -107,7 +108,6 @@ def validate(layout):
     assert {d["id"]: (d["category"], d["display_id"]) for d in old} == {
         d["id"]: (d["category"], d["display_id"]) for d in layout["drums"] if d["v2_xyz"] is not None
     }
-    assert WIDTH * DEPTH == 2 * 20 * 12
     boxes = []
     for rack in racks.values():
         x, y = rack["center"]
@@ -136,7 +136,7 @@ def validate(layout):
             minimum = min(minimum, math.hypot(dx, dy))
     assert minimum >= ROBOT_RADIUS
     through_widths = [ROW_Y[i+1] - ROW_Y[i] - RACK_SIZE for i in range(len(ROW_Y)-1)]
-    assert min(through_widths) >= 1.4
+    assert all(math.isclose(width, AISLE_CLEAR, abs_tol=1e-8) for width in through_widths)
     for rack_id, rack in racks.items():
         rows = {y for key, _, y in columns if key == rack_id}
         assert len(rows) <= 2

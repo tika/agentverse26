@@ -2,6 +2,8 @@
 
 2026-11-08 · Codex
 
+This report records the earlier 24 × 20 m baseline. See the current layout checks for the widened aisles.
+
 ## Composed stage
 
 - The 24 × 20 m stage resolves all four layers and 429 texture assets with no unresolved dependencies. The roof-off entry point hides `/World/Hall/Roof`.

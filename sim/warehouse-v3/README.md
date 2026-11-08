@@ -1,6 +1,8 @@
 # Agentverse warehouse · Environment v2
 
-Open [warehouse-v3.usda](warehouse-v3.usda) in Isaac Sim using **File → Open**. Keep the USD sublayers and `assets/` beside it. Open [warehouse-overhead.usda](warehouse-overhead.usda) for the roof-off review. The 24 × 20 m warehouse uses metres and Z-up. The robot spawn, route graph and per-drum inspection aisle are in [map.json](map.json). The scene provides the spawn transform at `/World/RobotSpawn`; load the existing Spot separately for a robot session.
+Open [warehouse-v3.usda](warehouse-v3.usda) in Isaac Sim using **File → Open**. Keep the USD sublayers and `assets/` beside it. Open [warehouse-overhead.usda](warehouse-overhead.usda) for the roof-off review. The 24 × 28.30 m warehouse uses metres and Z-up. The robot spawn, route graph and per-drum inspection aisle are in [map.json](map.json). The scene provides the spawn transform at `/World/RobotSpawn`; load the existing Spot separately for a robot session.
+
+The five aisles between rack rows have 3.32 m of clear width.
 
 For autonomous runs, use the [randomized defect session launcher](DEFECTS.md).
 
