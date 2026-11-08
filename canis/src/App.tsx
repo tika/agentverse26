@@ -8,7 +8,8 @@ import { StaticAdapter } from './adapters/StaticAdapter';
 import { ReplayAdapter } from './adapters/ReplayAdapter';
 import { LiveAdapter, parseFeedConfig } from './adapters/LiveAdapter';
 import type { Adapter } from './adapters/types';
-import { Header, OfflineBanner, ReplayBanner, TABS } from './components/Header';
+import { Header, ReplayBanner, TABS } from './components/Header';
+import { ConfigureDialog } from './components/ConfigureDialog';
 import { DrumDetail } from './components/DrumDetail';
 import { AlertsTab, InspectionTab, LogsTab, SensorsTab, SimulationTab } from './tabs/Tabs';
 
@@ -48,10 +49,12 @@ function Console({ map }: { map: PublicMap }) {
   const [tab, setTab] = useState<TabId>(initialTab);
   const [selectedDrumId, selectDrum] = useState<string | null>(null);
   const [selectedRackId, selectRack] = useState<string | null>(null);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [overlays, setOverlays] = useState(true);
 
   const drumByCode = useMemo(() => new Map<string, PublicDrum>(map.drums.map((d) => [d.location_code, d])), [map]);
 
-  const start = useCallback((mode: Mode) => {
+  const start = useCallback((mode: Mode, liveFeeds?: string) => {
     adapter.current?.stop();
     const previous = store.getState().mode;
     store.reset(mode);
@@ -70,13 +73,14 @@ function Console({ map }: { map: PublicMap }) {
     } else {
       setReplay(undefined);
       next = mode === 'live'
-        ? new LiveAdapter({ ...parseFeedConfig(import.meta.env.VITE_CANIS_FEEDS), ...parseFeedConfig(new URLSearchParams(window.location.search).get('feeds')) })
+        ? new LiveAdapter({ ...parseFeedConfig(import.meta.env.VITE_CANIS_FEEDS), ...parseFeedConfig(liveFeeds ?? new URLSearchParams(window.location.search).get('feeds')) })
         : new StaticAdapter();
     }
     adapter.current = next;
     next.start(ctx);
     const url = new URL(window.location.href);
     if (mode === 'offline') url.searchParams.delete('mode'); else url.searchParams.set('mode', mode);
+    if (liveFeeds) url.searchParams.set('feeds', liveFeeds);
     window.history.replaceState(null, '', url);
   }, [store, bus, map]);
 
@@ -107,6 +111,8 @@ function Console({ map }: { map: PublicMap }) {
   const value: ConsoleContextValue = {
     store, bus, map, drumByCode, setMode: start, replay,
     selectedDrumId, selectDrum, selectPackage, selectedRackId, selectRack, openTab,
+    openConfigure: () => setConfigOpen(true),
+    overlays, setOverlays,
   };
 
   return (
@@ -114,7 +120,6 @@ function Console({ map }: { map: PublicMap }) {
       <div className={`app ${tab === 'simulation' ? 'app-one-screen' : ''}`}>
         <Header tab={tab} onTab={openTab} />
         <ReplayBanner />
-        <OfflineBanner />
         <main className="app-main" id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`}>
           {tab === 'simulation' && <SimulationTab />}
           {tab === 'inspection' && <InspectionTab />}
@@ -123,9 +128,7 @@ function Console({ map }: { map: PublicMap }) {
           {tab === 'logs' && <LogsTab />}
         </main>
         <DrumDetail />
-        <footer className="app-foot faint">
-          C.A.N.I.S. operator console framework · read-only · public map <span className="mono">{map.source.file}</span> sha256 <span className="mono">{map.source.sha256.slice(0, 12)}</span> · baseline <span className="mono">{map.source.baseline_revision.slice(0, 7)}</span>
-        </footer>
+        {configOpen && <ConfigureDialog onClose={() => setConfigOpen(false)} />}
       </div>
     </ConsoleContext.Provider>
   );

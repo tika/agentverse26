@@ -18,13 +18,18 @@ export interface ConsoleContextValue {
   drumByCode: Map<string, PublicDrum>;
   /** Select by canonical ID or printed code. */
   selectPackage(code: string | null | undefined): void;
-  setMode(mode: Mode): void;
+  setMode(mode: Mode, liveFeeds?: string): void;
   replay?: ReplayControls;
   selectedDrumId: string | null;
   selectDrum(id: string | null): void;
   selectedRackId: string | null;
   selectRack(id: string | null): void;
   openTab(tab: TabId): void;
+  /** Opens the Configure Simulation dialog (feeds, recorded run, ledger file). */
+  openConfigure(): void;
+  /** False shows the raw evidence image with no boxes or result shapes. */
+  overlays: boolean;
+  setOverlays(on: boolean): void;
 }
 
 export type TabId = 'simulation' | 'inspection' | 'sensors' | 'alerts' | 'logs';

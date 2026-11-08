@@ -80,3 +80,14 @@ export function filterDrums(drums: PublicDrum[], f: DrumFilter, statuses: Map<st
       && (!f.finding || st.finding === f.finding);
   });
 }
+
+export type ResultStatus = 'ok' | 'unsure' | 'defect';
+export const RESULT_COLOUR: Record<ResultStatus, string> = { ok: 'var(--ok)', unsure: 'var(--brand)', defect: 'var(--alert)' };
+export const RESULT_LABEL: Record<ResultStatus, string> = { ok: 'OK in inspected views', unsure: 'Unsure', defect: 'Defect finding' };
+
+/** Latest in-order assessment per printed package code. Independent of coverage. */
+export function assessmentsByPackage(state: ConsoleState) {
+  const out = new Map<string, NonNullable<ConsoleState['assessments'][number]>>();
+  for (const a of state.assessments) if (!a.late) out.set(a.msg.package_id, a);
+  return out;
+}

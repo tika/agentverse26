@@ -13,21 +13,24 @@ test.describe('offline framework (default)', () => {
     await expect(page.getByTestId('replay-banner')).toHaveCount(0);
     await expect(page.locator('.feed-chip')).toHaveCount(6);
     for (const chip of await page.locator('.feed-chip').all()) await expect(chip).toContainText('NOT CONFIGURED');
-    await expect(page.getByTestId('static-reference')).toContainText('STATIC REFERENCE · NOT LIVE');
+    await expect(page.getByTestId('static-reference')).toContainText('STATIC REFERENCE — NOT LIVE');
+    await expect(page.getByTestId('third-person-empty')).toContainText('Simulation Feed Not Configured');
   });
 
   test('keeps sensor and mission fields unavailable', async ({ page }) => {
     await page.goto('/');
     // Poll: the panel renders only after the public map has been fetched.
     await expect.poll(() => page.locator('[data-testid="sensor-table"] [data-state]').evaluateAll((els) => els.map((e) => e.getAttribute('data-state'))))
-      .toEqual(['missing', 'missing', 'missing', 'missing', 'missing', 'not_supplied']);
-    await expect(page.getByTestId('robot-status').locator('[data-state="missing"]')).toHaveCount(7);
-    await expect(page.getByTestId('mission-progress')).toContainText('✓0 ◐0');
+      .toEqual(['missing', 'missing', 'missing', 'missing', 'not_supplied', 'not_supplied']);
+    await expect(page.getByTestId('robot-status').locator('[data-state="missing"]')).toHaveCount(8);
+    await expect(page.getByTestId('mission-progress')).toContainText('0.0 %');
+    await expect(page.getByTestId('coverage-bar')).toContainText('Unseen 100.0%');
     await expect(page.getByTestId('coverage-bar')).toContainText('0 inspected');
     await expect(page.getByTestId('coverage-bar')).toContainText('420 unseen');
-    for (const cam of ['rgb', 'lwir']) await expect(page.getByTestId(`camera-${cam}`)).toContainText('no frame');
+    await expect(page.getByTestId('camera-rgb')).toContainText('Camera Not Configured');
+    await expect(page.getByTestId('camera-lwir')).toContainText('Thermal Feed Not Configured');
     await page.getByRole('button', { name: 'DEPTH' }).click();
-    await expect(page.getByTestId('camera-depth')).toContainText('no frame');
+    await expect(page.getByTestId('camera-depth')).toContainText('Camera Not Configured');
     await expect(page.getByTestId('alerts-empty')).toBeVisible();
   });
 
@@ -54,7 +57,7 @@ test.describe('offline framework (default)', () => {
     await expect(detail).toContainText('3 · Supporting evidence');
     await expect(detail).toContainText('4 · Findings & assessments');
     await expect(detail).toContainText('/World/Drums/D01');
-    await expect(detail).toContainText('no assessment service connected');
+    await expect(detail).toContainText('no assessment record for this package');
   });
 
   test('map stack selection resolves the tier', async ({ page }) => {
@@ -64,6 +67,18 @@ test.describe('offline framework (default)', () => {
     await expect(picker.locator('.tier-btn')).toHaveCount(3);
     await picker.locator('.tier-btn', { hasText: 'T3' }).click();
     await expect(page.getByTestId('drum-detail')).toContainText('T3 of 3');
+  });
+
+  test('Configure simulation opens and can start the recorded demo run', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: /configure simulation/i }).click();
+    const dialog = page.getByTestId('configure-dialog');
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Connect live feeds' }).click();
+    await expect(dialog.getByRole('alert')).toContainText('ws://');
+    await dialog.getByRole('button', { name: 'Start demo replay' }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByTestId('replay-banner')).toBeVisible();
   });
 
   test('every tab renders and arrow keys move between tabs', async ({ page }) => {
@@ -116,9 +131,11 @@ test.describe('demo replay', () => {
     await expect(page.getByTestId('replay-banner')).toContainText('DEMO REPLAY · FICTIONAL FIXTURE DATA');
     await expect(page.getByTestId('mode-chip')).toHaveText('DEMO REPLAY');
     await expect(page.getByTestId('elapsed')).toContainText('REPLAY CLOCK');
-    const h2 = page.locator('[data-channel="h2"] [data-state]');
-    await expect(h2).toHaveAttribute('data-state', 'below_detection');
-    await expect(h2).toContainText('< 2 ppm · BELOW DETECTION');
+    const h2 = page.locator('[data-channel="h2"]');
+    await expect(h2.locator('[data-state]')).toHaveAttribute('data-state', 'below_detection');
+    await expect(h2).toContainText('< 2 ppm');
+    await expect(h2).toContainText('BELOW DETECTION');
+    await expect(h2).not.toContainText(/(^|\s)0(\.0+)? ppm/);
     await expect(page.locator('[data-channel="dose"] [data-state="stale"]')).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId('replay-banner')).toBeVisible();
     await expect(page.locator('.alert-line', { hasText: 'PROPOSED · NOT SENT' })).toBeVisible();
@@ -151,7 +168,7 @@ test.describe('demo replay', () => {
   test('switching back to offline clears fixture data', async ({ page }) => {
     await page.goto('/?mode=replay&tick=60');
     await expect(page.getByTestId('coverage-bar')).toContainText('1 inspected', { timeout: 10_000 });
-    await page.getByLabel('Data mode').selectOption('offline');
+    await page.getByLabel('System state').selectOption('offline');
     await expect(page.getByTestId('mode-chip')).toHaveText('FRAMEWORK · OFFLINE');
     await expect(page.getByTestId('replay-banner')).toHaveCount(0);
     await expect(page.getByTestId('coverage-bar')).toContainText('0 inspected');

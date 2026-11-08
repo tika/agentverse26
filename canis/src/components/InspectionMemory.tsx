@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useConsole, useConsoleState } from '../state/context';
-import { EMPTY_FILTER, filterDrums, packageStatuses, statusOf, type Coverage, type DrumFilter, type FindingFlag } from '../lib/inspection';
+import { assessmentsByPackage, EMPTY_FILTER, filterDrums, packageStatuses, statusOf, type Coverage, type DrumFilter, type FindingFlag } from '../lib/inspection';
 import { LedgerLoader } from './LedgerLoader';
 import { Panel } from './common';
 
@@ -22,6 +22,7 @@ export function InspectionMemory({ compact }: { compact?: boolean }) {
   const [filter, setFilter] = useState<DrumFilter>(EMPTY_FILTER);
   const states = useMemo(() => packageStatuses(state), [state.inspections, state.findings]); // eslint-disable-line react-hooks/exhaustive-deps
   const effective = { ...filter, rack: filter.rack || selectedRackId || '' };
+  const results = assessmentsByPackage(state);
   const rows = filterDrums(map.drums, effective, states);
   const counts = { inspected: [...states.values()].filter((v) => v.coverage === 'inspected').length, seen: [...states.values()].filter((v) => v.coverage === 'seen').length };
   const set = (patch: Partial<DrumFilter>) => setFilter({ ...filter, ...patch });
@@ -61,7 +62,7 @@ export function InspectionMemory({ compact }: { compact?: boolean }) {
       <div className="table-scroll">
         <table className="drum-table" data-testid="drum-table">
           <thead>
-            <tr><th>Drum</th><th>Printed code</th><th>Class</th><th>Rack</th><th>Tier</th>{!compact && <><th>Aisle</th><th>Position (m)</th></>}<th>Coverage</th>{!compact && <th>Finding</th>}</tr>
+            <tr><th>Drum</th><th>Printed code</th><th>Class</th><th>Rack</th><th>Tier</th>{!compact && <><th>Aisle</th><th>Position (m)</th></>}<th>Coverage</th>{!compact && <><th>Finding</th><th>Result</th></>}</tr>
           </thead>
           <tbody>
             {rows.map((d) => {
@@ -77,6 +78,7 @@ export function InspectionMemory({ compact }: { compact?: boolean }) {
                   {!compact && <><td className="num">{d.facing_aisle}</td><td className="num">{d.x_m.toFixed(2)}, {d.y_m.toFixed(2)}</td></>}
                   <td className={`ist ist-${st.coverage}`} title={st.views.length ? `views: ${st.views.join(', ')}` : 'no accepted ledger records'}>{COVERAGE_LABEL[st.coverage]}</td>
                   {!compact && <td className={`ist ist-${st.finding}`}>{FINDING_LABEL[st.finding]}</td>}
+                  {!compact && <td>{results.get(d.location_code) && <span className={`res res-${results.get(d.location_code)!.msg.status}`}>{results.get(d.location_code)!.msg.status.toUpperCase()}</span>}</td>}
                 </tr>
               );
             })}

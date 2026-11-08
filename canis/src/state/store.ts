@@ -35,6 +35,7 @@ export function feedForMessage(msg: Inbound): FeedId {
       return 'detector';
     case 'inspection_finding':
     case 'alert':
+    case 'assessment':
       return 'assessment';
   }
 }
@@ -63,6 +64,7 @@ export function initialState(mode: Mode = 'offline'): ConsoleState {
     inspections: [],
     findings: [],
     alerts: [],
+    assessments: [],
     acknowledged: new Set(),
     logs: [],
     stale: {},
@@ -207,6 +209,9 @@ export class ConsoleStore {
         return;
       case 'alert':
         this.commit({ ...feedPatch, alerts: push(s.alerts, wrap(msg)) });
+        return;
+      case 'assessment':
+        this.commit({ ...feedPatch, assessments: push(s.assessments, wrap(msg)) });
         return;
     }
   }

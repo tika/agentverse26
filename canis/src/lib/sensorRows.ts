@@ -54,5 +54,12 @@ export function sensorRows(state: ConsoleState, wallMs: number): SensorRow[] {
       if (!r) row.state = { kind: 'not_supplied', reason: 'optional channel' };
       return row;
     })(),
+    (() => {
+      const row = base('pressure', 'Air pressure · optional', (m) => m.pressure_kpa === undefined
+        ? { kind: 'not_supplied', reason: 'optional, not in this feed' }
+        : num(m.pressure_kpa, 'kPa', 1));
+      if (!r) row.state = { kind: 'not_supplied', reason: 'optional channel' };
+      return row;
+    })(),
   ];
 }

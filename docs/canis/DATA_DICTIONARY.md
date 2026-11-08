@@ -90,7 +90,8 @@ Observations only reach the console as `canis.v1` messages (`canis/src/contracts
 | `hydrogen_status` | `detected` \| `below_detection` | Whether the instrument resolved a concentration ≥ the limit | observation | Below detection does not prove absence |
 | `hydrogen_detection_limit_ppm` | ppm | Synthetic limit (2 ppm, `physical_config.json` `sensor.gas_detection_ppm`) | observation | — |
 | `gamma_xyz_m`, `gas_inlet_xyz_m` | m, world | Detector and inlet poses used for this sample. A gamma reading belongs to this pose, not to a drum | observation | Required by the console contract |
-| `methane_ppm`, `methane_status`, `methane_detection_limit_ppm` | ppm | **Optional future channel.** The current backend outputs no methane (scenario methane generation is 0) | observation | Shown `NOT SUPPLIED · optional channel` |
+| `methane_ppm`, `methane_status`, `methane_detection_limit_ppm` | ppm | **Optional future channel.** The current backend outputs no methane (scenario methane generation is 0) | observation | Status `N/S` when a feed omits it; `—` with no feed |
+| `pressure_kpa` | kPa | **Optional future channel.** Ambient air pressure. Not produced by `WarehouseSensors` today | observation | Same as methane |
 
 ### 2b. Directional gamma — `gamma_bearing`
 
@@ -138,6 +139,7 @@ A wipe does not characterise the whole package, and contamination is independent
 | `detection` | `detection_id`, `camera_id`, `frame_id`, `class_id` (0 drum, 1 corrosion, 2 bulge, per `DEFECTS.md`), `bbox_px`, `confidence`, `model_id`, optional `drum_attribution {package_id, status: attributed \| inconclusive, evidence}` | `confidence` belongs to the detection, not the drum. Attribution needs its own evidence (e.g. printed code read in a frame) and can stay inconclusive. The YOLO26s training set (`barrels_v2_1200`) is LLW-only; ILW pitting and lobes are out of distribution |
 | `inspection_record` | `run_id`, `package_id`, `frame_id`, `view`, `finding` | One accepted entry from `WarehouseObservations.accept()`. Coverage per package: no records → `unseen`; any → `seen`; `front` **and** `oblique` → `inspected`. This is the only input to coverage counts |
 | `inspection_finding` | `finding_id`, `package_id \| null`, `status: observation_only \| inconclusive \| finding`, `summary`, `evidence[]`, `limits[]`, `assessment: null` | Evidence summary, not a diagnosis. `assessment` is reserved for a future service |
+| `assessment` | `assessment_id`, `run_id`, `package_id`, `tier`, `status: ok \| unsure \| defect`, `defect_types`, `reason`, `evidence_frame_ids`, `model_sha256?`, `shapes[] {camera_id, frame_id, bbox_px}` | One record per package result for the camera result layer and the map (green / yellow / red). `ok` = OK in inspected views; it cannot come from an empty detector response or incomplete coverage. Separate from coverage. The raw evidence view stays available |
 | `alert` | `alert_id`, `severity`, `title`, `package_id?`, `evidence[]`, `proposed_action {text, status: "proposed_not_sent"}` | Proposals are displayed only. The console never sends commands. Acknowledgement is local |
 
 **Freshness.** Records are kept as history. Out-of-order or late records are flagged and do not change "current" values.

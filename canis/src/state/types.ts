@@ -1,5 +1,5 @@
 import type {
-  Alert, CameraFrame, CameraId, DetectionEvent, GammaBearing, InspectionFinding, InspectionRecord,
+  Alert, Assessment, CameraFrame, CameraId, DetectionEvent, GammaBearing, InspectionFinding, InspectionRecord,
   RobotPose, RunState, SensorReading, SwabResult,
 } from '../contracts/messages';
 
@@ -68,6 +68,8 @@ export interface ConsoleState {
   inspections: Received<InspectionRecord>[];
   findings: Received<InspectionFinding>[];
   alerts: Received<Alert>[];
+  /** Latest assessment per printed package (camera result layer + map). */
+  assessments: Received<Assessment>[];
   acknowledged: Set<string>;
   logs: LogEntry[];
   /** Per channel stale flags, so we only log transitions. */

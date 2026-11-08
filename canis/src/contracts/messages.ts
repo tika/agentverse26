@@ -135,6 +135,8 @@ export const SensorReadingMsg = z.object({
   methane_ppm: finite.nonnegative().nullable().optional(),
   methane_status: z.enum(['detected', 'below_detection']).optional(),
   methane_detection_limit_ppm: finite.positive().optional(),
+  /** Optional future channel: ambient air pressure. Not produced by the current backend. */
+  pressure_kpa: finite.positive().optional(),
   gamma_xyz_m: xyz,
   gas_inlet_xyz_m: xyz,
 }).superRefine((m, ctx) => {
@@ -253,10 +255,46 @@ export const AlertMsg = z.object({
   }).optional(),
 });
 
+/**
+ * One assessment record drives both the camera result layer and the map
+ * (Codex display contract, docs/warehouse_inspection_display.md on the dog branch).
+ * Status meanings:
+ *  - ok:     OK in inspected views. Required observations passed with no visible finding.
+ *            An empty detector response or incomplete coverage cannot produce ok.
+ *  - unsure: identity, visibility or evidence insufficient, or a candidate needs a second view.
+ *  - defect: accepted evidence supports visible corrosion, bulging or both.
+ * Assessments never change coverage; coverage comes only from inspection_record.
+ */
+export const AssessmentMsg = z.object({
+  ...envelope,
+  kind: z.literal('assessment'),
+  assessment_id: z.string().min(1),
+  run_id: z.string().min(1),
+  package_id: PackageId,
+  tier: z.number().int().min(1).max(3),
+  status: z.enum(['ok', 'unsure', 'defect']),
+  defect_types: z.array(z.enum(['corrosion', 'bulge'])).default([]),
+  reason: z.string().min(1),
+  evidence_frame_ids: z.array(z.string().min(1)).min(1),
+  model_sha256: z.string().regex(/^[0-9a-f]{64}$/).optional(),
+  /** Result shapes for the camera layer, only on frames where the package is associated. */
+  shapes: z.array(z.object({
+    camera_id: CameraId,
+    frame_id: z.string().min(1),
+    bbox_px: z.tuple([finite, finite, finite.positive(), finite.positive()]),
+  })).default([]),
+}).superRefine((m, ctx) => {
+  const tier = Number(/-T(\d)/.exec(m.package_id)?.[1]);
+  if (tier !== m.tier) ctx.addIssue({ code: z.ZodIssueCode.custom, message: `tier ${m.tier} does not match printed code ${m.package_id}` });
+  if (m.status === 'defect' && m.defect_types.length === 0) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'defect needs defect_types' });
+  if (m.status !== 'defect' && m.defect_types.length) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'defect_types only apply to status defect' });
+});
+
 export const InboundMessage = z.union([
   MapSnapshotMsg, RunStateMsg, RobotPoseMsg, CameraFrameMsg, SensorReadingMsg, GammaBearingMsg,
-  SwabResultMsg, DetectionEventMsg, InspectionRecordMsg, InspectionFindingMsg, AlertMsg,
+  SwabResultMsg, DetectionEventMsg, InspectionRecordMsg, InspectionFindingMsg, AlertMsg, AssessmentMsg,
 ]);
+export type Assessment = z.infer<typeof AssessmentMsg>;
 
 export type MapSnapshot = z.infer<typeof MapSnapshotMsg>;
 export type RunState = z.infer<typeof RunStateMsg>;
@@ -276,7 +314,7 @@ const byKind = {
   map_snapshot: MapSnapshotMsg, run_state: RunStateMsg, robot_pose: RobotPoseMsg,
   camera_frame: CameraFrameMsg, sensor_reading: SensorReadingMsg, gamma_bearing: GammaBearingMsg,
   swab_result: SwabResultMsg, detection: DetectionEventMsg, inspection_record: InspectionRecordMsg,
-  inspection_finding: InspectionFindingMsg, alert: AlertMsg,
+  inspection_finding: InspectionFindingMsg, alert: AlertMsg, assessment: AssessmentMsg,
 } as const;
 
 /** Validate by `kind` so schema errors name the right contract. */

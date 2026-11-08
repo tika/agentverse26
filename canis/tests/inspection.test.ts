@@ -56,3 +56,40 @@ describe('ledger compatibility (scripts/hot/warehouse_observations.py)', () => {
     expect(bus.ingest(msg, 'ledger')).toBe('schema_failure');
   });
 });
+
+describe('assessment records (camera result layer + map)', () => {
+  const base = {
+    schema: 'canis.v1', kind: 'assessment', source: { id: 'assessor', kind: 'assessment' }, quality: 'ok',
+    assessment_id: 'AS-1', run_id: 'seed-42', package_id: 'A-L-01-T1', tier: 1, status: 'unsure',
+    reason: 'single view', evidence_frame_ids: ['sensor_patrol-00042'],
+    shapes: [{ camera_id: 'rgb', frame_id: 'sensor_patrol-00042', bbox_px: [10, 20, 30, 40] }],
+  };
+  it('accepts a valid record and keeps it separate from coverage', async () => {
+    const { assessmentsByPackage } = await import('../src/lib/inspection');
+    const store = new ConsoleStore('live');
+    const bus = new FeedBus(store);
+    expect(bus.ingest({ ...base, seq: 0 }, 't')).toBe('accepted');
+    expect(assessmentsByPackage(store.getState()).get('A-L-01-T1')!.msg.status).toBe('unsure');
+    expect(packageStatuses(store.getState()).get('A-L-01-T1')?.coverage ?? 'unseen').toBe('unseen');
+  });
+  it('rejects a tier that disagrees with the printed code, and defect without a type', () => {
+    const bus = new FeedBus(new ConsoleStore('live'));
+    expect(bus.ingest({ ...base, seq: 0, tier: 2 }, 't')).toBe('schema_failure');
+    expect(bus.ingest({ ...base, seq: 1, status: 'defect' }, 't')).toBe('schema_failure');
+    expect(bus.ingest({ ...base, seq: 2, status: 'defect', defect_types: ['corrosion'] }, 't')).toBe('accepted');
+    expect(bus.ingest({ ...base, seq: 3, evidence_frame_ids: [] }, 't')).toBe('schema_failure');
+  });
+});
+
+describe('Codex exporter compatibility (detector/canis_frame_events.py shape)', () => {
+  it('accepts an exported rgb frame and a YOLO detection on the same frame_id', () => {
+    const store = new ConsoleStore('live');
+    const bus = new FeedBus(store);
+    const env = (kind: string, source: string, seq: number, fields: object) =>
+      ({ schema: 'canis.v1', kind, source: { kind: source, id: `warehouse-${source}` }, seq, quality: 'ok', ...fields });
+    expect(bus.ingest(env('camera_frame', 'isaac', 0, { camera_id: 'rgb', frame_id: 'seed42-stop1-front', width: 640, height: 360, uri: 'data:image/png;base64,AA==', encoding: 'png' }), 'x')).toBe('accepted');
+    expect(bus.ingest(env('detection', 'detector', 0, { camera_id: 'rgb', frame_id: 'seed42-stop1-front', detection_id: 'seed42-stop1-front:0', class_id: 0, bbox_px: [1, 2, 3, 4], confidence: 0.9, model_id: 'run:' + 'a'.repeat(64) }), 'x')).toBe('accepted');
+    expect(bus.ingest({ ...env('detection', 'detector', 1, { camera_id: 'rgb', frame_id: 'seed42-stop1-front', detection_id: 'p:1', class_id: 0, bbox_px: [1, 2, 3, 4], confidence: 0.5, model_id: 'optical-flow-preview' }), quality: 'degraded' }, 'x')).toBe('accepted');
+    expect(store.getState().detections).toHaveLength(2);
+  });
+});

@@ -236,6 +236,21 @@ export function buildReplay(map: PublicMap): ReplayStep[] {
     // Identity for d3 is read in a later frame; the t=24 detection itself stays unattributed.
     if (t === 26 && d3) m.push(record(d3, rgbFrame(26), 'front', 'possible deformation, single view (fixture)'));
     if (t === 48 && d2) m.push(record(d2, rgbFrame(48), 'oblique', null));
+    const assessment = (id: string, d: PublicDrum, status: 'ok' | 'unsure' | 'defect', reason: string, frame: string,
+      bbox: [number, number, number, number], defect_types: string[] = []) =>
+      envelope('assessment', 'assessment', {
+        assessment_id: id, run_id: 'demo-replay', package_id: d.location_code, tier: d.tier, status, defect_types,
+        reason: `${reason} (fixture)`, evidence_frame_ids: [frame], shapes: [{ camera_id: 'rgb', frame_id: frame, bbox_px: bbox }],
+      });
+    if (t === 16 && d1) {
+      note = 'Assessment: defect finding (fictional) shown as an opaque red result shape and on the map';
+      m.push(assessment('AS-0001', d1, 'defect', 'Visible corrosion on the lower chime in front and oblique views', rgbFrame(16), [40, 250, 72, 112], ['corrosion']));
+    }
+    if (t === 30 && d3) m.push(assessment('AS-0002', d3, 'unsure', 'Possible deformation; single view, needs a second oblique view', rgbFrame(30), [460, 240, 82, 108]));
+    if (t === 52 && d2) {
+      note = 'Assessment: OK in inspected views (front + oblique) for one package';
+      m.push(assessment('AS-0003', d2, 'ok', 'Front and oblique views accepted with no visible finding', rgbFrame(52), [470, 246, 76, 104]));
+    }
     if (t === 50 && d4) m.push(record(d4, rgbFrame(50), 'front', null));
     if (t === REPLAY_TOTAL_S) {
       m.push(envelope('assessment', 'alert', {

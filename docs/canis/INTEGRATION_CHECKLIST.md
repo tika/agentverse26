@@ -54,6 +54,9 @@ You can also set `VITE_CANIS_FEEDS` (same syntax) at build time. Each socket fra
 - [ ] Remember the training set is LLW-only.
 
 ### Assessment (`feeds=assessment=…`)
+- [ ] `assessment`, one record per package result, drives **both** the camera result layer and the map (Codex display contract `docs/warehouse_inspection_display.md`). Fields: `assessment_id`, `run_id`, `package_id` (printed code), `tier` (must match the code's `T#`), `status` `ok | unsure | defect`, `defect_types` (`corrosion`/`bulge`, required for and only allowed on `defect`), `reason`, `evidence_frame_ids` (≥ 1), optional `model_sha256`, and `shapes: [{camera_id, frame_id, bbox_px}]`. A shape is drawn only on the frame it references.
+- [ ] `ok` means OK in inspected views. An empty detector response or incomplete coverage must not produce `ok`. Assessments never change coverage.
+- [ ] Pre-assessment detections render as brand-yellow outline boxes. `model_id: "optical-flow-preview"` or `quality: "degraded"` renders dashed and labelled `TRACKED`, and is not evidence.
 - [ ] `inspection_finding` (`observation_only` / `inconclusive` / `finding`) with `evidence` refs and `limits`. `assessment` stays `null` until the service contract is agreed.
 - [ ] `alert` with `severity`, `evidence`, and optional `proposed_action.status: "proposed_not_sent"`.
 

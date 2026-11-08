@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import type { FeedStatus } from '../state/types';
 import { formatAge, formatValueState, type ValueState } from '../lib/values';
 
 export function Panel(props: {
   title: string;
+  icon?: LucideIcon;
   id?: string;
   right?: ReactNode;
   children: ReactNode;
@@ -12,7 +14,10 @@ export function Panel(props: {
   return (
     <section className={`panel ${props.className ?? ''}`} aria-labelledby={props.id ? `${props.id}-title` : undefined}>
       <header className="panel-head">
-        <h2 id={props.id ? `${props.id}-title` : undefined}>{props.title}</h2>
+        <h2 id={props.id ? `${props.id}-title` : undefined}>
+          {props.icon && <props.icon size={17} strokeWidth={1.8} aria-hidden className="panel-icon" />}
+          {props.title}
+        </h2>
         {props.right && <div className="panel-head-right">{props.right}</div>}
       </header>
       <div className="panel-body">{props.children}</div>
@@ -61,13 +66,20 @@ export function FeedChip({ label, status, detail, fixture }: { label: string; st
   );
 }
 
-export function EmptyState({ title, reason }: { title: string; reason: string }) {
+export function EmptyState({ title, reason, icon: I, action }: { title: string; reason: ReactNode; icon?: LucideIcon; action?: ReactNode }) {
   return (
-    <div className="empty">
+    <div className={`empty ${I ? 'empty-rich' : ''}`}>
+      {I && <I size={46} strokeWidth={1.3} aria-hidden className="empty-icon" />}
       <div className="empty-title">{title}</div>
       <div className="empty-reason">{reason}</div>
+      {action}
     </div>
   );
+}
+
+/** Small rounded status label used in panel headers ("No sensor feed", "0 active"). */
+export function Pill({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'ok' | 'warn' | 'alert' | 'fixture' }) {
+  return <span className={`pill pill-${tone}`}>{children}</span>;
 }
 
 export function ValueCell({ state }: { state: ValueState }) {

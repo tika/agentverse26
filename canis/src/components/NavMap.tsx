@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useConsole, useConsoleState } from '../state/context';
 import { groupStacks, scaleBarMetres, toScreen, type Stack } from '../map/geometry';
 import { Panel } from './common';
-import { packageStatuses, statusOf } from '../lib/inspection';
+import { assessmentsByPackage, packageStatuses, RESULT_COLOUR, statusOf } from '../lib/inspection';
 
 const PAD = 1.6;
 
@@ -16,6 +16,11 @@ export function NavMap({ tall, fill }: { tall?: boolean; fill?: boolean }) {
 
   const statuses = packageStatuses(state);
   const covOf = (d: (typeof map.drums)[number]) => statusOf(statuses, d);
+  const results = assessmentsByPackage(state);
+  const worstResult = (ds: typeof map.drums) => {
+    const rs = ds.map((d) => results.get(d.location_code)?.msg.status).filter(Boolean);
+    return rs.includes('defect') ? 'defect' : rs.includes('unsure') ? 'unsure' : rs.includes('ok') ? 'ok' : null;
+  };
   const selectedDrum = map.drums.find((d) => d.id === selectedDrumId);
 
   const zoneBoxes = Object.entries(map.zones).map(([zone, category]) => {
@@ -116,7 +121,8 @@ export function NavMap({ tall, fill }: { tall?: boolean; fill?: boolean }) {
             const allInspected = nInspected === covs.length;
             const anySeen = covs.some((c) => c === 'seen');
             const anyFlag = s.drums.some((d) => ['inconclusive', 'finding'].includes(covOf(d).finding));
-            const ring = isSel ? '#fff' : anyFlag ? 'var(--warn)' : nInspected ? 'var(--ok)' : anySeen ? 'var(--info)' : '#111';
+            const result = worstResult(s.drums);
+            const ring = isSel ? '#fff' : result ? RESULT_COLOUR[result] : anyFlag ? 'var(--warn)' : nInspected ? 'var(--ok)' : anySeen ? 'var(--info)' : '#111';
             const inRack = selectedRackId && s.drums[0].stack_id === selectedRackId;
             return (
               <g key={`${s.x_m},${s.y_m}`} className="stack" onClick={() => setPicked(s)} role="button" tabIndex={0}

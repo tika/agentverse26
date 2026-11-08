@@ -29,8 +29,9 @@ describe('offline state', () => {
     expect(s.inspections).toHaveLength(0);
     expect(s.simClockS).toBeUndefined();
     const rows = sensorRows(s, Date.now());
-    expect(rows.filter((r) => r.key !== 'ch4').every((r) => r.state.kind === 'missing')).toBe(true);
-    expect(rows.find((r) => r.key === 'ch4')!.state.kind).toBe('not_supplied');
+    const optional = ['ch4', 'pressure'];
+    expect(rows.filter((r) => !optional.includes(r.key)).every((r) => r.state.kind === 'missing')).toBe(true);
+    for (const k of optional) expect(rows.find((r) => r.key === k)!.state.kind).toBe('not_supplied');
   });
 });
 

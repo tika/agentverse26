@@ -1,6 +1,6 @@
 import { useConsole, useConsoleState } from '../state/context';
 import { DETECTOR_CLASSES } from '../contracts/messages';
-import { packageStatuses, statusOf, REQUIRED_VIEWS } from '../lib/inspection';
+import { packageStatuses, statusOf, REQUIRED_VIEWS, RESULT_LABEL } from '../lib/inspection';
 import { FixtureBadge } from './common';
 
 const CONTEXT_RADIUS_M = 3;
@@ -15,6 +15,7 @@ export function DrumDetail() {
   const records = state.inspections.filter((r) => r.msg.package_id === code);
   const detections = state.detections.filter((x) => x.msg.drum_attribution?.package_id === code);
   const findings = state.findings.filter((f) => f.msg.package_id === code);
+  const assessments = state.assessments.filter((a) => a.msg.package_id === code);
   const near = (xyz: [number, number, number]) => Math.hypot(xyz[0] - d.x_m, xyz[1] - d.y_m) <= CONTEXT_RADIUS_M;
   const doseContext = state.sensorHistory.filter((s) => !s.late && near(s.msg.gamma_xyz_m)).slice(-6);
   const swabs = state.swabs.filter((s) => s.msg.near_package_id === code || Math.hypot(s.msg.contact_xyz[0] - d.x_m, s.msg.contact_xyz[1] - d.y_m) < 1.5);
@@ -97,7 +98,19 @@ export function DrumDetail() {
               ))}
             </ul>
           )}
-          <p className="reserved">Assessment: <strong>reserved</strong> — no assessment service connected. The console does not diagnose packages.</p>
+          {assessments.length === 0 ? (
+            <p className="reserved">Assessment: <strong>none</strong> — no assessment record for this package. The console itself does not diagnose packages.</p>
+          ) : (
+            <ul className="obs" data-testid="assessments">
+              {assessments.map((a) => (
+                <li key={a.msg.assessment_id} className={a.late ? 'row-late' : ''}>
+                  <span className={`res res-${a.msg.status}`}>{RESULT_LABEL[a.msg.status].toUpperCase()}</span>{' '}
+                  {a.msg.defect_types.length > 0 && <strong>{a.msg.defect_types.join(' + ')} · </strong>}
+                  {a.msg.reason} <span className="faint">· run <span className="mono">{a.msg.run_id}</span> · T{a.msg.tier} · frames {a.msg.evidence_frame_ids.join(', ')}{a.msg.model_sha256 ? ` · model ${a.msg.model_sha256.slice(0, 12)}` : ''}</span> {a.fixture && <FixtureBadge />}
+                </li>
+              ))}
+            </ul>
+          )}
           <p className="faint small">Evidence is not diagnosis: rust can appear on a cool, intact drum; a bulged drum can be cool with hydrogen below detection in the surrounding air; elevated total gamma can come from several packages; a wipe samples one surface footprint. Internal pressure and headspace are not observable here.</p>
         </section>
       </div>

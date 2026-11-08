@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useConsoleState } from '../state/context';
+import { useConsole, useConsoleState } from '../state/context';
 import type { LogCategory, LogEntry } from '../state/types';
 import { Panel } from './common';
 
@@ -14,6 +14,7 @@ export function toJsonl(entries: LogEntry[]): string {
 
 export function Logs() {
   const state = useConsoleState();
+  const { map } = useConsole();
   const [cat, setCat] = useState<'' | LogCategory>('');
   const [level, setLevel] = useState<'' | 'info' | 'warn' | 'error'>('');
   const [q, setQ] = useState('');
@@ -40,7 +41,7 @@ export function Logs() {
 
   return (
     <Panel title="Logs" id="logs" className="logs-panel"
-      right={<span className="dim">payload values and private truth are never logged</span>}>
+      right={<span className="dim">payload values and private truth are never logged · public map <span className="mono">{map.source.file}</span> sha256 <span className="mono">{map.source.sha256.slice(0, 12)}</span></span>}>
       <div className="filters">
         <select aria-label="Log category" value={cat} onChange={(e) => setCat(e.target.value as typeof cat)}>
           <option value="">All categories</option>{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}

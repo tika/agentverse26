@@ -10,14 +10,14 @@ test.describe('handoff screenshots', () => {
   test.skip(!process.env.CANIS_SCREENSHOTS, 'set CANIS_SCREENSHOTS=1 (npm run screenshots)');
 
   test('desktop offline', async ({ page }) => {
-    await page.setViewportSize({ width: 1680, height: 1050 });
+    await page.setViewportSize({ width: 1672, height: 941 });
     await page.goto('/');
     await page.waitForTimeout(800);
     await page.screenshot({ path: `${out}/desktop-offline.png`, fullPage: true });
   });
 
   test('desktop replay', async ({ page }) => {
-    await page.setViewportSize({ width: 1680, height: 1050 });
+    await page.setViewportSize({ width: 1672, height: 941 });
     await page.goto('/?mode=replay&tick=40&at=28');
     await page.getByRole('button', { name: 'Resume replay' }).waitFor({ timeout: 20_000 });
     await page.waitForTimeout(300);
@@ -25,7 +25,7 @@ test.describe('handoff screenshots', () => {
   });
 
   test('desktop inspection with drum detail', async ({ page }) => {
-    await page.setViewportSize({ width: 1680, height: 1050 });
+    await page.setViewportSize({ width: 1672, height: 941 });
     await page.goto('/?tab=inspection');
     await page.locator('[data-testid="drum-table"] tbody tr', { hasText: 'D01' }).first().click();
     await page.waitForTimeout(300);
