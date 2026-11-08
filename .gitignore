@@ -8,3 +8,4 @@ sim/assets/generated/hall_v2_*.png
 sim/assets/generated/preview_weathered_yellow_s*_v2*.png
 sim/scene_barrel_hall.usda
 .claude/settings.local.json
+.DS_Store
