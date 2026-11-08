@@ -36,7 +36,7 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
                'HOT_WAREHOUSE': '1', 'HOT_WAREHOUSE_SEED': os.environ.get('HOT_WAREHOUSE_SEED', '42'),
                'HOT_SPAWN_X':os.environ.get('HOT_SPAWN_X','10'), 'HOT_SPAWN_Y':os.environ.get('HOT_SPAWN_Y','6')})
          .add_local_dir(ROOT / 'sim', '/workspace/sim', copy=True,
-                        ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc', '*.usda']))
+                        ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc']))
 HOT_GPU_COUNT=int(os.environ.get('HOT_GPU_COUNT','1'))
 if HOT_GPU_COUNT not in (1,2,4):raise ValueError('HOT_GPU_COUNT must be 1, 2 or 4')
 app = modal.App('canis-wh-hot')
