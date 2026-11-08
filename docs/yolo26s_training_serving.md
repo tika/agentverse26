@@ -1,6 +1,6 @@
 # Train and call the drum detector
 
-> **Latest release:** use [the selected four-condition YOLO26s API](../detector/v2/API_USAGE.md) and [its measured results](../detector/v2/RUN_RESULTS.md). The instructions below describe the earlier three-class patch detector. Do not mix its class IDs or rust-area calculations with whole-barrel condition boxes.
+> **Latest model:** use [the expanded 2,500-image YOLO26s handoff](../detector/v2/LATEST_MODEL.md), [the four-condition API contract](../detector/v2/API_USAGE.md) and [versioned results](../detector/v2/RUN_RESULTS.md). Select its URL explicitly; the previous 1,500-image model remains the repository default. The instructions below describe the earlier three-class patch detector. Do not mix its class IDs or rust-area calculations with whole-barrel condition boxes.
 
 This trains **one YOLO26s**. After an eight-H100 allocation remained queued, the
 user requested RTX PRO 6000, so the default is now **one RTX PRO 6000** with the

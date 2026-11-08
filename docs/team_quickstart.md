@@ -1,5 +1,9 @@
 # Team quickstart
 
+## Latest YOLO: start here
+
+Use [detector/v2/LATEST_MODEL.md](../detector/v2/LATEST_MODEL.md) to connect to the expanded 2,500-image YOLO26s used in the recent rigid-camera videos. It contains the exact URL, proxy-auth setup, checkpoint verification, worker-secret instructions and results. The previous 1,500-image API remains the default when no URL override is supplied; the older patch-detector notes below are historical. Model API callers need no local GPU, Isaac or training environment.
+
 Work from the same Git revision and use a separate branch for each workstream.
 The verified workflows run headlessly on Modal and return screenshots, video
 frames, or sensor logs. Isaac Sim runs in the container, so teammates only

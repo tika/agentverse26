@@ -10,9 +10,9 @@ SCALE=os.environ.get('CANIS_MODEL_SCALE','s');COMPARISON=os.environ.get('CANIS_C
 if SCALE not in ('n','s') or not COMPARISON.startswith('compare_') or '/' in COMPARISON:
     raise ValueError('Set CANIS_MODEL_SCALE=n|s and CANIS_COMPARISON_ID=compare_TIMESTAMP')
 MODEL=f'yolo26{SCALE}'
-app=modal.App('canis-conditions-'+MODEL)
+app=modal.App(os.environ.get('CANIS_API_APP','canis-conditions-'+MODEL))
 models=modal.Volume.from_name('detector-models')
-image=image.pip_install('fastapi==0.162.2','python-multipart==0.0.33').env({'CANIS_MODEL_SCALE':SCALE,'CANIS_COMPARISON_ID':COMPARISON})
+image=image.pip_install('fastapi==0.162.2','python-multipart==0.0.33').env({'CANIS_MODEL_SCALE':SCALE,'CANIS_COMPARISON_ID':COMPARISON,'CANIS_API_APP':os.environ.get('CANIS_API_APP','canis-conditions-'+MODEL)})
 
 @app.cls(image=image,gpu='RTX-PRO-6000',cpu=2,memory=8192,volumes={'/models':models},timeout=180,
          min_containers=0,max_containers=1,scaledown_window=120)

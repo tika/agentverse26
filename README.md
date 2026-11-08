@@ -14,7 +14,9 @@ CANIS is a simulated Spot inspection agent that combines visual findings, sensor
 
 The mission goal is to collect the required evidence for every assigned drum and report what remains unresolved. A separate safety layer constrains the choices available to the reasoning model and can stop motion independently.
 
-![Spot inspecting drums in Isaac Sim during the recorded YOLO and Cosmos mission](docs/previews/canis-banner.jpg)
+![Warehouse-v3 middle- and upper-drum test with a fixed body-mounted camera](docs/previews/canis-banner.jpg)
+
+*Latest warehouse-v3 two-drum camera/model test: fixed 15° upward mount, physical body pitch and the expanded YOLO26s. This rules-driven clip is separate from the earlier YOLO/Cosmos mission. [Reproduce the recording](docs/rigid_camera_demos.md).*
 
 | What CANIS observes | How it responds |
 |---|---|
@@ -27,6 +29,10 @@ The mission goal is to collect the required evidence for every assigned drum and
 The recording overlay shows the robot's camera, detections, sensor values, visited trail, inspection progress and actual model decisions. Each run also produces a structured report linking findings to the evidence collected.
 
 [Recorded mission and artifacts](docs/mission_recording_20261108.md) · [Front-camera recording workflow](docs/front_camera_recording.md) · [Environment previews and walkthrough](docs/previews/README.md)
+
+## Latest detector for teammates
+
+The recent warehouse-v3 rigid-camera recordings use the separately hosted **expanded YOLO26s**, fine-tuned on **2,500 images** (1,500 yellow LLW + 1,000 blue-teal ILW targets). Start with [the latest-model handoff](detector/v2/LATEST_MODEL.md) for the exact endpoint, private credential setup, checkpoint hash and worker configuration. **Select its URL explicitly:** the previous 1,500-image model remains deployed and is still the default in the client and `selected_model.json`. The expanded model is experimental and does not improve every test subset.
 
 ## How we used Modal
 
@@ -44,9 +50,9 @@ Modal provides the GPU infrastructure for the simulation, synthetic-data pipelin
 
 ### From rendered scenes to a trained detector
 
-We iterated through small visual pilots, a 40-image diversity pilot and an earlier 1,200-image release before generating the latest **1,500-image condition dataset**. The latest run submitted **10 RTX PRO 6000 worker jobs**; Modal initially allocated eight while two queued. Each worker reused one Isaac process across five procedural scene seeds.
+We iterated through small visual pilots, a 40-image diversity pilot and an earlier 1,200-image release before generating the original **1,500-image condition dataset**. That run submitted **10 RTX PRO 6000 worker jobs**; Modal initially allocated eight while two queued. Each worker reused one Isaac process across five procedural scene seeds.
 
-The new dataset contains **23,935 whole-barrel boxes** with four simple classes: **normal**, **rust**, **bulge** and **rust_and_bulge**. Printed IDs are randomized independently of condition. Scene seeds stay within one split: **1,200 training / 150 validation / 150 test images**, rendered at 384 × 384.
+That 1,500-image dataset contains **23,935 whole-barrel boxes** with four simple classes: **normal**, **rust**, **bulge** and **rust_and_bulge**. Printed IDs are randomized independently of condition. Scene seeds stay within one split: **1,200 training / 150 validation / 150 test images**, rendered at 384 × 384.
 
 YOLO26 nano and small were fine-tuned concurrently on **one RTX PRO 6000 each**. We selected **YOLO26s** for its stronger held-out results and retired nano's API while retaining both checkpoints and evaluation reports.
 
@@ -57,7 +63,9 @@ YOLO26 nano and small were fine-tuned concurrently on **one RTX PRO 6000 each**.
 | Yellow LLW primary-barrel accuracy | 96.0% | **96.0%** |
 | Metallic ILW primary-barrel accuracy | 54.7% | **74.7%** |
 
-These measurements come from 150 held-out synthetic frames. Primary-target accuracy and mAP measure different things; the [full results](detector/v2/RUN_RESULTS.md) include background barrels, per-condition errors, timings and limitations.
+These baseline measurements come from 150 held-out synthetic frames, not the expanded model. The later 2,500-image continuation uses 2,000 training / 235 validation / 265 test frames. On matched test subsets, original-yellow accuracy is 97.3% versus 96.0% previously, while original-ILW accuracy is 70.7% versus 74.7%. [Expanded results and limitations](detector/v2/RUN_RESULTS.md) report the full comparison.
+
+Primary-target accuracy and mAP measure different things; the [full results](detector/v2/RUN_RESULTS.md) include background barrels, per-condition errors, timings and limitations.
 
 [Generate and train](detector/v2/README.md) · [Call the selected YOLO26s API](detector/v2/API_USAGE.md) · [Cosmos vLLM deployment](tools/cosmos_vllm.py)
 
@@ -143,7 +151,7 @@ The report lists inspected, pending and deferred drums, unresolved findings and 
 |---|---|
 | **Integrated mission** | A recorded eight-drum job in the 28-drum hall: 64 successful YOLO requests and four live Cosmos decisions, including virtual swabbing and retreat/alert. This recording used the earlier detector. [Run and artifacts](docs/mission_recording_20261108.md) |
 | **Full-store coverage** | Routing, a visited trail, a ledger and checkpoints for all 28 drums. The documented partial run reached 11/28 observation sets before it was cut; full completion is not validated. [Coverage status](docs/full_store_mission.md) |
-| **Current perception model** | The newer four-condition YOLO26s model is trained, tested and deployed. Its API contract and test results are separate from the earlier mission recording. [Current API](detector/v2/API_USAGE.md) |
+| **Current perception model** | The expanded 2,500-image YOLO26s is served separately and used in recent rigid-camera tests; the previous 1,500-image model remains the default and available. These tests are separate from the earlier Cosmos mission. [Latest model and exact version](detector/v2/LATEST_MODEL.md) |
 | **Warehouse development** | A separate dense stacked warehouse workstream extends the environment beyond the recorded 28-drum baseline. [Scene and run guidance](sim/README.md) |
 
 CANIS is a simulation prototype. Domain sensor channels are simulated, thresholds are demonstration policy, and the new detector's reported accuracy is on synthetic images. The statistical policy comparison in [the evaluation](eval/EVALUATION.md) is a separate Python simulation, not a measured improvement from paired physical-robot or Isaac missions.
@@ -161,12 +169,15 @@ Start with the workflow you need:
 | Use the selected detector from another application | [YOLO26s API usage](detector/v2/API_USAGE.md) |
 | Regenerate data, train or redeploy the detector | [Dataset and training pipeline](detector/v2/README.md) |
 | Serve Cosmos on Modal | [vLLM deployment recipe](tools/cosmos_vllm.py) |
+| Launch the 420-drum warehouse-v3 with fresh corrosion and bulging | [Warehouse-v3 defects](sim/warehouse-v3/DEFECTS.md) |
+| Run the CANIS warehouse aisle walk (LLW + ILW, live YOLO26s) | [`scripts/hot/full_hall/wh_cond_walk.py`](scripts/hot/full_hall/wh_cond_walk.py) via [`tools/full_hall_report/hot_hall_canis.py`](tools/full_hall_report/hot_hall_canis.py) |
 | Explore earlier prototypes and detailed commands | [Earlier development workflows](docs/legacy_workflows.md) |
 
 The integration guides retain commands for their recorded versions. Use the selected detector's current API guide for its endpoint, credentials and four-condition response contract.
 
 ```text
 sim/                        USD environment, sensors, camera and coverage logic
+sim/warehouse-v3/           420-drum LLW/ILW warehouse, seeded faults and physical sensors
 scripts/hot/                Perception, agent tasks and mission scripts
 tools/hot_hall.py           Warm Modal simulator supervisor
 tools/cosmos_vllm.py        Cosmos Reason 2 serving recipe

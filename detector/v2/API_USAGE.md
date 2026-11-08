@@ -1,14 +1,17 @@
-# Selected CANIS drum detector: YOLO26s
+# CANIS YOLO26s API: latest experimental and previous default
 
-The selected model is **YOLO26s**, fine-tuned on 1,500 new-design synthetic
-warehouse frames. Its four conditions are `normal`, `rust`, `bulge`, and
-`rust_and_bulge`. Nano's API has been stopped; both trained checkpoints and
-comparison reports remain saved on Modal.
+The **latest experimental model** is YOLO26s continued on the expanded
+**2,500-image yellow / blue-teal ILW dataset**. It is used in the recent
+warehouse-v3 rigid-camera recordings. The previous 1,500-image model remains
+available and is still the default in `selected_model.json` and the Python
+client. Read [LATEST_MODEL.md](LATEST_MODEL.md) for pinned version identity,
+worker setup, measured comparisons and limitations. Both use the same four
+conditions: `normal`, `rust`, `bulge`, `rust_and_bulge`. Nano's API is retired.
 
-**Base URL:**
+**Latest experimental base URL (select explicitly):**
 
 ```text
-https://paramsachdeva07--canis-conditions-yolo26s-conditiondetector-web.us-east.modal.run
+https://paramsachdeva07--canis-yolo26s-expanded-conditiondetector-web.us-east.modal.run
 ```
 
 `GET /health` and `POST /predict` both require a Modal workspace proxy token:
@@ -18,10 +21,12 @@ No tokens are committed to this repository.
 
 ## Python client
 
-The included client needs only Python's standard library. Its default URL is
-the selected small model above.
+The included client needs only Python's standard library. Explicitly set the
+URL to avoid its retained previous-model default:
 
 ```sh
+export CANIS_API_URL='https://paramsachdeva07--canis-yolo26s-expanded-conditiondetector-web.us-east.modal.run'
+export DETECTOR_API_URL="$CANIS_API_URL"
 export DETECTOR_API_KEY='wk-<private-key>'
 export DETECTOR_API_SECRET='ws-<private-secret>'
 python3 detector/v2/api_client.py /absolute/path/to/front_camera.png
@@ -33,7 +38,7 @@ Set `CANIS_API_URL` or `--url` to override the URL. `--confidence` defaults to
 ## HTTP
 
 ```sh
-export CANIS_API_URL='https://paramsachdeva07--canis-conditions-yolo26s-conditiondetector-web.us-east.modal.run'
+export CANIS_API_URL='https://paramsachdeva07--canis-yolo26s-expanded-conditiondetector-web.us-east.modal.run'
 curl --fail-with-body "$CANIS_API_URL/health" \
   -H "Modal-Key: $DETECTOR_API_KEY" \
   -H "Modal-Secret: $DETECTOR_API_SECRET"
@@ -88,20 +93,24 @@ temperature, radiation, pressure, or gas.
 
 ## Version and storage
 
-- Comparison: `compare_20261108T043410Z`.
-- Dataset: `detector-data:/datasets/canis_conditions_1500_20261108T043410Z/dataset.zip`.
-- Checkpoint: `detector-models:/condition_v2/compare_20261108T043410Z/yolo26s/best.pt`.
-- Checkpoint SHA-256: `96bdf7160d7c4f17bf2d36727da51ecbe65f320cfeaa51b543311147db9a031a`.
-- Selected-model pointer: `detector-models:/condition_v2/active.json`.
+- Latest comparison: `compare_colors_20261108T053740Z_continued`.
+- Dataset: `detector-data:/color_expansions/canis_colors_20261108T053740Z/dataset.zip`.
+- Checkpoint: `detector-models:/condition_v2/compare_colors_20261108T053740Z_continued/yolo26s/best.pt`.
+- Checkpoint SHA-256: `ba4c80bcb99f6152d8ee0a6523151c4640ad67d727431b9ec846235dcf895b6a`.
+- Previous default: `selected_model.json` and
+  `detector-models:/condition_v2/active.json` still select the previous model.
 - Test reports/plots/predictions: the checkpoint directory's `results.json`
   and `evaluation/` subdirectory.
 
-Both APIs were checked against four held-out frames before selection:
-authentication was enforced, input/checkpoint hashes matched, and predictions
-matched the offline evaluation. Only small remains deployed. See
-[RUN_RESULTS.md](RUN_RESULTS.md) for accuracy and limitations, and
+Both the expanded and previous small-model APIs remain deployed. Authenticated
+health checks identify the exact comparison and checkpoint; check them before
+accepting findings. See [LATEST_MODEL.md](LATEST_MODEL.md) for the previous URL
+and full startup verification, [RUN_RESULTS.md](RUN_RESULTS.md) for measured
+results and limitations, and
 [README.md](README.md) to reproduce generation and training.
 
-This release does not change the warehouse map, robot control, Cosmos agent,
-mission code, or existing detector endpoint. Integrators explicitly select the
-new URL and consume its whole-barrel condition contract.
+Changing the endpoint does not change the warehouse map, robot control, camera,
+Cosmos agent or overlay. Configure the serving URL in the worker's secret and
+start an owned worker with that configuration; a running container does not
+inherit later shell exports. Do not interpret an API deployment as an automatic
+switch in every teammate's simulator.

@@ -1,5 +1,7 @@
 # CANIS whole-barrel condition retraining
 
+**Latest model:** start with [LATEST_MODEL.md](LATEST_MODEL.md). The 2,500-image expanded YOLO26s is hosted separately and used in the recent rigid-camera recordings. Explicitly select its API URL. `selected_model.json`, the bare client and bare deploy commands still default to the previous 1,500-image model. The reproduction commands below describe that original 1,500-image pipeline.
+
 This pipeline is isolated from the robot/warehouse implementation on `main`.
 Do not overwrite or merge simulation code when updating the detector. Current
 release updates only the YOLO pipeline and dataset renderer. The owner selected
@@ -83,7 +85,7 @@ unique image hashes, split counts and disjoint scene seeds.
 Download the portable release with:
 
 ```sh
-python3 -m modal volume get detector-data /datasets/<dataset_id>/dataset.zip ./dataset.zip
+python3 -m modal volume get detector-data '/datasets/<dataset_id>/dataset.zip' ./dataset.zip
 ```
 
 If packaging is interrupted after rendering, reuse the saved shards without
@@ -143,9 +145,9 @@ Progress is durable in Modal Dicts `canis-condition-generation-progress` and
 `.runtime/`; logs, contact sheets and downloaded metric reports live in
 ignored `out/condition_v2/`. No secrets belong in Git.
 
-## Serve the selected model
+## Reproduce the previous default deployment
 
-YOLO26s is selected in `selected_model.json`. Deploy it with:
+To consume the latest experimental model, use [the latest-model guide](LATEST_MODEL.md); no deployment is needed. The command below serves the **previous default** selected by `selected_model.json`:
 
 ```sh
 python3 -m modal deploy detector/v2/serve.py
@@ -168,7 +170,7 @@ do not use a Cosmos key. Existing workspace proxy tokens can be
 reused if authorized. Never paste tokens into docs or commit them.
 
 ```sh
-export CANIS_API_URL=https://<printed-base-url>
+export CANIS_API_URL='https://<printed-base-url>'
 # Set DETECTOR_API_KEY and DETECTOR_API_SECRET privately in your shell.
 python3 detector/v2/api_client.py /absolute/path/to/front_camera.png
 ```

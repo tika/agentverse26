@@ -1,5 +1,7 @@
 # YOLO + Cosmos integration into the recorded overlay
 
+> **Detector version:** configure the [latest expanded YOLO26s endpoint](../detector/v2/LATEST_MODEL.md) explicitly for new experiments. Its `best_sha256` starts `ba4c80bc`; the retained default starts `96bdf716`. The historical mission below used the older detector. Its linked three-class API page is archival, and replacing a URL does not update an already-running worker or enable Cosmos.
+
 For the newer all-28-drum coverage mission, estimated full trail and persistent
 checkpoints, see [the full-store mission guide](full_store_mission.md). This page
 also retains the commands and evidence for the original eight-drum job.

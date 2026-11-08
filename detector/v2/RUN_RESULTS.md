@@ -1,7 +1,24 @@
-# YOLO26 condition comparison — 8 November 2026
+# YOLO26s results and version history — 8 November 2026
 
-**Selected: YOLO26s.** Nano's API is retired; its checkpoint and reports remain archived.
-No warehouse, robot-control or Cosmos code is changed by this release.
+## Latest experimental: expanded 2,500-image fine-tune
+
+**Used in the recent rigid-camera videos:** `compare_colors_20261108T053740Z_continued`, checkpoint SHA `ba4c80bcb99f6152d8ee0a6523151c4640ad67d727431b9ec846235dcf895b6a`. It is deployed separately; the previous model remains the repository default. [Exact URL, credentials and verification](LATEST_MODEL.md).
+
+The release retains the original 1,500 mixed LLW/ILW frames, adds 750 yellow LLW and 250 blue-teal ILW frames, and totals 1,500 yellow + 1,000 ILW targets. Its split is 2,000 train / 235 validation / 265 test; scenes stay within splits and training is shuffled. Continuation from the previous best weights used 20 epochs, learning rate 0.0001 and one RTX PRO 6000: 68.78 seconds training, 76.57 seconds including evaluation. Validation selected this expanded candidate.
+
+| Matched primary-target test group | Targets | Previous | Latest experimental |
+|---|---:|---:|---:|
+| Original yellow LLW | 75 | 96.0% | 97.3% |
+| Original metallic / blue-teal ILW | 75 | 74.7% | 70.7% |
+| Additional yellow LLW | 90 | 98.9% | 100.0% |
+| Additional blue-teal ILW | 25 | 64.0% | 68.0% |
+| All primary targets | 265 | 233/265 (87.9%) | 233/265 (87.9%) |
+
+Confidence is 0.25 and matching IoU is 0.5; misses count as failures. Both models missed zero primary targets on this test. Latest all-box mAP50 / mAP50–95 is 82.9% / 78.3%; warm inference median / p95 is 6.06 / 6.28 ms. These metrics are synthetic, and the original ILW subset regressed. Do not describe the expanded model as universally better or promote it by changing the previous pointers. The latest-model guide lists saved weights, reports, predictions and known camera-test failures.
+
+## Previous default: 1,500-image nano/small comparison
+
+**Retained default: YOLO26s.** Nano's API is retired; its checkpoint and reports remain archived. The tables below are the original 150-frame comparison, not evaluation of the expanded model. No warehouse, robot-control or Cosmos code is changed by a detector release.
 
 ## Held-out synthetic test results
 
@@ -52,4 +69,4 @@ Small improves the overall result substantially, especially on metallic ILW drum
 
 `detector-models:/condition_v2/compare_20261108T043410Z/yolo26n/` and `yolo26s/` retain best/last checkpoints, training logs/curves, full metrics, confusion matrices, held-out predictions and error overlays. `api_checks.json` records authenticated live-vs-offline checks. `active.json` at `/condition_v2/` selects small.
 
-See [API_USAGE.md](API_USAGE.md) for the sole selected-model endpoint and response contract.
+See [LATEST_MODEL.md](LATEST_MODEL.md) for the latest experimental and retained previous endpoints, and [API_USAGE.md](API_USAGE.md) for their shared response contract.
