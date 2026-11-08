@@ -4,9 +4,14 @@
 
 ## The problem
 
-Radioactive waste stores need repeated checks for container deterioration and changing environmental conditions while limiting the need for people to enter hazardous areas. Robots such as Boston Dynamics Spot already support nuclear-site inspection and data collection, including at [Sellafield](https://www.gov.uk/government/case-studies/how-are-robot-dogs-helping-clean-up-sellafield); [Autowalk missions](https://dev.bostondynamics.com/docs/concepts/autonomy/autowalk_service.html) organize autonomous visits and actions around a recorded inspection plan.
+Robotic dogs such as Boston Dynamics Spot already inspect nuclear facilities, including [Sellafield](https://www.gov.uk/government/case-studies/how-are-robot-dogs-helping-clean-up-sellafield), collecting images, radiation measurements and environmental data. Their inspection workflows still face practical problems:
 
-A successful round still needs to resolve what the evidence means: does a questionable drum need another view, another measurement, an operator alert, or a safe stop? Incomplete observations, ambiguous images and new hazards make those follow-up decisions as important as reaching the inspection points.
+- **Predetermined routes and checks.** Standard [Autowalk missions](https://dev.bostondynamics.com/docs/concepts/autonomy/autowalk_service.html) visit predefined stops and perform assigned actions. Changing the next task after an unexpected finding requires additional decision logic.
+- **Incomplete visual coverage.** Rack posts, poor lighting and upper-tier placement can obscure rust or bulging. An unclear image needs another viewpoint before the drum can be considered inspected.
+- **Alarms require follow-up decisions.** A hot surface, a bulge and rising radiation need different responses. Whether to recheck the drum, inspect its neighbours, keep a safe distance or alert an operator must still be configured or decided.
+- **Human follow-up adds time and exposure.** Uncertain findings require review and can trigger repeat inspections. Where workers must enter hazardous areas, those visits also involve protective equipment and radiation controls.
+
+**Containment failures have substantial financial consequences.** In 2014, a [compromised waste drum caused a radioactive release at WIPP](https://www.epa.gov/radiation/2014-radiological-event-wipp). During recovery from that release and a separate truck fire, GAO reported **about US$64 million in additional restart costs and nearly nine months of delay** beyond the initial estimates. [GAO's 2016 recovery assessment](https://www.gao.gov/products/gao-16-608).
 
 ## CANIS: from an observation to a decision
 
