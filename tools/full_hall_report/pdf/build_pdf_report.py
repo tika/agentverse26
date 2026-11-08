@@ -39,7 +39,7 @@ CAMERA_CROP = (0, 100, 1280, 620)   # chase-camera panel of the 1920x1080 overla
 INK = '#1A1A18'
 COL = {'RED': '#B3261E', 'AMBER': '#C98A00', 'GREEN': '#2E7D32', 'GREY': '#8A8A85'}
 ZONE_COL = {'KEEP OUT': COL['RED'], 'RESTRICTED': COL['AMBER'], 'LOW GAMMA': COL['GREEN'], 'NOT CHECKED': COL['GREY']}
-FINDING = {'corrosion': 'Rust', 'bulge': 'Bulging', 'bulge+corrosion': 'Rust and bulging',
+FINDING = {'dose limit': 'Not reached', 'corrosion': 'Rust', 'bulge': 'Bulging', 'bulge+corrosion': 'Rust and bulging',
            'corrosion+bulge': 'Rust and bulging', 'none': 'Nothing found', '': 'Nothing found'}
 WASTE = {'LLW': 'Low-level', 'ILW': 'Intermediate-level'}
 
@@ -115,7 +115,8 @@ def drum_colour(d):
     if d['status'] == 'Suspect':
         why.append(f'possible {finding(d).lower()}, flagged for review')
     if d['status'] == "Couldn't inspect":
-        why.append('the robot could not get a clear look')
+        why.append('the robot stopped before this drum because radiation was too high' if d.get('finding') == 'dose limit'
+                   else 'the robot could not get a clear look')
     if heat is not None and heat >= HEAT_RISE:
         amber = True; why.append('drum is warmer than the air around it')
     return ('AMBER' if amber else 'GREEN'), why
@@ -559,7 +560,9 @@ def main():
     else:
         w(r'\begin{itemize}[leftmargin=*,itemsep=2pt]')
         for d in ci:
-            w(rf'\item Drum {d["drum_id"]} ({where(d)}): the robot could not get a clear look. Inspect again once the cause is cleared.')
+            cause = ('the robot stopped before this drum because radiation was too high'
+                     if d.get('finding') == 'dose limit' else 'the robot could not get a clear look')
+            w(rf'\item Drum {d["drum_id"]} ({where(d)}): {cause}. Inspect again once the cause is cleared.')
         by = defaultdict(list)
         for z in ns:
             by[z['name']].append(z['part'])
@@ -568,7 +571,12 @@ def main():
         w(r'\end{itemize}')
     if measured_none:
         w(r'Not measured anywhere in this inspection: ' + tex(', '.join(measured_none)) + '.')
-    if spike:
+    if spike and spike.get('stopped'):
+        w(rf'\paragraph{{Radiation event}} {clock(spike["t0"])} into the inspection, radiation in the aisle rose from about '
+          rf'{spike["base"]:.0f} to {spike["peak"]:.0f}\,\textmu Sv/h. The robot stopped the round to protect itself, '
+          r'backed off to the last point where the reading was low, and did not go back in. '
+          r'The drums it had not reached need a radiation-protection survey before anyone inspects them.')
+    elif spike:
         w(rf'\paragraph{{Radiation event}} {clock(spike["t0"])} into the inspection, radiation in the aisle rose from about '
           rf'{spike["base"]:.0f} to {spike["peak"]:.0f}\,\textmu Sv/h. The robot stepped back to a safer spot, waited for it to '
           rf'settle, and returned {clock(spike.get("returned"))} into the inspection to finish the drums it had skipped.')

@@ -22,7 +22,7 @@ FLAG, WEAK, CONFIRM, VIEWS, CLOSE_VIEWS = 0.50, 0.25, 0.72, 3, 5
 TOP_TILT = 0.60          # rad; steeper upward views are outside the detector's training range
 SETTLE_S, YOLO_EVERY_S, LOOK_TIMEOUT_S, SECOND_STEP = 0.35, 0.4, 3.5, 0.40
 YEL, BLK, WHITE, GREY = (255, 212, 0), (10, 10, 10), (255, 255, 255), (110, 118, 128)
-RGB = {'OK': (60, 220, 140), 'Suspect': (255, 160, 40), 'Confirmed defect': (255, 70, 70),
+RGB = {'Not reached': (150, 110, 255), 'OK': (60, 220, 140), 'Suspect': (255, 160, 40), 'Confirmed defect': (255, 70, 70),
        "Couldn't inspect": (255, 160, 40), 'Checking': WHITE}
 import base64 as _b64
 _fd = _Path('/tmp/canis_fonts'); _fd.mkdir(parents=True, exist_ok=True)
@@ -63,6 +63,10 @@ if W_HOT:
 GAMMA_Z, BUDGET_USV = 0.30, 50_000.0      # detector above the body origin; sim/inspection_config.json 50 mSv budget
 DOSE_AMBER, DOSE_STOP = 7.5, 100.0        # uSv/h; sim/inspection_config.json controlled_zone and hot_spot
 DOSE_CLEAR = 0.5 * DOSE_STOP              # retreat target: last pose read below half the stop limit
+# Robot protection: Spot is commercial electronics, not radiation-hardened. Total ionising dose damages
+# electronics cumulatively, so the mission budget is checked against the dose still to come, not only the dose so far.
+DRUM_S = 8.0                               # s per drum, measured on the 36-drum round (278 s)
+BUDGET_RESERVE = 0.2                       # keep 20% of the mission budget for the walk out
 TH_STEP = 4                                # 640 -> 160 px LWIR (thermal cores are low resolution)
 NEAR = [d for d in inventory if abs(d['y'] - AISLE_Y) < 3.0]
 (run_dir / 'stills').mkdir(parents=True, exist_ok=True)
@@ -433,13 +437,22 @@ def dose_check(t, p):
         mission['amber'] = True
         log(t, None, f'gamma {rate:.1f} uSv/h > {DOSE_AMBER:g}: controlled zone, dose watch', 'suspect',
             plain=f'Dose rate passed the {DOSE_AMBER:g} uSv/h controlled-zone level. Inspection continues under dose watch.')
-    if rate > DOSE_STOP:
+    dose = rec['reading']['mission_dose_mSv'] * 1000
+    left = sum(1 for s_ in PLAN for side in s_['sides'] for lk in side['looks'] if lk['drum'] not in rec['status'])
+    projected = dose + rate * left * DRUM_S / 3600
+    over_budget = projected > (1 - BUDGET_RESERVE) * BUDGET_USV
+    if rate > DOSE_STOP or over_budget:
+        why = (f'dose rate {rate:.0f} uSv/h, above the {DOSE_STOP:g} uSv/h hot-spot limit' if rate > DOSE_STOP else
+               f'finishing would bring the robot to {projected / 1000:.1f} mSv, past {1 - BUDGET_RESERVE:.0%} of its '
+               f'{BUDGET_USV / 1000:g} mSv budget')
         to = mission.get('last_clear') or (float(p[0]) - 2.0, AISLE_Y)
         mission['retreat'] = {'t': round(t, 2), 'from': [round(float(p[0]), 3), round(float(p[1]), 3)],
-                              'to': [round(to[0], 3), round(to[1], 3)], 'trigger_uSv_h': round(rate, 2)}
+                              'to': [round(to[0], 3), round(to[1], 3)], 'trigger_uSv_h': round(rate, 2),
+                              'reason': 'dose_rate' if rate > DOSE_STOP else 'projected_budget',
+                              'dose_uSv': round(dose, 3), 'projected_uSv': round(projected, 1)}
         mission['look'], mission['hold'], mission['phase'] = None, None, 'retreat'
         log(t, None, f'GAMMA {rate:.0f} uSv/h > {DOSE_STOP:g} -> STOP AND RETREAT', 'radiation',
-            plain=f'Dose rate {rate:.0f} uSv/h, above the {DOSE_STOP:g} uSv/h hot-spot limit. Inspection stopped; '
+            plain=f'{why[:1].upper() + why[1:]}. Inspection stopped to protect the robot; '
                   f'backing off to the last point read below {DOSE_CLEAR:g} uSv/h.')
 
 
@@ -469,6 +482,8 @@ def minimap(draw, box, p):
             ty = ry + (3 - tier) * ch if side == 'L' else ry + (tier - 1) * ch
             cx = cx_of(round(d['x'], 2))
             s_ = rec['status'].get(d['id']) or ('Checking' if mission['look'] and mission['look']['drum'] == d['id'] else None)
+            if rec['finding'].get(d['id']) == 'dose limit':
+                s_ = 'Not reached'
             col = RGB.get(s_, GREY)
             idle = (40, 46, 54) if d['category'] == 'LLW' else (30, 44, 60)
             draw.rectangle((cx + 3, ty + 3, cx + cw - 3, ty + ch - 3), fill=col if s_ else idle, outline=col if s_ else (70, 80, 92), width=2)
@@ -491,7 +506,8 @@ def minimap(draw, box, p):
     rx = max(x0 + 60, min(x1 - 14, rx))
     draw.ellipse((rx - 9, ay - 9, rx + 9, ay + 9), fill=YEL, outline=BLK)
     k = 0
-    for name, st in (('OK', 'OK'), ('Suspect', 'Suspect'), ('Defect', 'Confirmed defect'), ('Checking', 'Checking')):
+    for name, st in (('OK', 'OK'), ('Suspect', 'Suspect'), ('Defect', 'Confirmed defect'),
+                     ('Not reached', 'Not reached') if mission.get('retreat') else ('Checking', 'Checking')):
         draw.rectangle((x0 + 12 + 150 * k, y1 - 26, x0 + 26 + 150 * k, y1 - 12), fill=RGB[st])
         draw.text((x0 + 32 + 150 * k, y1 - 28), name, font=F[16], fill=WHITE)
         k += 1
@@ -598,11 +614,14 @@ def compose(t, p, chase_rgb, crop, boxes, tbox, therm=None, depth=None):
             if ok.size:
                 dr.text((x0 + 10, 1018), f'range at centre {float(_np2.median(ok)):.2f} m', font=F[14], fill=WHITE)
     # counters and live readings
-    seen = list(rec['status'].values())
+    planned_ids = {lk['drum'] for s_ in PLAN for side in s_['sides'] for lk in side['looks']}
+    dose_left = sum(1 for i in planned_ids if rec['finding'].get(i) == 'dose limit')
+    seen = [v for i, v in rec['status'].items() if rec['finding'].get(i) != 'dose limit']
     n = {k: seen.count(k) for k in ('OK', 'Suspect', 'Confirmed defect', "Couldn't inspect")}
     dr.rectangle((612, 788, 1280, 1040), fill=(14, 18, 24))
-    dr.text((626, 794), f"INSPECTED {len(seen)}/{len(SECTION)}  OK {n['OK']}  SUSPECT {n['Suspect'] + n[chr(67) + 'ouldn' + chr(39) + 't inspect']}"
-            f"  DEFECT {n['Confirmed defect']}", font=FB[22], fill=YEL)
+    dr.text((626, 794), f"INSPECTED {len(seen)}/{len(planned_ids)}  OK {n['OK']}  SUSPECT {n['Suspect'] + n[chr(67) + 'ouldn' + chr(39) + 't inspect']}"
+            f"  DEFECT {n['Confirmed defect']}" + (f"  NOT REACHED {dose_left}" if dose_left else ''), font=FB[20 if dose_left else 22],
+            fill=YEL)
     r_ = rec['reading']
     if r_:
         h2 = f"{r_['hydrogen_ppm']:.0f} ppm" if r_['hydrogen_ppm'] is not None else '<2 ppm'
@@ -611,7 +630,7 @@ def compose(t, p, chase_rgb, crop, boxes, tbox, therm=None, depth=None):
                 f"air {r_['temperature_c']:.1f}°C   H2 {h2}", font=F[16],
                 fill=(255, 70, 70) if rate > DOSE_STOP else (255, 160, 40) if rate > DOSE_AMBER else (150, 210, 240))
     if any(rate > DOSE_AMBER for _, rate in rec['dose_trail']):
-        dose_plot(dr, (16, 596, 456, 772), t)
+        dose_plot(dr, (824, 596, 1264, 772), t)
     yy = 856
     for tt, text, kind in rec['banners'][-6:]:
         col = {'confirmed': (255, 70, 70), 'radiation': (255, 70, 70), 'suspect': (255, 160, 40),
@@ -826,6 +845,10 @@ while t < W_MAX_S:
     else:
         mission['pitch'] = 0.0
     ce = _np2.array([*CHASE_EYE(p)[:2], 2.6 if p[0] < 12 else 3.2]); cl = _np2.array([p[0] + 1.2, AISLE_Y, 0.6 if p[0] < 12 else 1.0])
+    if mission.get('retreat'):                  # fixed wide view: Spot backs towards the camera, hot rack behind it
+        rt = mission['retreat']
+        ce = _np2.array([rt['to'][0] - 4.2, AISLE_Y + 0.3, 3.1])
+        cl = _np2.array([0.5 * (rt['to'][0] + rt['from'][0]) + 0.6, AISLE_Y + 0.3, 0.2])
     b = 1 - _math.exp(-FRAME_DT / TAU_CHASE)
     chase_s = _np2.concatenate([ce, cl]) if chase_s is None else chase_s + b * (_np2.concatenate([ce, cl]) - chase_s)
     aim(chase, chase_s[:3], chase_s[3:])
@@ -902,6 +925,9 @@ reading = rec['reading'] or {}
     'started_utc': _START, 'yolo_calls': rec['yolo_calls'], 'yolo_failures': rec['yolo_fail'], 'stills': rec['stills'],
     'dose_uSv': round(reading.get('mission_dose_mSv', 0) * 1000, 4), 'budget_uSv': BUDGET_USV,
     'radiation_retreat': mission.get('retreat'), 'planted_source': W_HOT,
+    'spike': ({'t0': mission['retreat']['t'], 'at': mission['retreat']['from'],
+               'base': float(_np2.median([r for _, r in rec['dose_trail'][:20]] or [0])),
+               'peak': max(r for _, r in rec['dose_trail']), 'stopped': True} if mission.get('retreat') else None),
     'detector_run_id': 'YOLO26s whole-barrel conditions (expanded, 8 Nov 2026)', 'cosmos_model': 'not used in this round',
     'sensors': 'warehouse-v3 backend: gamma (Poisson counts), air T/RH, H2 inlet, LWIR from depth + map', 'seed': _SEED},
     indent=2, default=float))
