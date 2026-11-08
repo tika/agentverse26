@@ -1,0 +1,190 @@
+{
+ "_note": "Invented data for the report framework example. Not from a robot run.",
+ "drums": [
+  {
+   "drum_id": "E-L-01-T1",
+   "internal_id": "D01",
+   "side": "L",
+   "column": 1,
+   "tier": 1,
+   "x": 1.0,
+   "y": 1.5,
+   "z": 0.14,
+   "category": "LLW",
+   "status": "OK",
+   "finding": "none",
+   "confidence": 0.95,
+   "views": 3,
+   "fault_views": 0,
+   "view_detail": [
+    {
+     "normal": 0.94
+    },
+    {
+     "normal": 0.95
+    },
+    {
+     "normal": 0.93
+    }
+   ],
+   "dose_rate_at_drum_uSv_h": 1.4
+  },
+  {
+   "drum_id": "E-L-01-T2",
+   "internal_id": "D02",
+   "side": "L",
+   "column": 1,
+   "tier": 2,
+   "x": 1.0,
+   "y": 1.5,
+   "z": 1.17,
+   "category": "LLW",
+   "status": "Confirmed defect",
+   "finding": "corrosion",
+   "confidence": 0.91,
+   "views": 3,
+   "fault_views": 3,
+   "view_detail": [
+    {
+     "corrosion": 0.86
+    },
+    {
+     "corrosion": 0.91
+    },
+    {
+     "corrosion": 0.88
+    }
+   ],
+   "dose_rate_at_drum_uSv_h": 1.5
+  },
+  {
+   "drum_id": "E-R-01-T1",
+   "internal_id": "D03",
+   "side": "R",
+   "column": 1,
+   "tier": 1,
+   "x": 1.0,
+   "y": -1.5,
+   "z": 0.14,
+   "category": "LLW",
+   "status": "OK",
+   "finding": "none",
+   "confidence": 0.93,
+   "views": 3,
+   "fault_views": 0,
+   "view_detail": [
+    {
+     "normal": 0.93
+    },
+    {
+     "normal": 0.92
+    },
+    {
+     "normal": 0.91
+    }
+   ],
+   "dose_rate_at_drum_uSv_h": 1.6
+  },
+  {
+   "drum_id": "E-R-01-T3",
+   "internal_id": "D04",
+   "side": "R",
+   "column": 1,
+   "tier": 3,
+   "x": 1.0,
+   "y": -1.5,
+   "z": 2.19,
+   "category": "LLW",
+   "status": "Suspect",
+   "finding": "corrosion",
+   "confidence": 0.62,
+   "views": 8,
+   "fault_views": 3,
+   "view_detail": [
+    {
+     "corrosion": 0.55
+    },
+    {
+     "normal": 0.81
+    },
+    {
+     "normal": 0.77
+    },
+    {
+     "corrosion": 0.62
+    },
+    {
+     "normal": 0.83
+    },
+    {
+     "corrosion": 0.58
+    },
+    {
+     "normal": 0.79
+    },
+    {
+     "normal": 0.8
+    }
+   ],
+   "dose_rate_at_drum_uSv_h": 1.7
+  },
+  {
+   "drum_id": "E-L-02-T1",
+   "internal_id": "D05",
+   "side": "L",
+   "column": 2,
+   "tier": 1,
+   "x": 5.0,
+   "y": 1.5,
+   "z": 0.14,
+   "category": "ILW",
+   "status": "Confirmed defect",
+   "finding": "bulge",
+   "confidence": 0.88,
+   "views": 3,
+   "fault_views": 2,
+   "view_detail": [
+    {
+     "bulge": 0.88
+    },
+    {
+     "bulge": 0.81
+    },
+    {
+     "normal": 0.55
+    }
+   ],
+   "dose_rate_at_drum_uSv_h": 14.0
+  },
+  {
+   "drum_id": "E-R-02-T1",
+   "internal_id": "D06",
+   "side": "R",
+   "column": 2,
+   "tier": 1,
+   "x": 5.0,
+   "y": -1.5,
+   "z": 0.14,
+   "category": "ILW",
+   "status": "Couldn't inspect",
+   "finding": "none",
+   "confidence": 0.0,
+   "views": 0,
+   "fault_views": 0,
+   "view_detail": [],
+   "dose_rate_at_drum_uSv_h": null
+  }
+ ],
+ "expected_drums": 6,
+ "aisle": "E",
+ "aisle_length_m": 8,
+ "duration_s": 80.0,
+ "started_utc": "2000-01-01 00:00:00 UTC",
+ "dose_uSv": 0.251,
+ "budget_uSv": 5.0,
+ "yolo_calls": 20,
+ "yolo_failures": 0,
+ "stills": [],
+ "detector": "example-detector (invented)",
+ "rule": "Side look, 3 views: fault in >=2 -> defect; normal in >=2 and no fault -> OK; otherwise, and always for tier 3, a closer look (8 views in total)."
+}

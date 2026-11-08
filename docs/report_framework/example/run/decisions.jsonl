@@ -1,0 +1,8 @@
+{"t": 12.0, "drum": "E-L-01-T1", "kind": "cleared", "text": "E-L-01-T1 normal (fault 0/3, normal 3/3) -> OK", "source": "CANIS rules"}
+{"t": 17.0, "drum": "E-L-01-T2", "kind": "confirmed", "text": "E-L-01-T2 CORROSION -> DEFECT (0.91, 3/3 views)", "source": "CANIS rules"}
+{"t": 22.0, "drum": "E-R-01-T1", "kind": "cleared", "text": "E-R-01-T1 normal (fault 0/3, normal 3/3) -> OK", "source": "CANIS rules"}
+{"t": 27.0, "drum": "E-R-01-T3", "kind": "suspect", "text": "E-R-01-T3 top tier (fault 1/3, normal 2/3) -> closer look", "source": "CANIS rules"}
+{"t": 33.0, "drum": "E-R-01-T3", "kind": "suspect", "text": "E-R-01-T3 mixed (fault 3/8, normal 5/8) -> SUSPECT", "source": "CANIS rules"}
+{"t": 52.0, "drum": "E-L-02-T1", "kind": "confirmed", "text": "E-L-02-T1 BULGE -> DEFECT (0.88, 2/3 views)", "source": "CANIS rules"}
+{"t": 61.0, "drum": "E-R-02-T1", "kind": "back_off", "text": "dose 120 uSv/h near E-R-02-T1 -> back off", "source": "CANIS rules"}
+{"t": 66.0, "drum": "E-R-02-T1", "kind": "could_not_inspect", "text": "E-R-02-T1 no clear view before back-off -> COULDN'T INSPECT", "source": "CANIS rules"}
