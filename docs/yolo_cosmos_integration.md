@@ -34,7 +34,7 @@ For the teammate's OpenAI-compatible Cosmos service, create a local ignored file
 `.runtime/cosmos.env` with mode 0600:
 
 ```dotenv
-COSMOS_URL=https://tika--agentverse-cosmos-vllm-serve.us-east.modal.run
+COSMOS_URL=https://levi-stein-26--agentverse-cosmos-vllm-serve.us-east.modal.run
 COSMOS_MODEL=cosmos
 VLLM_API_KEY=YOUR_PRIVATE_KEY
 ```

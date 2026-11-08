@@ -50,7 +50,7 @@ Modal provides the GPU infrastructure for the simulation, synthetic-data pipelin
 | **Synthetic dataset curation** | Independent GPU workers generate seeded scenes, render camera views and export semantic ground truth as YOLO boxes | Produces labeled examples with randomized faults, printed IDs, viewpoints and lighting |
 | **Training and fine-tuning** | Separate PyTorch/Ultralytics containers fine-tune pretrained YOLO26 models | Keeps training dependencies separate from Isaac's bundled Python and compares models on the same held-out data |
 | **Detector hosting** | YOLO26s behind an authenticated FastAPI service on an RTX PRO 6000 | Gives the robot and teammates a shared image-to-condition API; scales to zero when idle |
-| **NVIDIA model serving** | Pretrained `nvidia/Cosmos-Reason2-2B` behind vLLM's OpenAI-compatible `/v1/chat/completions` API | Serves image-and-state reasoning and plate-reading requests independently of the simulator |
+| **NVIDIA model serving** | Cosmos Reason 2 behind vLLM's OpenAI-compatible `/v1/chat/completions` API | Serves image-and-state reasoning and plate-reading requests independently of the simulator |
 | **Persistence and access** | Modal Volumes for datasets, checkpoints, caches and run artifacts; Secrets for service credentials | Preserves work between jobs and keeps credentials out of Git and recordings |
 
 ### From rendered scenes to a trained detector
@@ -84,7 +84,7 @@ Primary-barrel accuracy scores the designated target in each frame; mAP includes
 
 The dataset, best weights, training logs and test artifacts persist in Modal Volumes. The expanded model is served at its own authenticated endpoint, while the previous model remains available as the repository default. [Exact model, endpoint and artifact paths](detector/v2/LATEST_MODEL.md).
 
-[Generate the expanded dataset and fine-tune](detector/v2/COLOR_RETRAIN.md) · [Call the latest YOLO26s API](detector/v2/API_USAGE.md) · [Cosmos vLLM deployment](tools/cosmos_vllm.py)
+[Generate the expanded dataset and fine-tune](detector/v2/COLOR_RETRAIN.md) · [Call the latest YOLO26s API](detector/v2/API_USAGE.md) · [Shared Cosmos Reason 2 8B endpoint](docs/cosmos_8b_api.md) · [Cosmos vLLM deployment](tools/cosmos_vllm.py)
 
 ## Technical architecture
 

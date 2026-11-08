@@ -16,7 +16,7 @@ import urllib.request
 
 import modal
 
-MODEL = 'nvidia/Cosmos-Reason2-2B'
+MODEL = os.environ.get('CANIS_COSMOS_CHECKPOINT', 'nvidia/Cosmos-Reason2-2B')
 SERVED_NAME = 'cosmos'
 image = (modal.Image.debian_slim(python_version='3.12')
          .uv_pip_install('vllm==0.11.0', 'transformers==4.57.3', 'huggingface_hub[hf_transfer]')
