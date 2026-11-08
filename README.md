@@ -161,12 +161,15 @@ Start with the workflow you need:
 | Use the selected detector from another application | [YOLO26s API usage](detector/v2/API_USAGE.md) |
 | Regenerate data, train or redeploy the detector | [Dataset and training pipeline](detector/v2/README.md) |
 | Serve Cosmos on Modal | [vLLM deployment recipe](tools/cosmos_vllm.py) |
+| Launch the 420-drum warehouse-v3 with fresh corrosion and bulging | [Warehouse-v3 defects](sim/warehouse-v3/DEFECTS.md) |
+| Run the CANIS warehouse aisle walk (LLW + ILW, live YOLO26s) | [`scripts/hot/full_hall/wh_cond_walk.py`](scripts/hot/full_hall/wh_cond_walk.py) via [`tools/full_hall_report/hot_hall_canis.py`](tools/full_hall_report/hot_hall_canis.py) |
 | Explore earlier prototypes and detailed commands | [Earlier development workflows](docs/legacy_workflows.md) |
 
 The integration guides retain commands for their recorded versions. Use the selected detector's current API guide for its endpoint, credentials and four-condition response contract.
 
 ```text
 sim/                        USD environment, sensors, camera and coverage logic
+sim/warehouse-v3/           420-drum LLW/ILW warehouse, seeded faults and physical sensors
 scripts/hot/                Perception, agent tasks and mission scripts
 tools/hot_hall.py           Warm Modal simulator supervisor
 tools/cosmos_vllm.py        Cosmos Reason 2 serving recipe

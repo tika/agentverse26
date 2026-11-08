@@ -1,0 +1,201 @@
+{
+  "stage_conventions": {
+    "pass": true,
+    "detail": {
+      "metersPerUnit": 1.0,
+      "upAxis": "Z",
+      "defaultPrim": "/World"
+    }
+  },
+  "floor_area": {
+    "pass": true,
+    "detail": {
+      "v2_m2": 240.0,
+      "v3_m2": 679.2,
+      "ratio": 2.83,
+      "interior_m": [
+        24.0,
+        28.3
+      ],
+      "measured_from": "wall inner faces in composed stage"
+    }
+  },
+  "drum_inventory": {
+    "pass": true,
+    "detail": {
+      "stage_drums": 420,
+      "map_drums": 420,
+      "v2_drums": 360,
+      "v2_ids_missing_in_v3": [],
+      "v2_category_changed": [],
+      "v3_by_category": {
+        "LLW": 336,
+        "ILW": 84
+      },
+      "v2_by_category": {
+        "LLW": 304,
+        "ILW": 56
+      },
+      "by_zone": {
+        "A:LLW": 336,
+        "B:ILW": 84
+      }
+    }
+  },
+  "drum_poses_match_map": {
+    "pass": true,
+    "detail": {
+      "max_abs_error_m": 0.0
+    }
+  },
+  "three_high": {
+    "pass": true,
+    "detail": {
+      "drum_columns": 140,
+      "columns_not_exactly_1_2_3": 0,
+      "stacks": 56,
+      "stack_sizes": {
+        "12": 28,
+        "3": 28
+      }
+    }
+  },
+  "vertical_clearance": {
+    "pass": true,
+    "detail": {
+      "stacked_drum_overlaps": 0,
+      "tallest_stack_top_m": 4.032,
+      "truss_bottom_m": 7.93,
+      "lowest_fixture_m": 7.91
+    }
+  },
+  "colliders": {
+    "pass": true,
+    "detail": {
+      "drums_not_covered_by_own_or_rack_proxy_collider": 0,
+      "examples": [],
+      "max_overhang_beyond_rack_proxy_m": 0.0,
+      "tolerance_m": 0.05,
+      "floor": true,
+      "walls": {
+        "WallSouth": true,
+        "WallNorth": true,
+        "WallFront": true,
+        "WallBack": true
+      },
+      "rack_prims": 56,
+      "racks_without_collider": []
+    }
+  },
+  "route_clearance_geometric": {
+    "pass": true,
+    "detail": {
+      "robot_radius_m": 0.4,
+      "robot_height_m": 1.1,
+      "obstacle_meshes": 793,
+      "min_clearance_m": 0.53,
+      "worst_edge": [
+        "N0_0",
+        "N1_0"
+      ],
+      "worst_obstacle": "/World/Racks/A_R_P01/Beam1_0",
+      "edges_below_radius": [],
+      "edges": 35
+    }
+  },
+  "spawn_clear": {
+    "pass": true,
+    "detail": {
+      "spawn": [
+        1,
+        6,
+        0
+      ],
+      "nearest_m": 1.0,
+      "nearest": "/World/Hall/Structure/WallFront"
+    }
+  },
+  "staging_props_in_bounds": {
+    "pass": true,
+    "detail": {
+      "staging_bounds": [
+        [
+          0,
+          0,
+          24,
+          0.75
+        ],
+        [
+          0,
+          27.55,
+          24,
+          28.3
+        ]
+      ],
+      "props_outside": []
+    }
+  },
+  "semantic_labels": {
+    "pass": null,
+    "detail": {
+      "drums_with_labels_authored": 0,
+      "note": "v2 applies labels at runtime in Isaac (labels.label_scene); authored labels optional"
+    }
+  },
+  "roof_framing": {
+    "pass": true,
+    "detail": {
+      "members_above_deck_underside": [],
+      "max_vertex_above_deck_underside_m": -0.0008,
+      "deck_sheet_underside_error_m": 0.0003,
+      "vertical_clearances_m": {
+        "stack_top": 4.032,
+        "hook_bottom": 5.65,
+        "girder_top": 7.415,
+        "trolley_top": 7.77,
+        "fixture_face_bottom": 7.910000000223517,
+        "chord_underside": 7.93,
+        "eave_deck_underside": 9.08,
+        "ridge_deck_underside": 10.318
+      }
+    }
+  },
+  "end_gates": {
+    "pass": true,
+    "detail": {
+      "West": {
+        "opening_y": [
+          12.15,
+          16.15
+        ],
+        "opening_height": 4.5,
+        "curtain_covers_opening": true,
+        "curtain_and_wall_colliders": true,
+        "state": "closed"
+      },
+      "East": {
+        "opening_y": [
+          12.15,
+          16.15
+        ],
+        "opening_height": 4.5,
+        "curtain_covers_opening": true,
+        "curtain_and_wall_colliders": true,
+        "state": "closed"
+      }
+    }
+  },
+  "shell_repeatable": {
+    "pass": true,
+    "detail": {
+      "runs": 2,
+      "sha256": "ed8b84f84a216073552dfa1e"
+    }
+  },
+  "summary": {
+    "pass": true,
+    "failed": [],
+    "stage": "warehouse-v3.usda",
+    "map": "map.json"
+  }
+}

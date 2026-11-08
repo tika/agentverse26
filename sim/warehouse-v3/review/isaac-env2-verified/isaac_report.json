@@ -1,0 +1,566 @@
+{
+  "stage": "/stage/warehouse-v3.usda",
+  "started": 1794098970.7125554,
+  "open_seconds": 0.4,
+  "counts": {
+    "prims": 3963,
+    "meshes": 1525,
+    "lights": 85,
+    "drums": 420,
+    "colliders": 105,
+    "meters_per_unit": 1.0,
+    "up_axis": "Z"
+  },
+  "semantics": {
+    "labelled_drums": 420,
+    "taxonomies": [
+      "class",
+      "drum_id",
+      "waste_category"
+    ]
+  },
+  "physics_drop": {
+    "probes": 79,
+    "failed": [],
+    "final_xyz": {
+      "Node_N0_0": [
+        1.5,
+        1.3,
+        0.2
+      ],
+      "Node_N0_1": [
+        1.5,
+        4.0,
+        0.2
+      ],
+      "Node_N0_2": [
+        1.5,
+        7.0,
+        0.2
+      ],
+      "Node_N0_3": [
+        1.5,
+        10.0,
+        0.2
+      ],
+      "Node_N0_4": [
+        1.5,
+        13.0,
+        0.2
+      ],
+      "Node_N0_5": [
+        1.5,
+        16.0,
+        0.2
+      ],
+      "Node_N0_6": [
+        1.5,
+        18.7,
+        0.2
+      ],
+      "Node_N1_0": [
+        12.0,
+        1.3,
+        0.2
+      ],
+      "Node_N1_1": [
+        12.0,
+        4.0,
+        0.2
+      ],
+      "Node_N1_2": [
+        12.0,
+        7.0,
+        0.2
+      ],
+      "Node_N1_3": [
+        12.0,
+        10.0,
+        0.2
+      ],
+      "Node_N1_4": [
+        12.0,
+        13.0,
+        0.2
+      ],
+      "Node_N1_5": [
+        12.0,
+        16.0,
+        0.2
+      ],
+      "Node_N1_6": [
+        12.0,
+        18.7,
+        0.2
+      ],
+      "Node_N2_0": [
+        22.5,
+        1.3,
+        0.2
+      ],
+      "Node_N2_1": [
+        22.5,
+        4.0,
+        0.2
+      ],
+      "Node_N2_2": [
+        22.5,
+        7.0,
+        0.2
+      ],
+      "Node_N2_3": [
+        22.5,
+        10.0,
+        0.2
+      ],
+      "Node_N2_4": [
+        22.5,
+        13.0,
+        0.2
+      ],
+      "Node_N2_5": [
+        22.5,
+        16.0,
+        0.2
+      ],
+      "Node_N2_6": [
+        22.5,
+        18.7,
+        0.2
+      ],
+      "Node_spawn": [
+        1.0,
+        6.0,
+        0.2
+      ],
+      "Node_front_spawn_link": [
+        1.5,
+        6.0,
+        0.2
+      ],
+      "Rack_A_L_P01": [
+        3.1,
+        5.5,
+        3.272
+      ],
+      "Rack_A_L_P02": [
+        4.55,
+        5.5,
+        3.272
+      ],
+      "Rack_A_L_P03": [
+        6.0,
+        5.5,
+        3.272
+      ],
+      "Rack_A_L_P04": [
+        7.45,
+        5.5,
+        3.272
+      ],
+      "Rack_B_R_P01": [
+        3.1,
+        8.5,
+        3.272
+      ],
+      "Rack_B_R_P02": [
+        4.55,
+        8.5,
+        3.272
+      ],
+      "Rack_B_R_P03": [
+        6.0,
+        8.5,
+        3.272
+      ],
+      "Rack_B_R_P04": [
+        7.45,
+        8.5,
+        3.272
+      ],
+      "Rack_B_L_P01": [
+        3.1,
+        11.5,
+        3.272
+      ],
+      "Rack_B_L_P02": [
+        4.55,
+        11.5,
+        3.272
+      ],
+      "Rack_B_L_P03": [
+        6.0,
+        11.5,
+        3.272
+      ],
+      "Rack_B_L_P04": [
+        7.45,
+        11.5,
+        3.272
+      ],
+      "Rack_C_R_P01": [
+        3.1,
+        14.5,
+        3.272
+      ],
+      "Rack_C_R_P02": [
+        4.55,
+        14.5,
+        3.272
+      ],
+      "Rack_C_R_P03": [
+        6.0,
+        14.5,
+        3.272
+      ],
+      "Rack_C_R_P04": [
+        7.45,
+        14.5,
+        3.272
+      ],
+      "Rack_A_L_P06": [
+        15.1,
+        5.5,
+        4.232
+      ],
+      "Rack_A_L_P08": [
+        18.0,
+        5.5,
+        4.232
+      ],
+      "Rack_A_L_P09": [
+        19.45,
+        5.5,
+        4.232
+      ],
+      "Rack_B_R_P06": [
+        15.1,
+        8.5,
+        4.232
+      ],
+      "Rack_B_R_P08": [
+        18.0,
+        8.5,
+        4.232
+      ],
+      "Rack_B_R_P09": [
+        19.45,
+        8.5,
+        4.232
+      ],
+      "Rack_B_L_P06": [
+        15.1,
+        11.5,
+        4.232
+      ],
+      "Rack_B_L_P08": [
+        18.0,
+        11.5,
+        4.232
+      ],
+      "Rack_B_L_P09": [
+        19.45,
+        11.5,
+        4.232
+      ],
+      "Rack_C_R_P06": [
+        15.1,
+        14.5,
+        4.232
+      ],
+      "Rack_C_R_P08": [
+        18.0,
+        14.5,
+        4.232
+      ],
+      "Rack_C_R_P09": [
+        19.45,
+        14.5,
+        4.232
+      ],
+      "Rack_A_L_P05": [
+        8.9,
+        5.5,
+        3.272
+      ],
+      "Rack_A_L_P07": [
+        16.55,
+        5.5,
+        4.232
+      ],
+      "Rack_A_L_P10": [
+        20.9,
+        5.5,
+        4.232
+      ],
+      "Rack_A_R_P01": [
+        3.1,
+        2.5,
+        3.272
+      ],
+      "Rack_A_R_P02": [
+        4.55,
+        2.5,
+        3.272
+      ],
+      "Rack_A_R_P03": [
+        7.45,
+        2.5,
+        3.272
+      ],
+      "Rack_A_R_P04": [
+        8.9,
+        2.5,
+        3.272
+      ],
+      "Rack_A_R_P05": [
+        15.1,
+        2.5,
+        4.232
+      ],
+      "Rack_A_R_P06": [
+        16.55,
+        2.5,
+        4.232
+      ],
+      "Rack_A_R_P07": [
+        19.45,
+        2.5,
+        4.232
+      ],
+      "Rack_A_R_P08": [
+        20.9,
+        2.5,
+        4.232
+      ],
+      "Rack_B_L_P05": [
+        8.9,
+        11.5,
+        3.272
+      ],
+      "Rack_B_L_P07": [
+        16.55,
+        11.5,
+        4.232
+      ],
+      "Rack_B_L_P10": [
+        20.9,
+        11.5,
+        4.232
+      ],
+      "Rack_B_R_P05": [
+        8.9,
+        8.5,
+        3.272
+      ],
+      "Rack_B_R_P07": [
+        16.55,
+        8.5,
+        4.232
+      ],
+      "Rack_B_R_P10": [
+        20.9,
+        8.5,
+        4.232
+      ],
+      "Rack_C_L_P01": [
+        3.1,
+        17.5,
+        3.272
+      ],
+      "Rack_C_L_P02": [
+        4.55,
+        17.5,
+        3.272
+      ],
+      "Rack_C_L_P03": [
+        7.45,
+        17.5,
+        3.272
+      ],
+      "Rack_C_L_P04": [
+        8.9,
+        17.5,
+        3.272
+      ],
+      "Rack_C_L_P05": [
+        15.1,
+        17.5,
+        4.232
+      ],
+      "Rack_C_L_P06": [
+        16.55,
+        17.5,
+        4.232
+      ],
+      "Rack_C_L_P07": [
+        19.45,
+        17.5,
+        4.232
+      ],
+      "Rack_C_L_P08": [
+        20.9,
+        17.5,
+        4.232
+      ],
+      "Rack_C_R_P05": [
+        8.9,
+        14.5,
+        3.272
+      ],
+      "Rack_C_R_P07": [
+        16.55,
+        14.5,
+        4.232
+      ],
+      "Rack_C_R_P10": [
+        20.9,
+        14.5,
+        4.232
+      ]
+    },
+    "pass": true
+  },
+  "close_drums": {
+    "LLW": [
+      "D09",
+      "B-L-01-T1"
+    ],
+    "ILW": [
+      "D20",
+      "B-R-11-T1"
+    ]
+  },
+  "tour": {
+    "frames": 720,
+    "fps": 24,
+    "seconds": 30.0,
+    "resolution": [
+      1280,
+      720
+    ]
+  },
+  "render": {
+    "warmup_renders": 537,
+    "views": {
+      "overhead": {
+        "file": "overhead/rgb.png",
+        "mean": 179.3
+      },
+      "ceiling_from_aisle": {
+        "file": "ceiling_from_aisle/rgb.png",
+        "mean": 114.7
+      },
+      "roof_section": {
+        "file": "roof_section/rgb.png",
+        "mean": 141.1
+      },
+      "rear_elevation": {
+        "file": "rear_elevation/rgb.png",
+        "mean": 222.5
+      },
+      "rear_wall_approach": {
+        "file": "rear_wall_approach/rgb.png",
+        "mean": 116.0
+      },
+      "interior_main_aisle": {
+        "file": "interior_main_aisle/rgb.png",
+        "mean": 115.2
+      },
+      "llw_aisle": {
+        "file": "llw_aisle/rgb.png",
+        "mean": 112.3
+      },
+      "ilw_bank": {
+        "file": "ilw_bank/rgb.png",
+        "mean": 138.6
+      },
+      "floor_detail": {
+        "file": "floor_detail/rgb.png",
+        "mean": 114.2
+      },
+      "close_llw_D09": {
+        "file": "close_llw_D09/rgb.png",
+        "mean": 113.8
+      },
+      "close_ilw_D20": {
+        "file": "close_ilw_D20/rgb.png",
+        "mean": 115.4
+      },
+      "inspection_cam_llw_D09": {
+        "file": "inspection_cam_llw_D09/rgb.png",
+        "eye": [
+          2.791,
+          10.48,
+          0.6
+        ],
+        "body_xy": [
+          2.791,
+          10
+        ],
+        "drum": "D09",
+        "display_id": "B-L-01-T1",
+        "label_z": 0.584,
+        "camera": "v2 Spot inspection camera: 0.6 m, -10 deg, 78 deg FOV, 640x640"
+      },
+      "inspection_cam_ilw_D20": {
+        "file": "inspection_cam_ilw_D20/rgb.png",
+        "eye": [
+          15.1,
+          9.52,
+          0.6
+        ],
+        "body_xy": [
+          15.1,
+          10
+        ],
+        "drum": "D20",
+        "display_id": "B-R-11-T1",
+        "label_z": 0.72,
+        "camera": "v2 Spot inspection camera: 0.6 m, -10 deg, 78 deg FOV, 640x640"
+      }
+    }
+  },
+  "views": {
+    "overhead": [
+      "overhead/rgb.png"
+    ],
+    "ceiling_from_aisle": [
+      "ceiling_from_aisle/rgb.png"
+    ],
+    "roof_section": [
+      "roof_section/rgb.png"
+    ],
+    "rear_elevation": [
+      "rear_elevation/rgb.png"
+    ],
+    "rear_wall_approach": [
+      "rear_wall_approach/rgb.png"
+    ],
+    "interior_main_aisle": [
+      "interior_main_aisle/rgb.png"
+    ],
+    "llw_aisle": [
+      "llw_aisle/rgb.png"
+    ],
+    "ilw_bank": [
+      "ilw_bank/rgb.png"
+    ],
+    "floor_detail": [
+      "floor_detail/rgb.png"
+    ],
+    "close_llw_D09": [
+      "close_llw_D09/rgb.png"
+    ],
+    "close_ilw_D20": [
+      "close_ilw_D20/rgb.png"
+    ],
+    "inspection_cam_llw_D09": [
+      "inspection_cam_llw_D09/rgb.png"
+    ],
+    "inspection_cam_ilw_D20": [
+      "inspection_cam_ilw_D20/rgb.png"
+    ]
+  },
+  "seconds_total": 127.6
+}
