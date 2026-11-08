@@ -1,33 +1,30 @@
-"""Shared camera and viewpoint contract for the aisle-2 LLW demo (docs/demo_video_plan.md).
+"""Viewpoints for the aisle-2 LLW demo, computed for the robot's real camera.
 
-Pure numpy, no Isaac imports. The agent (scripts/hot) and the detector training
-renders (P1) both import this file, so the robot's onboard camera and the
-training camera are the same camera at the same poses.
-
-Frames: world z up. Body origin is Spot's base link (z ~ 0.50 m standing, from the
-hot-worker logs). Pitch rotates the camera mount about the body origin;
-positive pitch looks up. The Isaac Spot walking policy has no pitch input, so a
-pitched view is simulated while the robot stands still and must be labelled so.
+Pure numpy, no Isaac imports. The camera is the rigid body-mounted front camera in
+sim/front_camera.py (Param's): 1280x720, 110 deg horizontal FOV, 0.60 m forward and
+0.12 m above the body origin, level. The walking policy cannot pitch the body, so
+every view has pitch 0: to fit tier 3 (top 3.07 m) the robot stands farther back
+instead of looking up. Views are chosen once, offline, as a greedy set cover of the
+60 aisle-facing drums; the route is therefore deterministic.
 """
 import math
 
 import numpy as np
 
-CAMERA = dict(width=640, height=640, fx=400.0, fy=400.0, cx=320.0, cy=320.0)  # detector/dataset_plan.py CAMERA
-MOUNT = (0.35, 0.0, 0.45)       # Forward, left, up from the body origin (m). Level mount: 0 deg pitch.
+from front_camera import HFOV_DEG, MOUNT_XYZ, RESOLUTION
+
+_FX = RESOLUTION[0] / 2 / math.tan(math.radians(HFOV_DEG) / 2)
+CAMERA = dict(width=RESOLUTION[0], height=RESOLUTION[1], fx=_FX, fy=_FX, cx=RESOLUTION[0] / 2, cy=RESOLUTION[1] / 2)
+MOUNT = tuple(float(v) for v in MOUNT_XYZ)  # Forward, left, up from the body origin (m).
 AISLE_Y = 6.0
 SECTION = dict(lane='B', category='LLW', x_min=2.4, x_max=9.0)
 BODY_Z = 0.50                   # Measured standing base height (hot logs, truth z = 0.4999).
-MAX_BODY_PITCH = 0.3            # rad; within what a standing Spot can pitch its body.
-# One view per pallet face: 2 columns x 3 tiers. Stand VIEW_LEAD_M before the pallet
-# centre on the aisle centre line, yaw towards the row, pitch up. 1.5 m / 35 deg puts the
-# pallet near the image centre horizontally; 10 deg pitch lifts tier 3 (top 3.07 m) into frame.
-VIEW_PITCH = math.radians(10)
-VIEW_YAW = math.radians(35)
-VIEW_LEAD_M = 1.5
-FRAME_MARGIN_PX = 10
+FRAME_MARGIN_PX = 12
+MIN_DRUM_PX = 90                # Apparent drum height; below this YOLO boxes get unreliable.
+MIN_CLEARANCE_M = 0.10
 SPOT_FOOTPRINT = (1.1, 0.5)     # Length, width (m), centred on the body origin.
-SECOND_LOOK_RANGE_M = 1.3
+SECOND_LOOK_RANGE_M = 1.6
+ROUTE_X = (1.2, 9.6)            # Aisle stretch the robot may stand on.
 
 
 def _in_section(d):
@@ -80,9 +77,53 @@ def drum_outline(drum, samples=24):
 
 
 def drum_in_frame(drum, view, body_z=BODY_Z, margin=FRAME_MARGIN_PX):
-    uv, depth = project(drum_outline(drum), (*view['stop_xy'], body_z), view['yaw'], view['pitch'])
+    uv, depth = project(drum_outline(drum), (*view['stop_xy'], body_z), view['yaw'], view.get('pitch', 0.0))
     return bool(np.all(depth > 0.1) and np.all(uv >= margin)
                 and np.all(uv[:, 0] <= CAMERA['width'] - margin) and np.all(uv[:, 1] <= CAMERA['height'] - margin))
+
+
+MAX_INCIDENCE = math.radians(70)  # Steeper than this, the drum face is too oblique to inspect.
+
+
+def _blocked(eye, target, drum, others):
+    """True if the straight ray eye->target passes through another drum's cylinder."""
+    d = target - eye
+    for o in others:
+        if o['id'] == drum['id']:
+            continue
+        f = eye[:2] - (o['x'], o['y'])
+        a, b, c = d[:2] @ d[:2], 2 * f @ d[:2], f @ f - o['radius'] ** 2
+        disc = b * b - 4 * a * c
+        if disc <= 0:
+            continue
+        for t in ((-b - math.sqrt(disc)) / (2 * a), (-b + math.sqrt(disc)) / (2 * a)):
+            if 0.02 < t < 0.98 and o['base_z'] <= eye[2] + t * d[2] <= o['base_z'] + o['height']:
+                return True
+    return False
+
+
+def face_visible(drum, view, others, body_z=BODY_Z):
+    """The aisle-facing side is seen at <= MAX_INCIDENCE and at least 2 of 3 sight lines are unobstructed."""
+    eye, _, _ = camera_pose((*view['stop_xy'], body_z), view['yaw'], view.get('pitch', 0.0))
+    normal = np.array([0.0, 1.0 if AISLE_Y > drum['y'] else -1.0])
+    to_eye = eye[:2] - (drum['x'], drum['y'])
+    if math.acos(float(np.clip(to_eye @ normal / np.linalg.norm(to_eye), -1, 1))) > MAX_INCIDENCE:
+        return False
+    mid = drum['base_z'] + 0.5 * drum['height']
+    side = np.array([normal[1], -normal[0]]) * 0.7 * drum['radius']
+    face = np.array([drum['x'], drum['y']]) + normal * drum['radius'] * 0.9
+    points = [np.array([*(face + k * side), mid]) for k in (-1, 0, 1)]
+    return sum(not _blocked(eye, p, drum, others) for p in points) >= 2
+
+
+def drum_pixels(drum, view, body_z=BODY_Z, others=None):
+    """Apparent drum height in pixels (0 if not fully in frame, or its face is hidden/oblique)."""
+    if not drum_in_frame(drum, view, body_z):
+        return 0.0
+    if others is not None and not face_visible(drum, view, others, body_z):
+        return 0.0
+    uv, _ = project(drum_outline(drum), (*view['stop_xy'], body_z), view['yaw'], view.get('pitch', 0.0))
+    return float(uv[:, 1].max() - uv[:, 1].min())
 
 
 def _footprint(stop_xy, yaw):
@@ -116,61 +157,81 @@ def aisle_clearance(stop_xy, yaw, inventory=None):
     return min(_point_polygon_distance(np.array([x, y]), poly) - r for x, y, r in drums)
 
 
+def _candidates():
+    for x in np.arange(ROUTE_X[0], ROUTE_X[1] + 1e-9, 0.1):
+        for sign in (-1.0, 1.0):
+            for deg in np.arange(10.0, 172.5, 2.5):
+                yield (round(float(x), 2), AISLE_Y), sign * math.radians(deg)
+
+
 def inspection_views(inventory, body_z=BODY_Z):
-    """Fixed route, x ascending: one view per pallet face, right row then left row at each stop."""
-    faces = {}
-    for d in section_drums(inventory):
-        loc = d['location']
-        faces.setdefault((d['pallet_xy'][0], loc['side']), []).append(d)
+    """Deterministic route, x ascending: the fewest views that show every aisle-facing
+    drum whole and at least MIN_DRUM_PX tall (greedy set cover, ties -> larger drums)."""
+    drums = section_drums(inventory)
+    options = []
+    for stop, yaw in _candidates():
+        if aisle_clearance(stop, yaw, inventory) <= MIN_CLEARANCE_M:
+            continue
+        view = dict(stop_xy=stop, yaw=yaw, pitch=0.0)
+        seen = {d['id']: px for d in drums if (px := drum_pixels(d, view, body_z, drums)) >= MIN_DRUM_PX}
+        if seen:
+            options.append((view, seen))
+    todo, chosen = {d['id'] for d in drums}, []
+    while todo and options:
+        view, seen = max(options, key=lambda o: (len(todo & o[1].keys()), sum(o[1][i] for i in todo & o[1].keys())))
+        gain = todo & seen.keys()
+        if not gain:
+            break  # The rest are not inspectable from the aisle with this camera; see uninspectable().
+        chosen.append((view, sorted(gain)))
+        todo -= gain
+    by_id = {d['id']: d for d in drums}
     views = []
-    for (pallet_x, side), drums in sorted(faces.items(), key=lambda item: (item[0][0], item[0][1] != 'R')):
-        row_y = drums[0]['y']
-        toward = 1.0 if row_y > AISLE_Y else -1.0
-        columns = sorted({d['location']['column'] for d in drums})
-        views.append(dict(name=f"{SECTION['lane']}-{side}-{columns[0]:02d}-{columns[-1]:02d}",
-                          stop_xy=(round(pallet_x - VIEW_LEAD_M, 3), AISLE_Y), yaw=toward * VIEW_YAW,
-                          pitch=VIEW_PITCH, side=side, column=columns[0], columns=columns,
-                          drum_ids=[d['id'] for d in sorted(drums, key=lambda d: (d['location']['column'], d['location']['tier']))]))
+    for view, ids in sorted(chosen, key=lambda c: (c[0]['stop_xy'][0], c[0]['yaw'])):
+        side = by_id[ids[0]]['location']['side']
+        columns = sorted({by_id[i]['location']['column'] for i in ids})
+        views.append(dict(name=f"{SECTION['lane']}-{side}-{columns[0]:02d}" + (f"-{columns[-1]:02d}" if len(columns) > 1 else ''),
+                          stop_xy=view['stop_xy'], yaw=view['yaw'], pitch=0.0, side=side, column=columns[0],
+                          columns=columns, drum_ids=sorted(ids, key=lambda i: (by_id[i]['location']['column'], by_id[i]['location']['tier']))))
     return views
 
 
-def _inspection_yaw(drum):
-    return (1.0 if drum['y'] > AISLE_Y else -1.0) * VIEW_YAW
+def uninspectable(inventory, views):
+    """Aisle-facing drums no view covers: reported as 'not inspectable from aisle'."""
+    covered = {i for v in views for i in v['drum_ids']}
+    return [d for d in section_drums(inventory) if d['id'] not in covered]
 
 
-def second_look_view(drum, body_z=BODY_Z):
-    """A closer view from a new angle: on the aisle line, aimed at the drum, about 1.3 m away."""
+def second_look_view(drum, others, body_z=BODY_Z, avoid_yaw=None):
+    """A closer view of one drum from a new angle, on the aisle line."""
     best = None
-    for dx in np.arange(-2.0, 2.01, 0.05):
+    for dx in np.arange(-3.0, 3.01, 0.05):
         stop = (round(float(drum['x'] + dx), 3), AISLE_Y)
-        yaw = math.atan2(drum['y'] - AISLE_Y, -dx)  # Body faces the drum.
-        if abs(math.remainder(yaw - _inspection_yaw(drum), 2 * math.pi)) < math.radians(15):
-            continue
-        if aisle_clearance(stop, yaw) <= 0.05:
-            continue
-        for pitch in np.linspace(0.0, MAX_BODY_PITCH, 13):
-            view = dict(name=f"second-{drum['display_id']}", stop_xy=stop, yaw=yaw, pitch=float(pitch),
-                        side=drum['location']['side'], column=drum['location']['column'], columns=[drum['location']['column']],
-                        drum_ids=[drum['id']])
-            if not drum_in_frame(drum, view, body_z):
+        eye_target = math.atan2(drum['y'] - AISLE_Y, -dx)
+        for offset in np.radians(np.arange(-20, 21, 2.5)):
+            yaw = eye_target + offset
+            if avoid_yaw is not None and abs(math.remainder(yaw - avoid_yaw, 2 * math.pi)) < math.radians(15):
                 continue
-            eye, _, _ = camera_pose((*stop, body_z), yaw, pitch)
-            rng = math.dist(eye[:2], (drum['x'], drum['y']))
-            # Closest to 1.3 m; prefer looking back along the aisle (dx > 0, a clearly new angle).
-            score = abs(rng - SECOND_LOOK_RANGE_M) + (0.0 if dx > 0 else 0.05)
+            if aisle_clearance(stop, yaw) <= MIN_CLEARANCE_M:
+                continue
+            view = dict(name=f"second-{drum['display_id']}", stop_xy=stop, yaw=yaw, pitch=0.0,
+                        side=drum['location']['side'], column=drum['location']['column'],
+                        columns=[drum['location']['column']], drum_ids=[drum['id']])
+            px = drum_pixels(drum, view, body_z, others)
+            if px < MIN_DRUM_PX:
+                continue
+            score = -px  # Biggest view of the drum wins.
             if best is None or score < best[0]:
                 best = (score, view)
-            break  # Smallest pitch that fits.
     if best is None:
         raise ValueError(f"No second-look view fits {drum['display_id']}")
     return best[1]
 
 
 def jitter_view(view, rng):
-    """Training-render jitter around a view: +-0.3 m position, +-10 deg yaw, pitch 0..15 deg."""
+    """Training-render jitter: +-0.3 m along the aisle, +-0.15 m across, +-8 deg yaw, gait pitch/roll +-3 deg."""
     out = dict(view)
     out['stop_xy'] = (float(view['stop_xy'][0] + rng.uniform(-0.3, 0.3)),
-                      float(view['stop_xy'][1] + rng.uniform(-0.3, 0.3)))
-    out['yaw'] = float(view['yaw'] + rng.uniform(-math.radians(10), math.radians(10)))
-    out['pitch'] = float(rng.uniform(0.0, math.radians(15)))
+                      float(view['stop_xy'][1] + rng.uniform(-0.15, 0.15)))
+    out['yaw'] = float(view['yaw'] + rng.uniform(-math.radians(8), math.radians(8)))
+    out['pitch'] = float(rng.uniform(-math.radians(3), math.radians(3)))
     return out

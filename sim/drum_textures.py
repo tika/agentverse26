@@ -3,7 +3,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 from textures import ASSETS, noise, maps, text_image
 
-PAINTS = {'faded_yellow':(169,166,89),'mid_grey':(113,125,125),'dark_blue':(38,67,91)}
+PAINTS = {'faded_yellow':(169,166,89),'mid_grey':(113,125,125),'dark_blue':(38,67,91),
+          'safety_yellow':(199,143,5),'warm_yellow':(204,128,5),'stainless':(122,125,128)}  # Dense store shades (drums.YELLOWS).
 
 
 def clean_surfaces(seed=42):

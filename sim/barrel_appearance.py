@@ -25,7 +25,7 @@ def shape_spec(entry):
                 lid_rise=lid_rise,radial_fraction=swelling)
 
 
-@lru_cache(maxsize=3)
+@lru_cache(maxsize=8)
 def paint_maps(name):
     from corrosion_preview import weathered_maps
     from drum_textures import PAINTS
@@ -81,9 +81,9 @@ def apply_reviewed_appearance(stage,entry,materials,seed=74):
         # Other release meshes use world-space coordinates under this identity
         # parent. Transform only the oxide mesh, not its siblings.
         xform=UsdGeom.Xformable(oxide)
-        xform.GetOrderedXformOps()[0].Set(Gf.Vec3d(entry['x'],entry['y'],0))
+        xform.GetOrderedXformOps()[0].Set(Gf.Vec3d(entry['x'],entry['y'],entry.get('base_z',0.0)))
         from drums import ROWS
-        face=next(sign for row,_,_,sign in ROWS if row==entry['row'])
+        face=entry.get('face_sign') or next(sign for row,_,_,sign in ROWS if row==entry['row'])
         # Keep the dense failure region on the aisle-facing side, as in the
         # reviewed fixture. Body yaw and the warning plate remain unchanged.
         xform.AddRotateZOp().Set(0. if face<0 else 180.)

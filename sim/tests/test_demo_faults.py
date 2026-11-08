@@ -89,7 +89,7 @@ class DemoFaults(unittest.TestCase):
                 self.assertIn('dimensions_m', defect)
 
     def test_layout_resets(self):
-        self.assertEqual(df.layout_resets(IDS), ['D06', 'D10', 'D12'])
+        self.assertEqual(df.layout_resets(IDS), ['D05', 'D06', 'D10', 'D12'])
 
     def test_scene_overrides(self):
         for seed in range(50):
