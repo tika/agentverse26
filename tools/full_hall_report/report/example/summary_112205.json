@@ -78,7 +78,7 @@
    "aisle": "A",
    "part": "2–4 m",
    "zone": "NOT CHECKED",
-   "reason": "The robot logged no readings here.",
+   "reason": "The robot did not go here this time.",
    "gmax": null,
    "samples": 0
   }

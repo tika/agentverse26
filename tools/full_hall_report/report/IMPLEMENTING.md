@@ -32,7 +32,7 @@ python3 tools/full_hall_report/report/build_report.py <run_dir> --out <run_dir>/
 | Your run folder has | Format | Loader |
 |---|---|---|
 | `report.json` + `log.jsonl` + `evidence/` (warehouse-v3 adaptive-aisle takes, `schema: canis.v1`) | `canis.v1` | `load_canis_v1` |
-| `memory.json` + `telemetry.jsonl` + `decisions.jsonl` (+ `stills/`, `ground_truth.json`) | `framework` | `load_framework` |
+| `memory.json` + `telemetry.jsonl` + `decisions.jsonl` (+ `stills/`, `colour_accuracy.json` or `ground_truth.json`, `video.json`): the framework contract and the warehouse-v3 walk folders (`canis_wh_full_cosmos`) | `framework` | `load_framework` |
 
 If one of those already matches, skip to step 4. To check that the builder works, run it on the invented example first:
 `python3 tools/full_hall_report/report/build_report.py docs/report_framework/example/run --out /tmp/canis-example --no-pdf`
@@ -49,7 +49,13 @@ dict(
   dose_uSv=float or None, budget_uSv=float or None,   # robot's accumulated dose and its limit
   expected=int,                           # drums the run was sent to check
   aisle_length_m=float or None,           # so unreached sections still appear
-  truth={drum_id: bool_faulty} or None,   # self-check only
+  aisle_start_x=float or None,            # where section 0 m starts (robot start); default 1 m before first stack
+  lateral_pose=True,                      # False if telemetry only has distance along the aisle
+  planted={drum_id: 'rust'},              # faults planted on purpose (test notes); {} if none
+  groups=[dict(group='yellow', scope='all drums', drums=24, correct=23, accuracy=0.958, ci=[0.8, 0.99],
+               found=6, faulty=7, false=0, missed=1)],   # per-colour accuracy; [] if none
+  video=dict(summary=str, moments=[['0:00–0:13', 'what it shows']]) or None,
+  truth={drum_id: dict(faulty=bool, rust=float or None, bulge=float or None)} or None,   # self-check only
   tech=[('Label', 'value'), ...],         # Technical details appendix: model names, SHAs, seed, commit
   drums=[dict(
     drum_id='A-L-01-T2',                  # <aisle>-<L|R>-<stack>-T<tier>; other IDs work but lose the plain "where"
@@ -103,4 +109,4 @@ On failure the builder still writes `index.html` and `summary.json` and leaves `
 - [ ] Render the PDF pages and look at them: no drum ID wrapping, no text overflow, no empty pages.
 - [ ] No local home paths, tokens or Modal URLs anywhere in the PDF.
 
-Reference output: `example/CANIS_report_112205-adaptive_aisle-20f6.pdf` and `example/summary.json` (take 112205: 1 action needed, 1 check again, 4 no problem).
+Reference outputs in `example/`: `CANIS_report_083203-wh_rigid_walk-de01.pdf` (36-drum showcase walk: 8 action needed, 28 no problem) and `CANIS_report_112205-adaptive_aisle-20f6.pdf` (adaptive-aisle take: 1 action needed, 1 check again, 4 no problem), each with its `summary` JSON. Page order and style: `docs/report_framework/README.md` sections 5–6.

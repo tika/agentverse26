@@ -223,7 +223,7 @@ def main():
     w(r'\thispagestyle{first}')
     w(r'\begin{minipage}[c]{0.13\textwidth}\includegraphics[width=\linewidth]{logo.png}\end{minipage}\hfill')
     w(r'\begin{minipage}[c]{0.84\textwidth}\raggedleft')
-    w(r'{\large\bfseries C.A.N.I.S.}\\[-1pt]{\small\color{muted} Corrosion And Nuclear Inspection System}\\[10pt]')
+    w(r'{\large\bfseries C.A.N.I.S.}\\[-1pt]{\small\color{muted} Containment Analysis \& Nuclear Intelligence System}\\[10pt]')
     w(r'{\fontsize{24}{28}\selectfont\bfseries Drum Store Inspection Report}\\[4pt]')
     w(rf'{{\color{{muted}} {tex(store)} \enspace\textbar\enspace {tex(started.split(" ")[0])}}}')
     w(r'\end{minipage}\par\vspace{8pt}\rule{\textwidth}{0.6pt}\par\vspace{8pt}')

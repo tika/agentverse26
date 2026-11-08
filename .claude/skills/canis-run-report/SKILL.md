@@ -85,42 +85,17 @@ If a check fails, or Cosmos is unreachable, print "Cosmos explanation unavailabl
 
 ## 6. The PDF
 
-Run `python tools/full_hall_report/report/build_report.py <run_dir>`. It writes `index.html` (screen), `CANIS_report_<RUN_ID>.pdf` (A4, via Playwright/Chromium), `summary.json` and `evidence/` from the same data. Rules live in `report/rules.py`, loaders for each log format in `report/loaders.py`, layout in `report/render.py` + `style.css`; see `tools/full_hall_report/report/README.md`. Type: IBM Plex Mono for every label, number, ID and table, IBM Plex Sans for sentences, the console's dog-head mark and wordmark (`report/assets/`). The older LaTeX builder in `pdf/` is kept for reference only. Gamma at a drum sets the AREA zone, not the drum colour (otherwise every drum in a hot store turns amber).
+Build it with the shared builder; don't write a new one:
 
-A4, portrait, page numbers, run ID and "Simulated store (Isaac Sim)" in the footer of every page. Pages, in this order:
+```bash
+python3 tools/full_hall_report/report/build_report.py <run_dir> [--store "Warehouse v3, aisle A (simulated)"] [--aisle-start 1.0 --aisle-length 18]
+```
 
-1. **Letterhead + summary**
-   - the C.A.N.I.S. logo top-left (`tools/full_hall_report/pdf/assets/logo.png`), "CANIS Store Inspection Report", store name, run date and time, run ID, detector run ID, Cosmos model, repo commit
-   - **Summary box:**
-     - drums expected / inspected
-     - count of red / amber / green
-     - **drums needing a person** (amber + red)
-     - number of keep-out / restricted areas
-     - robot dose used vs budget
-     - mission time
-     - a one-line verdict, e.g. "2 drums need action; aisle B section 4–6 m is KEEP OUT."
-2. **Aisle survey results**
-   - a hall map with each 2 m section shaded green / amber / red / grey hatched (not surveyed), the drum dots coloured by status, and the robot's route
-   - then a table: aisle, section, zone, reason, max gamma, max H2, max drum heat rise, swab
-3. **Drum register (every drum, worst first):**
-   - ID, category (LLW/ILW), location, colour, finding (corrosion / bulge / both / none), YOLO confidence, looks, dose at the drum, heat rise, swab, label readable
-   - **change since last inspection** ("Baseline (first inspection)" if there's no previous `memory.json`; otherwise the old status → the new one)
-4. **Findings (one block per red or amber drum):**
-   - the evidence still **with its YOLO box drawn on it** (box from `memory.json` `best_box`, class + confidence written on it)
-   - the logged readings
-   - the decision trail from `decisions.jsonl`
-   - the Cosmos explanation (red only)
-   - the **recommended action**
-5. **What was not inspected:** every `Couldn't inspect` drum and every NOT SURVEYED area, with the reason and "re-inspect when …".
-6. **Self-check against the simulation's ground truth:** faulty drums found / missed / false alarms / couldn't inspect. Misses are shown, never hidden.
-7. **Method and limits:**
-   - the table from section 2 and the sources from section 4
-   - simulated store; detector trained on synthetic images; dose from a toy model; rust extent estimated, not measured; label reading uses the camera only
-8. **Appendix: sensor traces:**
-   - against time: gamma with the 7.5 / 100 lines, robot dose with the budget line, air temperature + RH, H2 (or "not measured"), each drum's heat rise
-   - events (spike, block, back-off) marked on each trace
+It writes `index.html`, `CANIS_report_<RUN_ID>.pdf` (A4, Playwright/Chromium), `summary.json` and `evidence/` from the same data. Rules: `report/rules.py`. A loader per log format: `report/loaders.py` (framework / warehouse walk folders, and `canis.v1` takes). Layout: `report/render.py` + `style.css`. Setup and agent steps: `tools/full_hall_report/report/README.md` and `IMPLEMENTING.md`.
 
-Design and audience: written for store managers and safety staff who are NOT engineers. Plain words only: drum names and "Row B, drum 3" / "Aisle between rows B and C, 2–4 m" instead of coordinates; "Action needed / Check again / No problem found" instead of status codes; "How sure: High (88%)" instead of confidence scores; no YOLO, model names or run IDs outside the final "Technical details" appendix. Source Sans (sans-serif) throughout, black and grey, red / amber / green only for labels, no decorative colour bars. Photos are cropped to the camera view and shown full width. The historical layout preview uses older labels and is `example/CANIS_report_preview8_014613.pdf`.
+**Page order, contents and style are specified in [`docs/report_framework/README.md`](../../../docs/report_framework/README.md), sections 5 and 6.** In short: page 1 is the verdict, results bar, eight key numbers, the "What to do now" list and run facts; then 01 aisle survey (plan + section table), 02 every drum at a glance, 03 drums that need attention (frame + readings + what the robot did + what to do), 04 green-drum photos if any, 05 what this report cannot tell you (gaps, accuracy, method, limits, label key, video), A readings or route over time, B step-by-step record, C technical details with every evidence frame. IBM Plex Mono for labels, numbers, IDs and tables; IBM Plex Sans for sentences; the dog-head mark and wordmark on an ink band with a yellow rule; red / amber / green only for status. The name is written out as *Containment Analysis & Nuclear Intelligence System*. Gamma at a drum sets the AREA zone, not the drum colour (otherwise every drum in a hot store turns amber).
+
+Reference outputs: `tools/full_hall_report/report/example/`: the 36-drum showcase walk (083203) and the adaptive-aisle take (112205). The older LaTeX builders (`build_walk_report.py`, `pdf/`) are kept for reference only.
 
 ## 7. Fixed recommended actions (used when there's no Cosmos text, and always printed as well)
 

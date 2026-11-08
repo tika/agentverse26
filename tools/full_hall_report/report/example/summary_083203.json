@@ -1,0 +1,382 @@
+{
+ "report": "CANIS-083203-wh_rigid_walk-de01",
+ "drums": {
+  "RED": 8,
+  "AMBER": 0,
+  "GREEN": 28
+ },
+ "zones": {
+  "RESTRICTED": 3,
+  "NOT CHECKED": 6,
+  "KEEP OUT": 0,
+  "LOW GAMMA": 0
+ },
+ "inspected": 36,
+ "expected": 36,
+ "peak_gamma_uSv_h": null,
+ "verdict": "8 drums need action. 28 showed no problem.",
+ "results": {
+  "A-L-01-T1": {
+   "colour": "RED",
+   "status": "Confirmed defect",
+   "why": [
+    "rust confirmed in 3 of 3 views"
+   ],
+   "action": "Ask an engineer to assess how far the rust has gone. Take a surface wipe if none was taken. Consider placing the drum in an overpack (a larger outer drum)."
+  },
+  "A-L-03-T1": {
+   "colour": "RED",
+   "status": "Confirmed defect",
+   "why": [
+    "bulging confirmed in 3 of 3 views"
+   ],
+   "action": "Limit access to this aisle. Ask an engineer to assess the drum for pressure build-up, and measure its surface temperature (not measured in this inspection)."
+  },
+  "A-L-03-T3": {
+   "colour": "RED",
+   "status": "Confirmed defect",
+   "why": [
+    "rust confirmed in 7 of 8 views"
+   ],
+   "action": "Ask an engineer to assess how far the rust has gone. Take a surface wipe if none was taken. Consider placing the drum in an overpack (a larger outer drum)."
+  },
+  "A-L-11-T2": {
+   "colour": "RED",
+   "status": "Confirmed defect",
+   "why": [
+    "rust confirmed in 3 of 3 views"
+   ],
+   "action": "Ask an engineer to assess how far the rust has gone. Take a surface wipe if none was taken. Consider placing the drum in an overpack (a larger outer drum)."
+  },
+  "A-R-01-T1": {
+   "colour": "RED",
+   "status": "Confirmed defect",
+   "why": [
+    "bulging confirmed in 3 of 3 views"
+   ],
+   "action": "Limit access to this aisle. Ask an engineer to assess the drum for pressure build-up, and measure its surface temperature (not measured in this inspection)."
+  },
+  "A-R-02-T2": {
+   "colour": "RED",
+   "status": "Confirmed defect",
+   "why": [
+    "rust confirmed in 3 of 3 views"
+   ],
+   "action": "Ask an engineer to assess how far the rust has gone. Take a surface wipe if none was taken. Consider placing the drum in an overpack (a larger outer drum)."
+  },
+  "A-R-04-T2": {
+   "colour": "RED",
+   "status": "Confirmed defect",
+   "why": [
+    "rust confirmed in 3 of 3 views"
+   ],
+   "action": "Ask an engineer to assess how far the rust has gone. Take a surface wipe if none was taken. Consider placing the drum in an overpack (a larger outer drum)."
+  },
+  "A-R-09-T2": {
+   "colour": "RED",
+   "status": "Confirmed defect",
+   "why": [
+    "rust confirmed in 3 of 3 views"
+   ],
+   "action": "Ask an engineer to assess how far the rust has gone. Take a surface wipe if none was taken. Consider placing the drum in an overpack (a larger outer drum)."
+  },
+  "A-L-01-T2": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-01-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-02-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-02-T2": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-02-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-03-T2": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-04-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-04-T2": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-04-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-11-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-11-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-12-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-12-T2": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-L-12-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-01-T2": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-01-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-02-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-02-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-03-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-03-T2": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-03-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-04-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-04-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-09-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-09-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-10-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-10-T2": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-10-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 8 views"
+   ],
+   "action": "No action. Routine inspection."
+  }
+ },
+ "sections": [
+  {
+   "aisle": "A",
+   "part": "0–2 m",
+   "zone": "RESTRICTED",
+   "reason": "Drum needing action here: A-L-01-T1, A-R-01-T1. Radiation was not measured, so this may need to be stricter.",
+   "gmax": null,
+   "samples": 108
+  },
+  {
+   "aisle": "A",
+   "part": "2–4 m",
+   "zone": "RESTRICTED",
+   "reason": "Drum needing action here: A-L-03-T1, A-L-03-T3, A-R-02-T2, A-R-04-T2. Radiation was not measured, so this may need to be stricter.",
+   "gmax": null,
+   "samples": 90
+  },
+  {
+   "aisle": "A",
+   "part": "4–6 m",
+   "zone": "NOT CHECKED",
+   "reason": "The robot walked here, but radiation was not measured.",
+   "gmax": null,
+   "samples": 1
+  },
+  {
+   "aisle": "A",
+   "part": "6–8 m",
+   "zone": "NOT CHECKED",
+   "reason": "The robot walked here, but radiation was not measured.",
+   "gmax": null,
+   "samples": 1
+  },
+  {
+   "aisle": "A",
+   "part": "8–10 m",
+   "zone": "NOT CHECKED",
+   "reason": "The robot walked here, but radiation was not measured.",
+   "gmax": null,
+   "samples": 1
+  },
+  {
+   "aisle": "A",
+   "part": "10–12 m",
+   "zone": "NOT CHECKED",
+   "reason": "The robot walked here, but radiation was not measured.",
+   "gmax": null,
+   "samples": 1
+  },
+  {
+   "aisle": "A",
+   "part": "12–14 m",
+   "zone": "NOT CHECKED",
+   "reason": "The robot walked here, but radiation was not measured.",
+   "gmax": null,
+   "samples": 65
+  },
+  {
+   "aisle": "A",
+   "part": "14–16 m",
+   "zone": "RESTRICTED",
+   "reason": "Drum needing action here: A-L-11-T2, A-R-09-T2. Radiation was not measured, so this may need to be stricter.",
+   "gmax": null,
+   "samples": 48
+  },
+  {
+   "aisle": "A",
+   "part": "16–18 m",
+   "zone": "NOT CHECKED",
+   "reason": "The robot did not go here this time.",
+   "gmax": null,
+   "samples": 0
+  }
+ ]
+}

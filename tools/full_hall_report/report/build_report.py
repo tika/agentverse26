@@ -28,10 +28,16 @@ def main():
     ap.add_argument('--format', default='auto', choices=['auto', 'framework', 'canis.v1'])
     ap.add_argument('--commit', help='report software version (default: git HEAD of this repo)')
     ap.add_argument('--store', default='Drum Store 1 (simulated)')
+    ap.add_argument('--aisle-start', type=float, help='x (m) where section 0 m starts, e.g. 1.0 for warehouse-v3 walks')
+    ap.add_argument('--aisle-length', type=float, help='aisle length (m) so unreached sections still appear, e.g. 18')
     ap.add_argument('--no-pdf', action='store_true')
     a = ap.parse_args()
 
     run = loaders.load(a.run_dir, a.format)
+    if a.aisle_start is not None:
+        run['aisle_start_x'] = a.aisle_start
+    if a.aisle_length is not None:
+        run['aisle_length_m'] = a.aisle_length
     out = Path(a.out) if a.out else Path(a.run_dir) / 'report'
     commit = a.commit
     if not commit:

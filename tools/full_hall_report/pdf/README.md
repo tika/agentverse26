@@ -1,4 +1,6 @@
-# C.A.N.I.S. run report (PDF)
+# C.A.N.I.S. run report (PDF), older LaTeX version
+
+> Superseded by [`../report/`](../report/README.md), which follows the current format in [`docs/report_framework/README.md`](../../../docs/report_framework/README.md) sections 5–6. Kept for reference.
 
 Builds the post-run inspection report from ONE run's logged files. Typeset with LaTeX (Source Sans). Written for store managers and safety staff, not engineers.
 

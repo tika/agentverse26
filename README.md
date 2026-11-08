@@ -168,15 +168,15 @@ After a run, the logs can be turned into a report for store managers and safety 
 
 1. **Collect the run's logs:** drum memory, decisions, telemetry and evidence photos.
 2. **Rate each drum** with fixed rules: *Action needed*, *Check again* or *No problem found*.
-3. **Rate each 2 m of the aisle:** *Safe*, *Restricted*, *Keep out* or *Not checked*. A section is only *Safe* if radiation was measured there.
-4. **Assemble the report:** a summary, the aisle plan, every drum, a photo and next step for each flagged drum, what was not checked, and accuracy against the simulation's seeded faults.
+3. **Rate each 2 m of the aisle:** *Low gamma*, *Restricted*, *Keep out* or *Not checked*. A section is only *Low gamma* if radiation was measured there.
+4. **Assemble the report:** a verdict and to-do list on page 1, the aisle plan, every drum, the evidence frame, readings, decision trail and next step for each flagged drum, what was not checked, and accuracy against the simulation's seeded faults.
 5. **Check it before sharing,** including that each photo really shows the drum it is filed under.
 
 Anything the run did not log is printed as `not measured`. Fixed rules set every rating; a language model can only add a labelled explanation for a drum that needs action.
 
 [Report framework](docs/report_framework/README.md) · [Worked example with invented data](docs/report_framework/example/expected_report.md)
 
-The [PDF generator on the report branch](https://github.com/tika/agentverse26/tree/canis-report-pdf/tools/full_hall_report/pdf) formats a compatible full-hall run bundle. Its bundled PDF preview comes from a separate simulated run. The two-drum recording uses the smaller evidence report described in the [rigid-camera run guide](docs/rigid_camera_demos.md#ambiguous-upper-tier-view-with-cosmos-reason-2-8b).
+Build it with [`tools/full_hall_report/report/build_report.py`](tools/full_hall_report/report/README.md) (HTML + A4 PDF + `summary.json`); the page order and style are in [the framework, sections 5–6](docs/report_framework/README.md#5-what-the-report-contains-in-order). Example: [36-drum showcase report](tools/full_hall_report/report/example/CANIS_report_083203-wh_rigid_walk-de01.pdf). To add it to another pipeline, follow [`IMPLEMENTING.md`](tools/full_hall_report/report/IMPLEMENTING.md). The two-drum recording uses the smaller evidence report described in the [rigid-camera run guide](docs/rigid_camera_demos.md#ambiguous-upper-tier-view-with-cosmos-reason-2-8b).
 
 ## What is demonstrated today
 

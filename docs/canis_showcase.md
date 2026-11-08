@@ -19,7 +19,7 @@ The system behind the final CANIS showcase video: a quadruped walks aisle A of w
 | `scripts/hot/full_hall/cosmos_ping.py`, `yolo_ping.py` | Check that Cosmos and the exact detector are reachable before a render |
 | `scripts/hot/full_hall/wh_score_color.py` | Scores a finished walk per drum colour against the seeded faults |
 | `tools/full_hall_report/make_showcase.py` | Cuts the full video to under a minute, key moments in real time |
-| `tools/full_hall_report/build_walk_report.py` | Builds the PDF inspection report from the run's logs |
+| `tools/full_hall_report/report/build_report.py` | Builds the PDF inspection report from the run's logs ([format](report_framework/README.md#5-what-the-report-contains-in-order)) |
 
 ## Running it
 
@@ -44,10 +44,11 @@ After the render, with `R` set to the run's `canis_wh_full_cosmos` folder:
 
 ```bash
 python3 scripts/hot/full_hall/wh_score_color.py "$R" 42
-python3 tools/full_hall_report/build_walk_report.py "$R" --commit "$(git rev-parse --short HEAD)"
+python3 tools/full_hall_report/report/build_report.py "$R" --store "Warehouse v3, aisle A (simulated)" \
+  --aisle-start 1.0 --aisle-length 18 --commit "$(git rev-parse --short HEAD)"
 ```
 
-`wh_score_color.py` needs the same `HOT_FORCE_FAULTS` as the run. `make_showcase.py` takes the full video, `telemetry.jsonl`, an output path and an ffmpeg binary. Its real-time segments are set for this run, so check them against `decisions.jsonl` for a new one.
+`wh_score_color.py` needs the same `HOT_FORCE_FAULTS` as the run; keep it set for the report too, so planted faults get their test note. The report reads `colour_accuracy.json` for its accuracy section, and an optional `video.json` (`{summary, moments}`) for the video evidence table. One-time setup for the PDF step: `cd tools/full_hall_report/report && npm install && npx playwright install chromium`. The finished report for this run is [`tools/full_hall_report/report/example/CANIS_report_083203-wh_rigid_walk-de01.pdf`](../tools/full_hall_report/report/example/CANIS_report_083203-wh_rigid_walk-de01.pdf). `build_walk_report.py` is the older LaTeX version. `make_showcase.py` takes the full video, `telemetry.jsonl`, an output path and an ffmpeg binary. Its real-time segments are set for this run, so check them against `decisions.jsonl` for a new one.
 
 ## Result of the recorded run
 
