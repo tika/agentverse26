@@ -39,7 +39,7 @@ flowchart LR
             end
         end
         subgraph Cosmos["Cosmos service · L40S (tools/cosmos_vllm.py)"]
-            VLLM["vLLM OpenAI API<br/>nvidia/Cosmos-Reason2-2B"]
+            VLLM["vLLM OpenAI API<br/>nvidia/Cosmos-Reason2-8B"]
         end
         VOL[("Volumes<br/>HF weights · vLLM cache")]
         SEC[("Secrets<br/>huggingface · cosmos-vllm")]

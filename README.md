@@ -56,6 +56,7 @@ local Isaac and Modal commands, editing, picture-ready settings and video captur
 - [Environment build specification](docs/environment_mvp.md)
 - [Sensors, inspection criteria, safety rules and limitations](docs/sensors_and_criteria.md)
 - [Inspection source register and threshold rationale](docs/inspection_source_register.md)
+- [Cosmos Reason 2 8B API: how to call the shared endpoint](docs/cosmos_8b_api.md)
 - [Detector/camera API and training start gate](docs/training_handoff.md)
 - [Isolated rust/bulge appearance review and two-cue screening](docs/barrel_appearance_review.md)
 - [Technical barrel design handoff for the next developer](docs/barrel_design_handoff.md)
@@ -228,7 +229,8 @@ See `sim/hot_server.py`. Definitions persist between requests. Restart the
 worker after editing `sim/*.py`.
 
 The demo job is a Cosmos-driven inspection round that ends in a report. It
-needs the `cosmos-vllm` secret and `modal deploy tools/cosmos_vllm.py`:
+needs the `cosmos-vllm` secret and `modal deploy tools/cosmos_vllm.py` (Cosmos Reason 2 8B; see
+[how to use the 8B endpoint](docs/cosmos_8b_api.md)):
 
 ```sh
 hot run scripts/hot/sensing.py scripts/hot/scenario_lib.py scripts/hot/agent.py scripts/hot/agent_ilw_round.py
