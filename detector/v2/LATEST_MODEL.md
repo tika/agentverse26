@@ -132,6 +132,23 @@ existing scene/agent recording guides after configuring the detector; no map,
 locomotion, camera transform, Cosmos or overlay changes are required for this
 model switch. This does not automatically enable Cosmos.
 
+## Restore the expanded API in another workspace
+
+To serve a verified copy of the expanded checkpoint in another Modal workspace,
+upload `best.pt` and its run metadata as `results.json` under
+`detector-models:/condition_v2/compare_colors_20261108T053740Z_continued/yolo26s/`.
+The checked-in [validation record](../../docs/validation/yolo26s_expanded_20261108.json)
+provides the expected checkpoint hash and dataset ID. Deploy with:
+
+```sh
+CANIS_MODEL_SCALE=s CANIS_COMPARISON_ID=compare_colors_20261108T053740Z_continued \
+  CANIS_API_APP=canis-yolo26s-expanded modal deploy detector/v2/serve.py
+```
+
+Use a proxy token from the new workspace and the URL printed by the deploy
+command. Save them as the three `DETECTOR_API_*` fields in the worker's Modal
+secret.
+
 ## Read the response correctly
 
 Use `condition_detections` or the condition booleans in `barrels`. Every native

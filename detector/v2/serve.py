@@ -41,7 +41,7 @@ class ConditionDetector:
         @api.get('/health')
         def health():return dict(status='ready',model=MODEL,comparison_id=COMPARISON,run_id=COMPARISON+'_'+MODEL,best_sha256=self.sha,
                                  label_schema='whole_barrel_condition_v2',classes=self.names,imgsz=384,gpu=self.gpu,
-                                 dataset_id=self.report.get('dataset_id'),test=self.report['test']['overall'])
+                                 dataset_id=self.report.get('dataset_id'),test=self.report.get('test', {}).get('overall'))
         def infer(raw,confidence,stamp):
             try:
                 with Image.open(io.BytesIO(raw)) as source:

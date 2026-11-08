@@ -4,7 +4,57 @@ These are short **stationary camera/model tests** in warehouse-v3, seed 42.
 They use the latest expanded YOLO26s and the approved CANIS layout: original
 header, robot corner view, minimap, counters and decision log. The whole native
 camera image is fitted below its caption; no edge is covered by the HUD.
-The demos do not run Cosmos or implement the full aisle inspection mission.
+The original one- and two-drum recordings use framing rules. The ambiguous-view variant below calls Cosmos. All three start from a stationary inspection pose.
+
+## Ambiguous upper-tier view with Cosmos Reason 2 8B
+
+The initial plan checks the middle tier and makes one upper-tier attempt. The
+first upper-tier pitch is deliberately shallow. If the target projection is
+clipped or the detector result is weak, Cosmos sees the actual front-camera
+crop and the logged observation. It may request one higher view or defer to
+the operator. The executor adds the extra view only when Cosmos selects it.
+An incomplete view cannot clear the drum. This is a framing challenge, with
+target association derived from the simulator map and pose.
+
+With the worker ready, configure the private credentials for the
+[PR #3 endpoint](https://github.com/tika/agentverse26/pull/3) and run:
+
+```sh
+python3 tools/full_hall_report/hot_hall_canis.py cosmos-config .runtime/cosmos-8b.env
+HOT_NO_OPEN=1 python3 tools/full_hall_report/hot_hall_canis.py run \
+  scripts/hot/full_hall/brand_data.py \
+  scripts/hot/full_hall/rigid_posture.py \
+  scripts/hot/full_hall/rigid_recording_setup.py \
+  scripts/hot/full_hall/ambiguity_cosmos.py \
+  scripts/hot/full_hall/rigid_middle_upper.py
+```
+
+The run requires the `cosmos` alias to identify `nvidia/Cosmos-Reason2-8B`
+in the live model list. It writes `canis_ambiguous_view.mp4` and a run folder
+with `report.md`, `tilt_report.json`, exact camera inputs and detector
+responses. The decision trace records the offered actions, selected action,
+model identity and input hash. If the detector endpoint is unavailable, the
+HUD and report label the test as framing-only and leave drum condition
+unresolved. Use the report from this run when showing this recording.
+
+The planner input includes the active drum and associated nearby detections.
+Each record carries the inventory category, tier, range, projected crop
+coverage, current YOLO prediction and inspection status. The snapshot labels
+inventory and geometry sources and marks unsampled channels. The trace also
+records request wall time separately from simulation time.
+
+## Barrel inspection course
+
+Add `scripts/hot/full_hall/inspection_course.py` immediately before
+`rigid_middle_upper.py` in the command above. This isolates the near rack's
+drums for a two-case inspection. Cosmos can continue after a sufficient
+first view, ask for a higher view, or defer the drum for operator review.
+The upper-tier test supplies a scripted apparent temperature of 34 °C
+against 19 °C ambient and offers a ground reposition or operator deferral.
+When Cosmos requests the reposition, Spot walks to a second standoff and
+turns back toward the same drum. The fixture keeps the heat cue present so
+the report flags it for review. The run saves the two XY positions, decision
+inputs and report beside `canis_inspection_course.mp4`.
 
 ## Set up the worker
 

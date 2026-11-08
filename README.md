@@ -158,7 +158,7 @@ Inference calls are synchronous in this prototype, so simulation time pauses whi
 
 ### 4. Produce an evidence-backed handoff
 
-Python assembles `report.json` and `report.md` from inspection memory, sensor observations and status rules. The bundle also contains decisions, telemetry, model-request provenance, timings and the recorded MP4. Cosmos's generated reasons are retained alongside the observations that were available to it.
+The integrated mission assembles `report.json` and `report.md` from inspection memory, sensor observations and status rules. Its bundle also includes decisions, telemetry, model-request provenance, timings and the MP4. The warehouse-v3 two-drum recheck demo writes its own `tilt_report.json` and `report.md` beside the recording, with the original and repeat views saved in `inputs/`.
 
 The report lists inspected, pending and deferred drums, unresolved findings and operator follow-up. **Coverage and condition are separate:** collecting all required observations does not imply that a drum is fault-free. The recording overlay is composited from the same run data; it is not a separate dashboard service.
 
@@ -176,10 +176,13 @@ Anything the run did not log is printed as `not measured`. Fixed rules set every
 
 [Report framework](docs/report_framework/README.md) · [Worked example with invented data](docs/report_framework/example/expected_report.md)
 
+The [PDF generator on the report branch](https://github.com/tika/agentverse26/tree/canis-report-pdf/tools/full_hall_report/pdf) formats a compatible full-hall run bundle. Its bundled PDF preview comes from a separate simulated run. The two-drum recording uses the smaller evidence report described in the [rigid-camera run guide](docs/rigid_camera_demos.md#ambiguous-upper-tier-view-with-cosmos-reason-2-8b).
+
 ## What is demonstrated today
 
 | Workstream | Evidence and current scope |
 |---|---|
+| **Warehouse-v3 recheck** | In the two-drum simulation, a clipped upper-tier view led Cosmos Reason 2 8B to add a higher look. The projected drum box went from 78% to 100% in frame. The detector endpoint returned HTTP 404, so the run left drum condition unresolved. [Reproduce the test](docs/rigid_camera_demos.md#ambiguous-upper-tier-view-with-cosmos-reason-2-8b) |
 | **Integrated mission** | A recorded eight-drum job in the 28-drum hall: 64 successful YOLO requests and four live Cosmos decisions, including virtual swabbing and retreat/alert. This recording used the earlier detector. [Run and artifacts](docs/mission_recording_20261108.md) |
 | **Full-store coverage** | Routing, a visited trail, a ledger and checkpoints for all 28 drums. The documented partial run reached 11/28 observation sets before it was cut; full completion is not validated. [Coverage status](docs/full_store_mission.md) |
 | **Current perception model** | The expanded 2,500-image YOLO26s is served separately and used in recent rigid-camera tests; the previous 1,500-image model remains the default and available. These tests are separate from the earlier Cosmos mission. [Latest model and exact version](detector/v2/LATEST_MODEL.md) |

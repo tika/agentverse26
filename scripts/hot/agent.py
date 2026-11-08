@@ -114,6 +114,8 @@ class InspectionMemory:
     def progress(self):
         """Compact view for Cosmos: what is done, what is missing, what is wrong."""
         return {DRUMS[d]['display_id']: {'status': e['status'], 'missing_checks': e.get('missing', list(CHECKS)),
+                                         'inventory_category': DRUMS[d].get('category'),
+                                         'rack_tier': DRUMS[d].get('location', {}).get('tier'),
                                          'issues': e['reasons'],
                                          'observations':{k:v for k,v in e['checks'].items()
                                              if k in ('id','thermal','visual','radiation_nearby','gas_nearby','swab')}}

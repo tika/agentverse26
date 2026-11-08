@@ -1,0 +1,532 @@
+{
+  "walks": 2000,
+  "bootstrap": 10000,
+  "seed": 20261108,
+  "drums": 420,
+  "aisle_count": 7,
+  "path_m": 164.6089999999998,
+  "layout_sha256": "5e88234bbe0a4d603ab207769ffe5bbb25f288e2f540a2280b0008501c728b5d",
+  "expanded_reference_sha256": "ba4c80bcb99f6152d8ee0a6523151c4640ad67d727431b9ec846235dcf895b6a",
+  "accuracy_by_category": {
+    "LLW": 0.9878787878787879,
+    "ILW": 0.7
+  },
+  "class_mix": {
+    "normal": 0.7,
+    "rust": 0.15,
+    "bulge": 0.1,
+    "rust_and_bulge": 0.05
+  },
+  "drive_m_s": 0.8,
+  "first_look_seconds": 10.0,
+  "seconds_per_extra_look": 20.0,
+  "mode": "aggregate_sensitivity",
+  "prediction_file_sha256": null,
+  "sample_counts": null,
+  "scenarios": {
+    "unsure_0.1_reuse_0.0": {
+      "follow_up_drums": {
+        "fixed": 41.746,
+        "recheck": 11.73,
+        "delta": -30.016,
+        "paired_ci95": [
+          -30.2455125,
+          -29.786
+        ]
+      },
+      "correctly_classified_faults_pct": {
+        "fixed": 83.66679543228675,
+        "recheck": 90.81572681131829,
+        "delta": 7.14893137903153,
+        "paired_ci95": [
+          7.0493498344923795,
+          7.2506735530587285
+        ]
+      },
+      "faults_marked_normal": {
+        "fixed": 2.651,
+        "recheck": 2.675,
+        "delta": 0.024,
+        "paired_ci95": [
+          0.0175,
+          0.031
+        ]
+      },
+      "clean_drums_flagged": {
+        "fixed": 18.5835,
+        "recheck": 18.7305,
+        "delta": 0.147,
+        "paired_ci95": [
+          0.13,
+          0.1645
+        ]
+      },
+      "mission_minutes": {
+        "fixed": 73.42935416666663,
+        "recheck": 101.26002083333331,
+        "delta": 27.830666666666673,
+        "paired_ci95": [
+          27.65365833333334,
+          28.006333333333345
+        ]
+      },
+      "mcnemar_correct_fault_classification": {
+        "both_correct": 210363,
+        "only_fixed_correct": 0,
+        "only_recheck_correct": 17977,
+        "neither_correct": 23080,
+        "p_value": null,
+        "log10_p_value": -5411.315202055726,
+        "unit": "pooled simulated faulty drums"
+      }
+    },
+    "unsure_0.1_reuse_0.5": {
+      "follow_up_drums": {
+        "fixed": 41.746,
+        "recheck": 26.7015,
+        "delta": -15.0445,
+        "paired_ci95": [
+          -15.2105,
+          -14.878
+        ]
+      },
+      "correctly_classified_faults_pct": {
+        "fixed": 83.66679543228675,
+        "recheck": 87.263437715646,
+        "delta": 3.596642283359267,
+        "paired_ci95": [
+          3.5242528299383533,
+          3.669442562281518
+        ]
+      },
+      "faults_marked_normal": {
+        "fixed": 2.651,
+        "recheck": 2.662,
+        "delta": 0.011,
+        "paired_ci95": [
+          0.0065,
+          0.016
+        ]
+      },
+      "clean_drums_flagged": {
+        "fixed": 18.5835,
+        "recheck": 18.659,
+        "delta": 0.0755,
+        "paired_ci95": [
+          0.0635,
+          0.088
+        ]
+      },
+      "mission_minutes": {
+        "fixed": 73.42935416666663,
+        "recheck": 101.26002083333331,
+        "delta": 27.830666666666673,
+        "paired_ci95": [
+          27.65365833333334,
+          28.006333333333345
+        ]
+      },
+      "mcnemar_correct_fault_classification": {
+        "both_correct": 210363,
+        "only_fixed_correct": 0,
+        "only_recheck_correct": 9048,
+        "neither_correct": 32009,
+        "p_value": null,
+        "log10_p_value": -2723.418370772038,
+        "unit": "pooled simulated faulty drums"
+      }
+    },
+    "unsure_0.1_reuse_1.0": {
+      "follow_up_drums": {
+        "fixed": 41.746,
+        "recheck": 41.746,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "correctly_classified_faults_pct": {
+        "fixed": 83.66679543228675,
+        "recheck": 83.66679543228675,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "faults_marked_normal": {
+        "fixed": 2.651,
+        "recheck": 2.651,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "clean_drums_flagged": {
+        "fixed": 18.5835,
+        "recheck": 18.5835,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "mission_minutes": {
+        "fixed": 73.42935416666663,
+        "recheck": 101.26002083333331,
+        "delta": 27.830666666666673,
+        "paired_ci95": [
+          27.65365833333334,
+          28.006333333333345
+        ]
+      },
+      "mcnemar_correct_fault_classification": {
+        "both_correct": 210363,
+        "only_fixed_correct": 0,
+        "only_recheck_correct": 0,
+        "neither_correct": 41057,
+        "p_value": 1.0,
+        "log10_p_value": 0.0,
+        "unit": "pooled simulated faulty drums"
+      }
+    },
+    "unsure_0.25_reuse_0.0": {
+      "follow_up_drums": {
+        "fixed": 104.974,
+        "recheck": 52.79,
+        "delta": -52.184,
+        "paired_ci95": [
+          -52.467012499999996,
+          -51.899487500000006
+        ]
+      },
+      "correctly_classified_faults_pct": {
+        "fixed": 69.70827837465674,
+        "recheck": 82.08210604217352,
+        "delta": 12.373827667516784,
+        "paired_ci95": [
+          12.244483330615473,
+          12.503239450181594
+        ]
+      },
+      "faults_marked_normal": {
+        "fixed": 2.1875,
+        "recheck": 2.223,
+        "delta": 0.0355,
+        "paired_ci95": [
+          0.028,
+          0.044
+        ]
+      },
+      "clean_drums_flagged": {
+        "fixed": 15.4085,
+        "recheck": 15.672,
+        "delta": 0.2635,
+        "paired_ci95": [
+          0.241,
+          0.2865
+        ]
+      },
+      "mission_minutes": {
+        "fixed": 73.42935416666663,
+        "recheck": 143.41202083333332,
+        "delta": 69.98266666666667,
+        "paired_ci95": [
+          69.733,
+          70.24
+        ]
+      },
+      "mcnemar_correct_fault_classification": {
+        "both_correct": 175251,
+        "only_fixed_correct": 0,
+        "only_recheck_correct": 31097,
+        "neither_correct": 45072,
+        "p_value": null,
+        "log10_p_value": -9360.828745167159,
+        "unit": "pooled simulated faulty drums"
+      }
+    },
+    "unsure_0.25_reuse_0.5": {
+      "follow_up_drums": {
+        "fixed": 104.974,
+        "recheck": 78.776,
+        "delta": -26.198,
+        "paired_ci95": [
+          -26.412,
+          -25.99
+        ]
+      },
+      "correctly_classified_faults_pct": {
+        "fixed": 69.70827837465674,
+        "recheck": 75.95975176946801,
+        "delta": 6.251473394811261,
+        "paired_ci95": [
+          6.156852996824684,
+          6.346896349233785
+        ]
+      },
+      "faults_marked_normal": {
+        "fixed": 2.1875,
+        "recheck": 2.2055,
+        "delta": 0.018,
+        "paired_ci95": [
+          0.0125,
+          0.024
+        ]
+      },
+      "clean_drums_flagged": {
+        "fixed": 15.4085,
+        "recheck": 15.5425,
+        "delta": 0.134,
+        "paired_ci95": [
+          0.118,
+          0.1505
+        ]
+      },
+      "mission_minutes": {
+        "fixed": 73.42935416666663,
+        "recheck": 143.41202083333332,
+        "delta": 69.98266666666667,
+        "paired_ci95": [
+          69.733,
+          70.24
+        ]
+      },
+      "mcnemar_correct_fault_classification": {
+        "both_correct": 175251,
+        "only_fixed_correct": 0,
+        "only_recheck_correct": 15717,
+        "neither_correct": 60452,
+        "p_value": null,
+        "log10_p_value": -4730.987411855129,
+        "unit": "pooled simulated faulty drums"
+      }
+    },
+    "unsure_0.25_reuse_1.0": {
+      "follow_up_drums": {
+        "fixed": 104.974,
+        "recheck": 104.974,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "correctly_classified_faults_pct": {
+        "fixed": 69.70827837465674,
+        "recheck": 69.70827837465674,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "faults_marked_normal": {
+        "fixed": 2.1875,
+        "recheck": 2.1875,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "clean_drums_flagged": {
+        "fixed": 15.4085,
+        "recheck": 15.4085,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "mission_minutes": {
+        "fixed": 73.42935416666663,
+        "recheck": 143.41202083333332,
+        "delta": 69.98266666666667,
+        "paired_ci95": [
+          69.733,
+          70.24
+        ]
+      },
+      "mcnemar_correct_fault_classification": {
+        "both_correct": 175251,
+        "only_fixed_correct": 0,
+        "only_recheck_correct": 0,
+        "neither_correct": 76169,
+        "p_value": 1.0,
+        "log10_p_value": 0.0,
+        "unit": "pooled simulated faulty drums"
+      }
+    },
+    "unsure_0.4_reuse_0.0": {
+      "follow_up_drums": {
+        "fixed": 168.075,
+        "recheck": 114.71,
+        "delta": -53.365,
+        "paired_ci95": [
+          -53.663012499999994,
+          -53.0679875
+        ]
+      },
+      "correctly_classified_faults_pct": {
+        "fixed": 55.78929408621231,
+        "recheck": 68.38965203146904,
+        "delta": 12.60035794525673,
+        "paired_ci95": [
+          12.470496603377057,
+          12.729416658617515
+        ]
+      },
+      "faults_marked_normal": {
+        "fixed": 1.7585,
+        "recheck": 1.802,
+        "delta": 0.0435,
+        "paired_ci95": [
+          0.0345,
+          0.053
+        ]
+      },
+      "clean_drums_flagged": {
+        "fixed": 12.3515,
+        "recheck": 12.604,
+        "delta": 0.2525,
+        "paired_ci95": [
+          0.2305,
+          0.2745
+        ]
+      },
+      "mission_minutes": {
+        "fixed": 73.42935416666663,
+        "recheck": 185.47935416666664,
+        "delta": 112.05,
+        "paired_ci95": [
+          111.74731666666668,
+          112.34800833333333
+        ]
+      },
+      "mcnemar_correct_fault_classification": {
+        "both_correct": 140251,
+        "only_fixed_correct": 0,
+        "only_recheck_correct": 31690,
+        "neither_correct": 79479,
+        "p_value": null,
+        "log10_p_value": -9539.3395325959,
+        "unit": "pooled simulated faulty drums"
+      }
+    },
+    "unsure_0.4_reuse_0.5": {
+      "follow_up_drums": {
+        "fixed": 168.075,
+        "recheck": 141.326,
+        "delta": -26.749,
+        "paired_ci95": [
+          -26.967,
+          -26.5339875
+        ]
+      },
+      "correctly_classified_faults_pct": {
+        "fixed": 55.78929408621231,
+        "recheck": 62.090161838654296,
+        "delta": 6.3008677524419925,
+        "paired_ci95": [
+          6.208385288422313,
+          6.3933621577854325
+        ]
+      },
+      "faults_marked_normal": {
+        "fixed": 1.7585,
+        "recheck": 1.7755,
+        "delta": 0.017,
+        "paired_ci95": [
+          0.0115,
+          0.023
+        ]
+      },
+      "clean_drums_flagged": {
+        "fixed": 12.3515,
+        "recheck": 12.4735,
+        "delta": 0.122,
+        "paired_ci95": [
+          0.107,
+          0.1375
+        ]
+      },
+      "mission_minutes": {
+        "fixed": 73.42935416666663,
+        "recheck": 185.47935416666664,
+        "delta": 112.05,
+        "paired_ci95": [
+          111.74731666666668,
+          112.34800833333333
+        ]
+      },
+      "mcnemar_correct_fault_classification": {
+        "both_correct": 140251,
+        "only_fixed_correct": 0,
+        "only_recheck_correct": 15850,
+        "neither_correct": 95319,
+        "p_value": null,
+        "log10_p_value": -4771.024401278438,
+        "unit": "pooled simulated faulty drums"
+      }
+    },
+    "unsure_0.4_reuse_1.0": {
+      "follow_up_drums": {
+        "fixed": 168.075,
+        "recheck": 168.075,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "correctly_classified_faults_pct": {
+        "fixed": 55.78929408621231,
+        "recheck": 55.78929408621231,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "faults_marked_normal": {
+        "fixed": 1.7585,
+        "recheck": 1.7585,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "clean_drums_flagged": {
+        "fixed": 12.3515,
+        "recheck": 12.3515,
+        "delta": 0.0,
+        "paired_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "mission_minutes": {
+        "fixed": 73.42935416666663,
+        "recheck": 185.47935416666664,
+        "delta": 112.05,
+        "paired_ci95": [
+          111.74731666666668,
+          112.34800833333333
+        ]
+      },
+      "mcnemar_correct_fault_classification": {
+        "both_correct": 140251,
+        "only_fixed_correct": 0,
+        "only_recheck_correct": 0,
+        "neither_correct": 111169,
+        "p_value": 1.0,
+        "log10_p_value": 0.0,
+        "unit": "pooled simulated faulty drums"
+      }
+    }
+  }
+}
