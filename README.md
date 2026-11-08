@@ -89,30 +89,37 @@ The dataset, best weights, training logs and test artifacts persist in Modal Vol
 Everything runs on Modal. One warm Isaac Sim worker holds the warehouse, Spot and the mission script in a single Python process. The detector and Cosmos are separate GPU services reached over authenticated HTTPS, and the report is built from the run's logs afterwards. **The mission script coordinates everything**: models never call each other, and no model output becomes a verdict without passing a fixed rule.
 
 ```mermaid
-flowchart LR
-    subgraph Worker["Warm Isaac Sim worker on Modal: one Python process"]
-        Scene["warehouse-v3 session<br/>420 drums, seeded faults"]
-        Cam["Inspection camera<br/>pan/tilt head or body-fixed +15°"]
-        Backend["Sensor backend<br/>LWIR, gamma, dose, air, H2"]
-        Mission["Mission script<br/>route, view plan, per-drum ledger"]
-        Rules["Fixed rules<br/>verdicts, framing gate, dose stop"]
-        Spot["Spot<br/>pretrained walking policy"]
-        Logs["Overlay video and run logs"]
-        Scene --> Cam --> Mission
-        Scene --> Backend --> Mission
-        Mission <--> Rules
-        Mission -->|"body velocity and posture"| Spot --> Scene
-        Mission --> Logs
-    end
-    YOLO["YOLO26s detector<br/>FastAPI on Modal"]
-    Cosmos["Cosmos Reason 2 8B<br/>vLLM on Modal"]
-    Report["Report builder<br/>PDF and HTML, fixed rules"]
-    Truth[("Seeded fault manifest")]
-    Mission -->|"640×640 camera crop"| YOLO -->|"whole-barrel condition and confidence"| Mission
-    Mission -->|"image, detector summary, offered actions"| Cosmos -->|"one offered action"| Mission
+flowchart TD
+    World["Isaac Sim: warehouse-v3 and Spot"]
+    Camera["Inspection RGB-D camera<br/>Rigid +15° or pan/tilt, by mission"]
+    Sensors["Sensor backend, when enabled<br/>LWIR, gamma, dose, air and H2"]
+    Map["Known warehouse map<br/>Simulator robot pose"]
+    Agent["Python mission coordinator<br/>Route, observations and drum ledger"]
+    YOLO["YOLO26s API on Modal<br/>Whole-barrel condition boxes"]
+    Cosmos["Cosmos Reason 2 8B on Modal<br/>Optional constrained follow-up selection"]
+    Rules["Fixed verdict and action rules<br/>Framing; dose stop when enabled"]
+    Motion["Velocity and posture controller<br/>Pretrained Spot walking policy"]
+    Logs["Overlay video and evidence logs"]
+    Report["Report builder<br/>Fixed-rule ratings, HTML and PDF"]
+    Truth["Private seeded inventory"]
+    World --> Camera
+    World --> Sensors
+    Camera -->|"Unannotated 640×640 RGB crop"| YOLO
+    YOLO -->|"Condition, confidence and boxes"| Agent
+    Sensors -->|"Readings with timestamps"| Agent
+    Map --> Agent
+    Agent -->|"Image, findings and offered actions"| Cosmos
+    Cosmos -->|"Offered action ID and reason"| Agent
+    Agent <--> Rules
+    Agent -->|"Validated motion task"| Motion
+    Motion --> World
+    Agent --> Logs
     Logs --> Report
-    Truth -.->|"scoring only, never sent to the mission"| Report
+    Truth -->|"Source parameters, sensor backend only"| Sensors
+    Truth -.->|"Ground truth for scoring only"| Report
 ```
+
+The sensor and Cosmos branches are enabled by the selected mission; this diagram does not imply that every script uses both. Warehouse navigation currently uses the known map and simulator pose. The third-person camera is for the overlay only; detector input comes from the inspection camera. [Detailed architecture and mission variants](docs/system_architecture.md).
 
 ### Three mission scripts on one stack
 

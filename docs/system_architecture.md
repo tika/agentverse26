@@ -1,99 +1,59 @@
-# How the inspection system fits together
+# Current CANIS architecture
 
-The robot discovers the world through onboard sensors. Cosmos Reason 2 chooses
-every action from a list the safety layer allows. The scenario script only
-authors the world, for example which drum is heating. Dashed boxes are not
-built yet.
+Aligned with the warehouse-v3 mission scripts on main. The Python mission coordinates the models; YOLO and Cosmos do not call each other. Fixed rules set verdicts, while Cosmos can select only offered follow-up actions.
 
 ```mermaid
-flowchart LR
-    subgraph Laptop["Laptop (repo checkout)"]
-        CLI["tools/hot_hall.py<br/>up · run · down"]
-        REQ["scripts/hot/*.py<br/>sensing · scenario_lib · agent<br/>+ scenario (world setup only)"]
-        RES["out/hot/&lt;run&gt;/<br/>video.mp4 · report.md · report.json<br/>decisions.json · log.jsonl"]
-    end
-
-    subgraph Modal["Modal"]
-        subgraph Worker["Hot hall worker · L40S · stays up 4 h"]
-            RELAY["serve(): request queue → Isaac,<br/>frames → mp4, results back"]
-            subgraph Isaac["Isaac Sim 6.2 (sim/hot_server.py)"]
-                WORLD["Hall stage via load_layout()<br/>28 drums · labels · ID plates<br/>authored faults: hot drum, H2 vent, contamination"]
-                SPOT["Spot<br/>learned locomotion policy (physics)"]
-                subgraph Sensors["Onboard sensors"]
-                    LIDAR["RTX LiDAR<br/>Ouster OS1-32"]
-                    IMU["Physics IMU"]
-                    ENC["Joint encoders"]
-                    RGBD["Onboard RGB-D"]
-                    PTZ["PTZ zoom camera"]
-                    MODELS["Sensor models<br/>LWIR thermal · H2 · mic · gamma ·<br/>temp/RH · swab"]
-                end
-                subgraph Sensing["Perception and navigation (sensing.py)"]
-                    NAV["Leg odometry + gyro<br/>→ ICP scan-match to store map"]
-                    THERM["Thermal hotspot → depth →<br/>drum via map"]
-                    HISS["Hiss detector<br/>(band energy over mic floor)"]
-                    CORR["Corrosion<br/>segmentation stand-in"]
-                end
-                AGENT["agent.py<br/>findings → safety layer → offered actions"]
-                EXEC["Action executor<br/>route · face · swab · retreat"]
-                REPORT["Report<br/>criteria.py grades + summary"]
-            end
-        end
-        subgraph Cosmos["Cosmos service · L40S (tools/cosmos_vllm.py)"]
-            VLLM["vLLM OpenAI API<br/>nvidia/Cosmos-Reason2-8B"]
-        end
-        VOL[("Volumes<br/>HF weights · vLLM cache")]
-        SEC[("Secrets<br/>huggingface · cosmos-vllm")]
-    end
-
-    HF[("Hugging Face Hub")]
-    GH[("GitHub repo")]
-    YOLO["YOLO corrosion detector<br/>(teammates, pending)"]
-
-    CLI -- "script source" --> RELAY
-    REQ --> CLI
-    RELAY -- "exec on live stage" --> AGENT
-    WORLD --> Sensors
-    SPOT --> Sensors
-    LIDAR --> NAV
-    IMU --> NAV
-    ENC --> NAV
-    RGBD --> THERM
-    MODELS --> THERM
-    MODELS --> HISS
-    RGBD --> CORR
-    NAV --> AGENT
-    THERM --> AGENT
-    HISS --> AGENT
-    CORR --> AGENT
-    MODELS -- "gamma, H2, temp/RH, swab results" --> AGENT
-    AGENT -- "image + readings + findings + allowed actions" --> VLLM
-    PTZ -- "plate crop" --> VLLM
-    VLLM -- "action + reason · plate ID · summary" --> AGENT
-    AGENT --> EXEC
-    EXEC -- "velocity commands" --> SPOT
-    AGENT --> REPORT
-    REPORT -- "summary request" --> VLLM
-    RELAY -- "mp4 + report" --> RES
-    HF --> VOL
-    VOL --> VLLM
-    SEC -.-> VLLM
-    SEC -.-> RELAY
-    YOLO -.-> CORR
-    Laptop -- "git push" --> GH
+flowchart TD
+    World["Isaac Sim: warehouse-v3 and Spot"]
+    Camera["Inspection RGB-D camera<br/>Rigid +15° or pan/tilt, by mission"]
+    Sensors["Sensor backend, when enabled<br/>LWIR, gamma, dose, air and H2"]
+    Map["Known warehouse map<br/>Simulator robot pose"]
+    Agent["Python mission coordinator<br/>Route, observations and drum ledger"]
+    YOLO["YOLO26s API on Modal<br/>Whole-barrel condition boxes"]
+    Cosmos["Cosmos Reason 2 8B on Modal<br/>Optional constrained follow-up selection"]
+    Rules["Fixed verdict and action rules<br/>Framing; dose stop when enabled"]
+    Motion["Velocity and posture controller<br/>Pretrained Spot walking policy"]
+    Logs["Overlay video and evidence logs"]
+    Report["Report builder<br/>Fixed-rule ratings, HTML and PDF"]
+    Truth["Private seeded inventory"]
+    World --> Camera
+    World --> Sensors
+    Camera -->|"Unannotated 640×640 RGB crop"| YOLO
+    YOLO -->|"Condition, confidence and boxes"| Agent
+    Sensors -->|"Readings with timestamps"| Agent
+    Map --> Agent
+    Agent -->|"Image, findings and offered actions"| Cosmos
+    Cosmos -->|"Offered action ID and reason"| Agent
+    Agent <--> Rules
+    Agent -->|"Validated motion task"| Motion
+    Motion --> World
+    Agent --> Logs
+    Logs --> Report
+    Truth -->|"Source parameters, sensor backend only"| Sensors
+    Truth -.->|"Ground truth for scoring only"| Report
 ```
 
-## What each part is
+## Mission variants
 
-| Part | Real or modelled |
-| --- | --- |
-| Hall, drums, Spot locomotion, RGB-D, PTZ, LiDAR, IMU, encoders | Isaac Sim physics and RTX rendering |
-| Gamma, temperature/RH, H2, microphone, LWIR thermal, swab | Sensor models of authored sources. Isaac has no native sensor for these |
-| Navigation | Real estimator on sensor data. Ground truth is used only for the error shown in the overlay |
-| Thermal, hiss and ID detection | Real algorithms on sensor output. IDs are read by Cosmos from PTZ crops |
-| Corrosion detection | Simulator segmentation, until the YOLO detector lands |
-| Decisions | Cosmos Reason 2 over safety-checked actions. A rules baseline takes over if Cosmos is unreachable, and that is labelled in the video |
-| Thresholds | `sim/inspection_config.json`. Sources and limits are in [inspection_source_register.md](inspection_source_register.md). H2 has no alarm setpoint |
+- `scripts/hot/full_hall/aisle_patrol.py`: live thermal, gamma/dose, air and H2 sensor backend; rule-driven route and dose retreat; no Cosmos in this round.
+- `scripts/hot/full_hall/wh_rigid_walk.py`, enabled by `wh_rigid_cosmos.py` or `wh_rigid_full_cosmos.py`: body-fixed camera, latest YOLO26s, optional Cosmos review and bounded closer looks; no live domain sensors in this implementation.
+- `scripts/hot/full_hall/rigid_middle_upper.py` with `ambiguity_cosmos.py`: rigid-camera framing gate, physical body pitch, YOLO votes and constrained Cosmos recheck selection. The inspection course includes a scripted heat cue.
 
-`tools/run_hall.py` jobs, such as `tools/run_plates.py`, render
-texture-accurate stills with the same container recipe as the hot worker.
-Renders from `isaac_sim_modal.py` currently draw one texture on every surface.
+These variants share services and recording conventions; their features are not automatically combined. The locally recorded six-drum rust/warm-bulge prototype is a separate run and is not the implementation of every main-branch mission.
+
+## Data and timing
+
+- YOLO receives an unannotated 640×640 inspection-camera crop and returns whole-barrel condition boxes/confidences. The third-person presentation view is never detector input.
+- Cosmos Reason 2–8B receives an image, detector/inspection state and offered actions; its action ID and reason return to the Python executor for validation. Calls occur at eligible reviews, not every physics step.
+- Warehouse navigation uses public map geometry and simulator robot pose. Onboard localisation and SLAM are not implemented in these warehouse runs.
+- The aisle patrol samples gamma/air/H2 every 0.5 simulated seconds. LWIR is associated with inspection views using depth and map geometry. Its dose rule runs on gamma samples.
+- The main patrol/walk detector interval is at least 0.4 simulated seconds when a view is settled. Rendering is 24 frames per simulated second; physics and the walking policy use their own substeps.
+- Model calls are synchronous: simulation pauses during inference. Video speed does not measure wall-clock throughput.
+- Private source parameters feed the sensor backend. Authored condition truth is not passed to Cosmos as a finding; the report may use it separately for scoring.
+- The report builder consumes the completed run logs/evidence. Fixed rules set ratings and missing readings remain not measured. It produces HTML/PDF and a summary.
+
+## Source of truth
+
+See the [README architecture and mission table](../README.md#technical-architecture), [latest YOLO model](../detector/v2/LATEST_MODEL.md), [Cosmos endpoint](cosmos_8b_api.md), [sensor backend](../sim/warehouse-v3/warehouse_sensors.py) and [report builder](../tools/full_hall_report/report/README.md).
+
+The older `docs/architecture.png` describes an earlier hall workflow; the Mermaid diagram above is the current architecture reference.
