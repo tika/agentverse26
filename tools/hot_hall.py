@@ -30,9 +30,12 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
          .entrypoint([])
          .pip_install('imageio[ffmpeg]')
          .env({'ACCEPT_EULA': 'Y', 'PRIVACY_CONSENT': 'N', 'NVIDIA_DRIVER_CAPABILITIES': 'all',
+               'HOT_GPU_COUNT':os.environ.get('HOT_GPU_COUNT','1'),
                'HOT_SPAWN_X':os.environ.get('HOT_SPAWN_X','10'), 'HOT_SPAWN_Y':os.environ.get('HOT_SPAWN_Y','6')})
          .add_local_dir(ROOT / 'sim', '/workspace/sim', copy=True,
                         ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc', '*.usda']))
+HOT_GPU_COUNT=int(os.environ.get('HOT_GPU_COUNT','1'))
+if HOT_GPU_COUNT not in (1,2,4):raise ValueError('HOT_GPU_COUNT must be 1, 2 or 4')
 app = modal.App('agentverse-hot-hall')
 requests = modal.Queue.from_name('agentverse-hot-requests', create_if_missing=True)
 results = modal.Dict.from_name('agentverse-hot-results', create_if_missing=True)
@@ -54,7 +57,7 @@ def _encode(folder):
         frames.rmdir()
 
 
-@app.function(image=image, gpu=['RTX-PRO-6000','L40S','L4'], cpu=8, memory=32768, timeout=4 * 60 * 60,
+@app.function(image=image, gpu=([f'RTX-PRO-6000:{HOT_GPU_COUNT}',f'L40S:{HOT_GPU_COUNT}'] if HOT_GPU_COUNT>1 else ['RTX-PRO-6000','L40S','L4']), cpu=16, memory=32768, timeout=4 * 60 * 60,
               volumes={'/mission-runs':mission_runs},
               # Unconditional dependency; external Cosmos credentials are refreshed from the private Dict.
               secrets=[modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL','DETECTOR_API_KEY','DETECTOR_API_SECRET'])])

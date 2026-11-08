@@ -14,7 +14,7 @@
     "appearance_seed": 1405681632,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 0.961475,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -28,7 +28,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "faded_yellow",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 0.961475
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.025463,
+        "fill_height_fraction": 0.477834
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.037884,
+        "beta_gamma_bq_cm2": 0.400602,
+        "ph": 6.78575,
+        "conductivity_us_cm": 112.480001,
+        "chloride_mg_m2": 8.82203
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D02",
@@ -45,7 +74,7 @@
     "appearance_seed": 942484272,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 0.930803,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -59,7 +88,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "faded_yellow",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 0.930803
+      },
+      "thermal": {
+        "peak_above_local_air_c": 0.880821,
+        "fill_height_fraction": 0.347509
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.045975,
+        "beta_gamma_bq_cm2": 0.428879,
+        "ph": 6.619043,
+        "conductivity_us_cm": 117.072994,
+        "chloride_mg_m2": 4.222851
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D03",
@@ -76,7 +134,7 @@
     "appearance_seed": 432652533,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 0.75356,
     "state": "corrosion",
     "faults": [
       "corrosion"
@@ -101,7 +159,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "faded_yellow",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 0.75356
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.032091,
+        "fill_height_fraction": 0.321904
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.008044,
+        "beta_gamma_bq_cm2": 0.118465,
+        "ph": 6.536276,
+        "conductivity_us_cm": 51.472747,
+        "chloride_mg_m2": 10.720508
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D04",
@@ -118,7 +205,7 @@
     "appearance_seed": 202244314,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 1.215553,
     "state": "corrosion",
     "faults": [
       "corrosion"
@@ -143,7 +230,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "mid_grey",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 1.215553
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.112539,
+        "fill_height_fraction": 0.354375
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.005031,
+        "beta_gamma_bq_cm2": 0.152186,
+        "ph": 7.202046,
+        "conductivity_us_cm": 165.723409,
+        "chloride_mg_m2": 5.97099
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D05",
@@ -160,7 +276,7 @@
     "appearance_seed": 1540770720,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 1.044974,
     "state": "bulge",
     "faults": [
       "bulge"
@@ -168,15 +284,44 @@
     "corrosion_severity": 0,
     "defects": [],
     "shape": {
-      "max_radius": 0.31511137317857835,
-      "lid_rise": 0.07,
+      "max_radius": 0.31432420762180435,
+      "lid_rise": 0.068692,
       "dents": [],
-      "radial_swelling_fraction": 0.08
+      "radial_swelling_fraction": 0.076523
     },
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "faded_yellow",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 1.044974
+      },
+      "thermal": {
+        "peak_above_local_air_c": 11.644432,
+        "fill_height_fraction": 0.369801
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.050248,
+        "beta_gamma_bq_cm2": 0.108428,
+        "ph": 7.015054,
+        "conductivity_us_cm": 73.221022,
+        "chloride_mg_m2": 6.22907
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.076523,
+        "lid_rise_m": 0.068692
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D06",
@@ -193,7 +338,7 @@
     "appearance_seed": 1688060241,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 1.26067,
     "state": "residue",
     "faults": [
       "residue"
@@ -237,7 +382,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "faded_yellow",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 1.26067
+      },
+      "thermal": {
+        "peak_above_local_air_c": 0.421949,
+        "fill_height_fraction": 0.326932
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.249228,
+        "beta_gamma_bq_cm2": 2.325576,
+        "ph": 5.138559,
+        "conductivity_us_cm": 1135.446288,
+        "chloride_mg_m2": 111.208575
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D07",
@@ -254,7 +428,7 @@
     "appearance_seed": 1074497556,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 0.899745,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -268,7 +442,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "faded_yellow",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 0.899745
+      },
+      "thermal": {
+        "peak_above_local_air_c": 0.912783,
+        "fill_height_fraction": 0.325659
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.021493,
+        "beta_gamma_bq_cm2": 0.257596,
+        "ph": 7.502918,
+        "conductivity_us_cm": 154.914931,
+        "chloride_mg_m2": 19.358856
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D08",
@@ -285,7 +488,7 @@
     "appearance_seed": 796282693,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 0.980138,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -299,7 +502,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "mid_grey",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 0.980138
+      },
+      "thermal": {
+        "peak_above_local_air_c": 0.499587,
+        "fill_height_fraction": 0.343584
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.04717,
+        "beta_gamma_bq_cm2": 0.23063,
+        "ph": 7.343808,
+        "conductivity_us_cm": 157.937146,
+        "chloride_mg_m2": 10.085244
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D09",
@@ -316,7 +548,7 @@
     "appearance_seed": 864178267,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 1.298273,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -330,7 +562,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "mid_grey",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 1.298273
+      },
+      "thermal": {
+        "peak_above_local_air_c": 0.702077,
+        "fill_height_fraction": 0.465671
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.009897,
+        "beta_gamma_bq_cm2": 0.216885,
+        "ph": 7.577878,
+        "conductivity_us_cm": 58.448111,
+        "chloride_mg_m2": 19.741161
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D10",
@@ -347,7 +608,7 @@
     "appearance_seed": 1766867110,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 1.317778,
     "state": "bulge+corrosion+leak",
     "faults": [
       "bulge",
@@ -405,15 +666,44 @@
       }
     ],
     "shape": {
-      "max_radius": 0.31511137317857835,
-      "lid_rise": 0.07,
+      "max_radius": 0.3158702397147608,
+      "lid_rise": 0.073454,
       "dents": [],
-      "radial_swelling_fraction": 0.08
+      "radial_swelling_fraction": 0.083352
     },
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "mid_grey",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 1.317778
+      },
+      "thermal": {
+        "peak_above_local_air_c": 13.589216,
+        "fill_height_fraction": 0.335606
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 3.043728,
+        "methane_ppm_at_source": 1.072475
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.965518,
+        "beta_gamma_bq_cm2": 6.20686,
+        "ph": 6.1184,
+        "conductivity_us_cm": 2199.273688,
+        "chloride_mg_m2": 125.908065
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.083352,
+        "lid_rise_m": 0.073454
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.010492
+      }
+    }
   },
   {
     "id": "D11",
@@ -430,7 +720,7 @@
     "appearance_seed": 197860369,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 0.825282,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -444,7 +734,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "mid_grey",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 0.825282
+      },
+      "thermal": {
+        "peak_above_local_air_c": 0.66258,
+        "fill_height_fraction": 0.323443
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.02782,
+        "beta_gamma_bq_cm2": 0.211457,
+        "ph": 7.162114,
+        "conductivity_us_cm": 44.869404,
+        "chloride_mg_m2": 10.752708
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D12",
@@ -461,7 +780,7 @@
     "appearance_seed": 1190961761,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 1.344438,
     "state": "corrosion",
     "faults": [
       "corrosion"
@@ -486,7 +805,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "dark_blue",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 1.344438
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.133819,
+        "fill_height_fraction": 0.437908
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.043844,
+        "beta_gamma_bq_cm2": 0.490017,
+        "ph": 7.472989,
+        "conductivity_us_cm": 57.235335,
+        "chloride_mg_m2": 16.413622
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D13",
@@ -503,7 +851,7 @@
     "appearance_seed": 594336918,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 0.875,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -517,7 +865,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "faded_yellow",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 0.875
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.350989,
+        "fill_height_fraction": 0.452893
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.02876,
+        "beta_gamma_bq_cm2": 0.12597,
+        "ph": 6.677809,
+        "conductivity_us_cm": 132.131174,
+        "chloride_mg_m2": 18.522996
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D14",
@@ -534,7 +911,7 @@
     "appearance_seed": 1356488968,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 1.160173,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -548,7 +925,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "mid_grey",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 1.160173
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.271118,
+        "fill_height_fraction": 0.460062
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.0523,
+        "beta_gamma_bq_cm2": 0.046755,
+        "ph": 7.06505,
+        "conductivity_us_cm": 140.782349,
+        "chloride_mg_m2": 18.63646
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D15",
@@ -565,7 +971,7 @@
     "appearance_seed": 145857092,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 1.080006,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -579,7 +985,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "dark_blue",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 1.080006
+      },
+      "thermal": {
+        "peak_above_local_air_c": 0.605886,
+        "fill_height_fraction": 0.391979
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.029997,
+        "beta_gamma_bq_cm2": 0.414585,
+        "ph": 6.980822,
+        "conductivity_us_cm": 79.116729,
+        "chloride_mg_m2": 19.565931
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D16",
@@ -596,7 +1031,7 @@
     "appearance_seed": 2084558134,
     "radius": 0.299,
     "height": 0.88,
-    "source_strength": 1,
+    "source_strength": 0.827259,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -610,7 +1045,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": "mid_grey",
-    "appearance_version": "reviewed_llw_v2"
+    "appearance_version": "reviewed_llw_v2",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 0.827259
+      },
+      "thermal": {
+        "peak_above_local_air_c": 0.347843,
+        "fill_height_fraction": 0.468786
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.032481,
+        "beta_gamma_bq_cm2": 0.271477,
+        "ph": 7.658578,
+        "conductivity_us_cm": 62.372494,
+        "chloride_mg_m2": 14.309057
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D17",
@@ -627,7 +1091,7 @@
     "appearance_seed": 1631871624,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 23.977809,
     "state": "corrosion",
     "faults": [
       "corrosion"
@@ -689,7 +1153,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 23.977809
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.297635,
+        "fill_height_fraction": 0.42981
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.033258,
+        "beta_gamma_bq_cm2": 0.301533,
+        "ph": 6.841548,
+        "conductivity_us_cm": 60.679388,
+        "chloride_mg_m2": 15.403463
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D18",
@@ -706,7 +1199,7 @@
     "appearance_seed": 417983442,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 17.527821,
     "state": "corrosion",
     "faults": [
       "corrosion"
@@ -768,7 +1261,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 17.527821
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.231361,
+        "fill_height_fraction": 0.413522
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.055562,
+        "beta_gamma_bq_cm2": 0.442217,
+        "ph": 7.234952,
+        "conductivity_us_cm": 45.443505,
+        "chloride_mg_m2": 19.180971
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D19",
@@ -785,7 +1307,7 @@
     "appearance_seed": 1173749072,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 17.865472,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -799,7 +1321,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 17.865472
+      },
+      "thermal": {
+        "peak_above_local_air_c": 2.044068,
+        "fill_height_fraction": 0.470838
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.046192,
+        "beta_gamma_bq_cm2": 0.317628,
+        "ph": 7.069221,
+        "conductivity_us_cm": 163.634851,
+        "chloride_mg_m2": 16.494642
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D20",
@@ -816,7 +1367,7 @@
     "appearance_seed": 331334161,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 17.643197,
     "state": "leak",
     "faults": [
       "leak"
@@ -860,7 +1411,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 17.643197
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.590202,
+        "fill_height_fraction": 0.411935
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 30.221872,
+        "methane_ppm_at_source": 1.175066
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 1.148869,
+        "beta_gamma_bq_cm2": 12.154016,
+        "ph": 6.104475,
+        "conductivity_us_cm": 903.690573,
+        "chloride_mg_m2": 127.606183
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D21",
@@ -877,7 +1457,7 @@
     "appearance_seed": 787359109,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 20.882976,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -891,7 +1471,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 20.882976
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.697243,
+        "fill_height_fraction": 0.340815
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.0507,
+        "beta_gamma_bq_cm2": 0.563683,
+        "ph": 7.029211,
+        "conductivity_us_cm": 46.485536,
+        "chloride_mg_m2": 16.449759
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D22",
@@ -908,7 +1517,7 @@
     "appearance_seed": 2077711329,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 23.261303,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -922,7 +1531,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 23.261303
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.046194,
+        "fill_height_fraction": 0.337166
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.029548,
+        "beta_gamma_bq_cm2": 0.530641,
+        "ph": 7.464932,
+        "conductivity_us_cm": 139.897272,
+        "chloride_mg_m2": 19.935106
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D23",
@@ -939,7 +1577,7 @@
     "appearance_seed": 163945743,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 19.856697,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -953,7 +1591,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 19.856697
+      },
+      "thermal": {
+        "peak_above_local_air_c": 2.293463,
+        "fill_height_fraction": 0.482318
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.02474,
+        "beta_gamma_bq_cm2": 0.26651,
+        "ph": 7.529368,
+        "conductivity_us_cm": 71.105533,
+        "chloride_mg_m2": 9.468956
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D24",
@@ -970,7 +1637,7 @@
     "appearance_seed": 1008363426,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 21.876174,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -984,7 +1651,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 21.876174
+      },
+      "thermal": {
+        "peak_above_local_air_c": 2.227594,
+        "fill_height_fraction": 0.355248
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.040442,
+        "beta_gamma_bq_cm2": 0.522883,
+        "ph": 7.373151,
+        "conductivity_us_cm": 104.087547,
+        "chloride_mg_m2": 10.960649
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D25",
@@ -1001,7 +1697,7 @@
     "appearance_seed": 1474200732,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 19.428278,
     "state": "corrosion+residue",
     "faults": [
       "corrosion",
@@ -1091,7 +1787,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 19.428278
+      },
+      "thermal": {
+        "peak_above_local_air_c": 2.501448,
+        "fill_height_fraction": 0.362532
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.212651,
+        "beta_gamma_bq_cm2": 2.155979,
+        "ph": 5.937619,
+        "conductivity_us_cm": 532.128435,
+        "chloride_mg_m2": 117.24335
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D26",
@@ -1108,7 +1833,7 @@
     "appearance_seed": 1021568550,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 17.443639,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -1122,7 +1847,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 17.443639
+      },
+      "thermal": {
+        "peak_above_local_air_c": 2.289686,
+        "fill_height_fraction": 0.350189
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.034578,
+        "beta_gamma_bq_cm2": 0.328596,
+        "ph": 7.207648,
+        "conductivity_us_cm": 169.240654,
+        "chloride_mg_m2": 11.949391
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D27",
@@ -1139,7 +1893,7 @@
     "appearance_seed": 2019291965,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 18.188308,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -1153,7 +1907,36 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 18.188308
+      },
+      "thermal": {
+        "peak_above_local_air_c": 1.523402,
+        "fill_height_fraction": 0.413022
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.0177,
+        "beta_gamma_bq_cm2": 0.182605,
+        "ph": 6.640397,
+        "conductivity_us_cm": 58.635768,
+        "chloride_mg_m2": 6.08253
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   },
   {
     "id": "D28",
@@ -1170,7 +1953,7 @@
     "appearance_seed": 938776597,
     "radius": 0.4,
     "height": 1.2,
-    "source_strength": 20,
+    "source_strength": 20.072867,
     "state": "clean",
     "faults": [],
     "corrosion_severity": 0,
@@ -1184,6 +1967,35 @@
     "obstructed": false,
     "internal_corrosion": false,
     "paint_color": null,
-    "appearance_version": "stainless_ilw_v1"
+    "appearance_version": "stainless_ilw_v1",
+    "simulation_properties": {
+      "version": "individual_drum_v1",
+      "seed": 42,
+      "radiation": {
+        "gamma_at_1m_uSv_h": 20.072867
+      },
+      "thermal": {
+        "peak_above_local_air_c": 0.900223,
+        "fill_height_fraction": 0.419811
+      },
+      "gas": {
+        "hydrogen_ppm_at_source": 0.0,
+        "methane_ppm_at_source": 0.0
+      },
+      "surface_sample": {
+        "alpha_bq_cm2": 0.033704,
+        "beta_gamma_bq_cm2": 0.21563,
+        "ph": 7.006212,
+        "conductivity_us_cm": 135.985386,
+        "chloride_mg_m2": 7.271461
+      },
+      "structure": {
+        "radial_swelling_fraction": 0.0,
+        "lid_rise_m": 0.0
+      },
+      "acoustic": {
+        "hiss_amplitude": 0.0
+      }
+    }
   }
 ]

@@ -5,10 +5,11 @@ import json
 import math
 import omni.replicator.core as rep
 from PIL import Image, ImageDraw, ImageFont
-from pxr import Gf, UsdGeom
-from isaacsim.sensors.camera import Camera
+from pxr import UsdGeom
+from front_camera import CAMERA_PATH
 from inspection_payloads import microphone_window
 from sensors import SensorWorld, load_config
+from drum_properties import thermal_parameters
 
 W, H = 1920, 1080
 FPS = 12
@@ -21,13 +22,6 @@ FONT = {size: ImageFont.load_default(size=size) for size in (14, 16, 18, 22, 28,
 ROW_FACING = {'A': -1, 'B': 1, 'C': -1, 'D': 1}
 
 
-def _aim(camera, eye, target, up=(0, 0, 1)):
-    matrix = Gf.Matrix4d().SetLookAt(Gf.Vec3d(*map(float, eye)), Gf.Vec3d(*map(float, target)), Gf.Vec3d(*up))
-    quat = matrix.GetInverse().ExtractRotationQuat()
-    camera.set_world_pose(position=np.array(eye, dtype=float),
-                          orientation=np.array([quat.GetReal(), *quat.GetImaginary()]), camera_axes='usd')
-
-
 def _rgb(camera):
     rgba = camera.get_rgba()
     if rgba is None or not rgba.size:
@@ -35,25 +29,15 @@ def _rgb(camera):
     return rgba[:, :, :3].astype(np.uint8)
 
 
-if 'scenario_cams' not in state:
-    third = Camera('/World/ScnThird', resolution=(1280, 720))
-    bird = Camera('/World/ScnBird', resolution=(640, 360))
-    third.initialize()
-    bird.initialize()
-    third.prim.GetAttribute('focalLength').Set(16.0)
-    bird.prim.GetAttribute('focalLength').Set(4.2)
-    for camera in (third, bird):
-        camera.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(0.05, 60))
+if 'front_seg' not in state:
     seg = rep.AnnotatorRegistry.get_annotator(
         'semantic_segmentation', init_params={'semanticTypes': ['class', 'drum_id'], 'colorize': False})
     seg.attach([onboard.get_render_product_path()])
     for _ in range(10):
         world.render()
-    state['scenario_cams'] = (third, bird, seg)
-THIRD, BIRD, SEG = state['scenario_cams']
-BIRD.prim.GetAttribute('focalLength').Set(4.2)
-# Match the chase camera's near clip so an aisle-side drum renders at standoff.
-onboard.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(0.05, 60))
+    state['front_seg'] = seg
+SEG=state['front_seg']
+assert str(onboard.prim.GetPath())==CAMERA_PATH,'Unexpected visual camera'
 SPILLS = [str(p.GetPath()) for p in stage.Traverse() if p.GetName().startswith('Spill_')]
 
 
@@ -77,6 +61,7 @@ def wrap(angle):
 
 
 EMISSIVITY = {'ILW': 0.30, 'LLW': 0.90, 'floor': 0.95, 'wall': 0.92}  # Bare stainless vs painted steel/concrete.
+ZONE_AIR={k:v['temperature_c'] for k,v in load_config()['environment']['zones'].items()}
 LWIR_RES = (160, 90)        # Microbolometer-class resolution, upscaled for display.
 NETD_C = 0.05               # Sensor noise (noise-equivalent temperature difference).
 
@@ -97,7 +82,8 @@ def _pixel_world(depth, camera):
     """World xyz of each pixel from the camera's (physical) pose, intrinsics and depth."""
     k = camera.get_intrinsics_matrix()
     h, w = depth.shape
-    sx, sy = 640 / w, 360 / h
+    full_w,full_h=state['front_frame']['info']['width'],state['front_frame']['info']['height']
+    sx, sy = full_w / w, full_h / h
     vs, us = np.mgrid[0:h, 0:w]
     u, v = (us + 0.5) * sx, (vs + 0.5) * sy
     position, quat = camera.get_world_pose(camera_axes='world')
@@ -134,7 +120,7 @@ def perceive(scene):
     rows = (np.arange(h) * ids_full.shape[0] / h).astype(int)
     cols = (np.arange(w) * ids_full.shape[1] / w).astype(int)
     ids = ids_full[np.ix_(rows, cols)]
-    depth_full = onboard.get_depth()
+    depth_full = state['front_frame']['depth']
     depth = np.nan_to_num(depth_full[np.ix_(rows, cols)], nan=20.0, posinf=20.0) if depth_full is not None else np.full((h, w), 20.0)
     xyz = _pixel_world(np.clip(depth, 0.05, 40.0), onboard)
     # Background: floor (warmed near hot drums) and walls (mild vertical stratification).
@@ -150,16 +136,17 @@ def perceive(scene):
         if not mask.any():
             continue
         d = DRUMS[drum_id]
-        offset = scene['drum_offsets_c'].get(drum_id, 1.2 if d['category'] == 'ILW' else 0.3)
+        offset,fill_height = thermal_parameters(d,scene['drum_offsets_c'])
+        local_air=ZONE_AIR[d['zone']]+ambient-ZONE_AIR[scene.get('sensor_zone','A')]
         z = np.clip(xyz[..., 2] / d['height'], 0, 1)
-        profile = 0.55 + 0.45 * np.exp(-((z - 0.4) / 0.32) ** 2)       # Hottest near the waste mid-height.
+        profile = 0.55 + 0.45 * np.exp(-((z - fill_height) / 0.32) ** 2)
         rel = np.stack([xyz[..., 0] - d['x'], xyz[..., 1] - d['y']], -1)
         normal = rel / np.maximum(np.linalg.norm(rel, axis=-1, keepdims=True), 1e-6)
         to_cam = onboard.get_world_pose(camera_axes='world')[0][:2] - np.stack([xyz[..., 0], xyz[..., 1]], -1)
         to_cam /= np.maximum(np.linalg.norm(to_cam, axis=-1, keepdims=True), 1e-6)
         cos_view = np.clip((normal * to_cam).sum(-1), 0, 1)
         eps = EMISSIVITY[d['category']] * (0.35 + 0.65 * cos_view ** 0.5)  # Emissivity drops at grazing angles.
-        true = np.where(mask, ambient + offset * profile, true)
+        true = np.where(mask, local_air + offset * profile, true)
         emiss = np.where(mask, eps, emiss)
     apparent = _apparent(true, emiss, ambient)
     noise = rng.normal(0, NETD_C, apparent.shape) + rng.normal(0, NETD_C, (1, w))  # Pixel + column pattern noise.
@@ -200,43 +187,6 @@ def thermal_inset(perception, size=(256, 144)):
     return image, lo, hi
 
 
-def place_cameras(p, cam_yaw, scene, onboard_yaw=None):
-    onboard.prim.GetAttribute('focalLength').Set(10.0 if scene.get('coverage_mission') else 15.0)
-    heading = np.array([math.cos(cam_yaw), math.sin(cam_yaw), 0.0])
-    chase_eye = p - 3.4 * heading + [0, 0, 1.70]
-    if scene.get('coverage_mission'):
-        for angle in (cam_yaw+math.pi,cam_yaw+math.pi-.8,cam_yaw+math.pi+.8,cam_yaw):
-            candidate=p+np.array([3.4*math.cos(angle),3.4*math.sin(angle),2.0])
-            if .65<candidate[0]<19.35 and .65<candidate[1]<11.35:
-                chase_eye=candidate;break
-    # Keep the presentation camera inside the 20 x 12 m hall at the docking pose.
-    chase_eye[:2] = np.clip(chase_eye[:2], [.65, .65], [19.35, 11.35])
-    _aim(THIRD, chase_eye, p + .65 * heading + [0, 0, .10])
-    if onboard_yaw is not None:
-        heading = np.array([math.cos(onboard_yaw), math.sin(onboard_yaw), 0.0])
-    if onboard_yaw is not None:
-        # Match the elevated PTZ mount and leave clearance from the drum at standoff.
-        eye = p + 0.35 * heading + [0, 0, 0.45]
-    else:
-        eye = p + 0.62 * heading + [0, 0, 0.30]
-        if scene.get('coverage_mission'):eye=p+.25*heading+[0,0,.45]
-    look = scene.get('look')
-    target = np.array([*look, scene.get('look_height',0.5)]) if look is not None else eye + heading + [0, 0, -0.32]
-    if not scene.get('coverage_mission') and onboard_yaw is not None and np.dot(target[:2] - eye[:2], heading[:2]) <= 0.1:
-        target = eye + heading + [0, 0, -0.32]
-    _aim(onboard, eye, target)
-    _aim(BIRD, (10.0, 6.0, 5.5), (10.0, 6.0, 0.0), up=(0, 1, 0))
-    return eye
-
-
-def project_bird(points_xy, centre, z=LIDAR_Z):
-    k = BIRD.get_intrinsics_matrix()
-    depth = 5.5 - z
-    u = k[0, 2] + k[0, 0] * (points_xy[:, 0] - 10.0) / depth
-    v = k[1, 2] - k[1, 1] * (points_xy[:, 1] - 6.0) / depth
-    return np.stack([u, v], 1)
-
-
 def spark(draw, box, values, limit, color, label):
     x0, y0, x1, y1 = box
     draw.rectangle(box, outline='#2a3644')
@@ -253,38 +203,19 @@ def spark(draw, box, values, limit, color, label):
 
 def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
     canvas = Image.new('RGB', (W, H), '#0d131b')
-    canvas.paste(Image.fromarray(frames['third']), (0, 0))
-    first = Image.fromarray(frames['first'])
-    inset, lo, hi = thermal_inset(perception)
-    first.paste(inset, (640 - 262, 360 - 150))
-    canvas.paste(first, (1280, 0))
-    bird = Image.fromarray(frames['bird'])
-    bd = ImageDraw.Draw(bird)
-    if len(m.nav.hits_world):
-        for u, v in project_bird(m.nav.hits_world, p):
-            bd.rectangle((u - 1, v - 1, u + 1, v + 1), fill='#33e0ff')
-    route = [tuple(m.nav.fused[:2])] + [tuple(w) for w in m.route]
-    if len(route) > 1:
-        bd.line([tuple(x) for x in project_bird(np.array(route), p, 0.0)], fill='#ffffff', width=2)
-    if len(m.trail) > 1:
-        bd.line([tuple(x) for x in project_bird(np.array(m.trail[-200:]), p, 0.0)], fill='#5fe2af', width=2)
-    if m.swab_contact is not None:
-        a, b = project_bird(np.array([p[:2], m.swab_contact]), p, 0.0)
-        bd.line([tuple(a), tuple(b)], fill='#7cc4ff', width=3)
-        bd.ellipse((b[0] - 5, b[1] - 5, b[0] + 5, b[1] + 5), outline='#7cc4ff', width=2)
-    est = project_bird(np.array([m.nav.fused[:2]]), p, 0.0)[0]
-    bd.ellipse((est[0] - 6, est[1] - 6, est[0] + 6, est[1] + 6), outline='#ffc55e', width=2)
-    canvas.paste(bird, (1280, 360))
+    canvas.paste(Image.fromarray(frames['first']), (0, 0))
     draw = ImageDraw.Draw(canvas)
-    for x, y, text in ((10, 8, '3RD PERSON  |  chase camera'), (1290, 8, '1ST PERSON  |  onboard RGB'),
-                       (1290, 368, "BIRD'S EYE  |  LiDAR hits (cyan), route, trail, estimate (amber)")):
-        draw.rectangle((x - 6, y - 4, x + 9 * len(text) + 4, y + 22), fill='#0d131bcc')
-        draw.text((x, y), text, font=FONT[16], fill='white')
-    draw.text((1290 + 640 - 262, 360 - 172), f'LWIR 160x90 (synthetic)  {lo:.0f}-{hi:.0f} C', font=FONT[14], fill='white')
-    # Title banner
-    draw.rectangle((0, 668, 1280, 720), fill='#0d131bdd')
-    draw.text((14, 674), m.title, font=FONT[34], fill='white')
-    draw.text((1120, 680), f't = {t:4.1f} s', font=FONT[28], fill='#9fb2c4')
+    draw.rectangle((0,0,1280,33),fill='#0d131b')
+    info=frames['frame_info']
+    draw.text((12,6),'FIXED FRONT CAMERA | '+info['frame_id']+' | body-mounted RGB',font=FONT[18],fill='white')
+    draw.text((1080,6),f't = {t:5.1f}s',font=FONT[18],fill='#9fb2c4')
+    draw.text((14,695),m.title,font=FONT[18],fill='white',stroke_width=1,stroke_fill='black')
+    if 'presentation' in frames:canvas.paste(Image.fromarray(frames['presentation']),(1280,0))
+    draw.rectangle((1280,0,1920,30),fill='#0d131b')
+    draw.text((1292,6),'3RD PERSON | recording only; excluded from model inputs',font=FONT[16],fill='white')
+    inset,lo,hi=thermal_inset(perception,size=(192,108))
+    canvas.paste(inset,(1720,244))
+    draw.text((1720,226),'SIM thermal | front-aligned',font=FONT[14],fill='white',stroke_width=1,stroke_fill='black')
     # Stats strip
     y0 = 728
     status_color = COLORS.get(m.status, 'white')

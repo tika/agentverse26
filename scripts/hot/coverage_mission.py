@@ -85,9 +85,9 @@ class FullStoreMission:
                     'corrosion_observed':{'type':['boolean','null']},'bulge_observed':{'type':['boolean','null']},
                     'reason':{'type':'string'}},'required':['object_visible','inspection_quality','corrosion_observed','bulge_observed','reason'],
                     'additionalProperties':False}
-                raw=cosmos_chat([_image_part(crop),{'type':'text','text':prompt}],max_tokens=256,schema=schema)
+                raw=cosmos_chat([front_image_part(crop,'cosmos_visual_fallback',(w//4,0,3*w//4,h)),{'type':'text','text':prompt}],max_tokens=256,schema=schema)
                 answer=extract_json(raw)
-                depth=onboard.get_depth();patch=depth[h//3:2*h//3,2*w//5:3*w//5]
+                depth=state['front_frame']['depth'];patch=depth[h//3:2*h//3,2*w//5:3*w//5]
                 vals=patch[np.isfinite(patch)&(patch>.2)&(patch<4)]
                 quality=(answer.get('object_visible') is True and answer.get('inspection_quality')=='good' and
                          type(answer.get('corrosion_observed')) is bool and type(answer.get('bulge_observed')) is bool)
@@ -150,6 +150,7 @@ class FullStoreMission:
         options=[]
         if not alerts:
             for key,e in self.ledger.drums.items():
+                if a.scene.get('mission_scope') and key not in a.scene['mission_scope']:continue
                 if e['complete'] or e['deferred']:continue
                 d=self.drums[key]; views=self.router.viewpoints(d)
                 if len(e['views'])==0:goal=views[0]
@@ -235,16 +236,24 @@ class FullStoreMission:
         if self.phase=='choose':self.choose(a,t,frames['first'],reading)
         elif self.phase=='move':
             if not a.route:
+                self.phase='align';self.since=t;a.hold=False;a.status='ALIGN FRONT CAMERA'
+            elif t>self.deadline:
+                self.ledger.drums[self.active]['deferred']='Navigation did not converge before timeout'
+                a.event(t,'Deferred '+self.drums[self.active]['display_id']+': navigation timeout')
+                self.phase='choose';a.route=[];a.hold=True
+        elif self.phase=='align':
+            d=self.drums[self.active];est=a.nav.fused
+            error=wrap(math.atan2(d['y']-est[1],d['x']-est[0])-est[2])
+            if abs(error)<.06 and abs(a.nav.gyro)<.15:
                 self.phase='capture';self.since=t;a.hold=True;a.status='INSPECT'
                 d=self.drums[self.active]
                 ident=a.memory.drums[self.active]['checks'].get('id',{})
                 if ident.get('result')!='match' and ident.get('tries',0)<3:
                     read_plate_for(a,d,t,p,yaw)
                     self.sync(a)
-            elif t>self.deadline:
-                self.ledger.drums[self.active]['deferred']='Navigation did not converge before timeout'
-                a.event(t,'Deferred '+self.drums[self.active]['display_id']+': navigation timeout')
-                self.phase='choose';a.route=[];a.hold=True
+            elif t-self.since>12:
+                self.ledger.drums[self.active]['deferred']='Body could not align fixed front camera'
+                self.phase='choose';a.hold=True
         elif self.phase=='capture' and t-self.since>=self.dwell_s:
             self.sync(a);entry=self.ledger.drums[self.active]
             a.event(t,f"{self.drums[self.active]['display_id']}: {len(entry['views'])}/2 valid angles; "+
@@ -263,6 +272,10 @@ class FullStoreMission:
 
     def command(self,a,est):
         if a.hold:return np.zeros(3,dtype=np.float32)
+        if self.phase=='align':
+            d=self.drums[self.active]
+            error=wrap(math.atan2(d['y']-est[1],d['x']-est[0])-est[2])
+            return np.array([0.,0.,float(np.clip(1.5*error,-.65,.65))],dtype=np.float32)
         if a.route and np.linalg.norm(est[:2]-a.route[0])<.14:a.route.pop(0)
         if not a.route:return np.zeros(3,dtype=np.float32)
         delta=a.route[0]-est[:2];dist=float(np.linalg.norm(delta));heading=math.atan2(delta[1],delta[0])

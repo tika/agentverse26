@@ -52,6 +52,7 @@ class DrumDetector:
     def web(self):
         import io
         import time
+        import hashlib
         from datetime import datetime, timezone
         from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
         from PIL import Image, ImageOps, UnidentifiedImageError
@@ -104,6 +105,7 @@ class DrumDetector:
                             corrosion_observed=condition['corrosion'], bulge_observed=condition['bulge'])
                        for i,(d,condition) in enumerate(zip(drums,conditions))]
             return dict(model='YOLO26s', run_id=RUN_ID, best_sha256=self.sha,
+                        input_sha256=hashlib.sha256(raw).hexdigest(),
                         received_at=datetime.now(timezone.utc).isoformat(), frame_timestamp=frame_timestamp,
                         image=dict(width=frame.width, height=frame.height), detections=detections, barrels=barrels,
                         latency_ms=round((time.perf_counter()-started)*1000, 2), model_speed_ms=result.speed,

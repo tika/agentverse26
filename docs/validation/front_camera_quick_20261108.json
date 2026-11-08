@@ -1,0 +1,17 @@
+{
+  "run_id": "015801-audit_front_camera-51ea",
+  "status": "mount and YOLO input checks passed; short-mode report generation KeyError corrected afterwards",
+  "frames": 49,
+  "simulation_duration_s": 4.032,
+  "max_mount_position_error_m": 3.350857624008794e-07,
+  "max_mount_rotation_error": 1.493365642146531e-07,
+  "yolo_requests": 9,
+  "yolo_failures": 0,
+  "model_visual_sources": [
+    "/World/WalkingSpot/body/FrontCamera"
+  ],
+  "presentation_only_source": "/World/Presentation/CornerCamera",
+  "gpu_count": 2,
+  "gpu_type": "RTX PRO 6000 Blackwell Server Edition",
+  "body_posture_actions_verified": false
+}

@@ -1,8 +1,7 @@
 # World authoring only: the planner receives measurements, not these fault settings.
 scene=copy.deepcopy(BASE_SCENE)
-scene.update(job_drums=[d['id'] for d in inventory],coverage_mission=True)
-# Make authored bulged barrels visibly warmer; the agent must discover both cues.
-scene['drum_offsets_c']={d['id']:12.0 for d in inventory if 'bulge' in d.get('faults',[])}
+scene.update(job_drums=[d['id'] for d in inventory],coverage_mission=True,show_spills=True)
+# Thermal/gas/sample truth now comes from each drum's individualized private profile.
 a=Agent(28,'Full store | YOLO26s + Cosmos | 28 drums',scene,[])
 a.mission=FullStoreMission(inventory,resume=state.pop('coverage_resume',None))
 

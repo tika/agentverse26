@@ -28,13 +28,18 @@ python3 tools/hot_hall.py cosmos-config .runtime/cosmos.env
 HOT_SPAWN_X=1.3 HOT_SPAWN_Y=2.0 HOT_NO_OPEN=1 python3 tools/hot_hall.py up
 HOT_NO_OPEN=1 python3 tools/hot_hall.py run \
   scripts/hot/sensing.py scripts/hot/scenario_lib.py \
-  scripts/hot/prepare_robot_visuals.py scripts/hot/yolo.py \
+  scripts/hot/prepare_robot_visuals.py scripts/hot/presentation_view.py \
+  scripts/hot/front_camera_guard.py scripts/hot/yolo.py \
   scripts/hot/agent.py scripts/hot/coverage_mission.py \
   scripts/hot/agent_full_store.py
 python3 tools/hot_hall.py down
 ```
 
 Use exactly one hot worker per workspace because the request queue is shared.
+The current camera mechanics and optional two-GPU seven-drum recording are
+described in [the front-camera guide](front_camera_recording.md). The large
+image is now the rigid body-mounted front sensor; third person is presentation
+only. Plate reads use a digital crop from the front image.
 Changes to `sim/*.py` require restarting the worker. Hot scripts are transmitted
 for every request. The full mission runs until coverage/deferrals are resolved,
 a safety stop occurs or its 540-second simulation budget expires. It is not a
@@ -78,8 +83,9 @@ not used as the displayed visited trajectory or navigation estimate.
 
 The existing detector was trained on painted LLW-style drums. A live static
 viewpoint probe detected 14/28 target bodies from the primary views and missed
-the 12 stainless ILW drums. Widening the RGB focal length to 10 mm fixes image
-cropping but does not remove that domain gap. No replacement model is trained
+the 12 stainless ILW drums. That probe used the earlier camera mechanics and
+is not a validation of the current fixed front sensor. Camera calibration does
+not remove that training-domain gap. No replacement model is trained
 or silently deployed by this mission.
 
 YOLO runs throughout. If it does not return the active target's body box, the

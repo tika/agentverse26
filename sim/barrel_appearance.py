@@ -17,10 +17,12 @@ def shape_spec(entry):
     bulged='bulge' in entry.get('faults',[])
     if bulged and entry['category']!='LLW':
         raise NotImplementedError('The reviewed bulge fixture is for 208 L painted LLW drums')
-    profile=swollen_profile(BODY_SWELLING) if bulged else drum_profile(entry['category'])
+    structure=entry.get('simulation_properties',{}).get('structure',{})
+    swelling=float(structure.get('radial_swelling_fraction') or BODY_SWELLING) if bulged else 0.
+    lid_rise=float(structure.get('lid_rise_m') or LID_RISE_M) if bulged else 0.
+    profile=swollen_profile(swelling) if bulged else drum_profile(entry['category'])
     return dict(profile=profile,bulged=bulged,max_radius=max(r for r,z in profile),
-                lid_rise=LID_RISE_M if bulged else 0.,
-                radial_fraction=BODY_SWELLING if bulged else 0.)
+                lid_rise=lid_rise,radial_fraction=swelling)
 
 
 @lru_cache(maxsize=3)
