@@ -87,11 +87,22 @@ def face_patch(drum):
     return np.array([[*(face + k * side), drum['base_z'] + f * drum['height']] for k in (-1, 0, 1) for f in (0.15, 0.5, 0.85)])
 
 
+# YOLO was trained on a 640x640, 77.3 deg camera. The detector gets the matching centre crop of the
+# 110 deg frame (square, side DETECT_SIDE px, resized to 640): same field of view, same pixels per degree.
+TRAIN_HFOV_DEG = 77.3
+DETECT_SIDE = min(CAMERA['height'], round(2 * CAMERA['fx'] * math.tan(math.radians(TRAIN_HFOV_DEG) / 2)))
+DETECT_BOX = ((CAMERA['width'] - DETECT_SIDE) / 2, (CAMERA['height'] - DETECT_SIDE) / 2,
+              (CAMERA['width'] + DETECT_SIDE) / 2, (CAMERA['height'] + DETECT_SIDE) / 2)
+MIN_RANGE_M = 0.9               # Training views were 1.0-1.5 m (single) and 2.8-3.7 m (context).
+
+
 def drum_in_frame(drum, view, body_z=BODY_Z, margin=FRAME_MARGIN_PX):
-    """The inspected face patch is in frame (a close drum may be cropped top and bottom)."""
+    """The inspected face patch is inside the detector crop, at a training-like range."""
     uv, depth = project(face_patch(drum), (*view['stop_xy'], body_z), view['yaw'], view.get('pitch', 0.0))
-    return bool(np.all(depth > 0.1) and np.all(depth < MAX_RANGE_M) and np.all(uv >= margin)
-                and np.all(uv[:, 0] <= CAMERA['width'] - margin) and np.all(uv[:, 1] <= CAMERA['height'] - margin))
+    x0, y0, x1, y1 = DETECT_BOX
+    return bool(np.all(depth > MIN_RANGE_M) and np.all(depth < MAX_RANGE_M)
+                and np.all(uv[:, 0] >= x0 + margin) and np.all(uv[:, 0] <= x1 - margin)
+                and np.all(uv[:, 1] >= y0 + margin) and np.all(uv[:, 1] <= y1 - margin))
 
 
 MAX_INCIDENCE = math.radians(70)  # Steeper than this, the drum face is too oblique to inspect.

@@ -25,8 +25,22 @@ DWELL_S, YOLO_EVERY_S, MAX_S = 1.2, 0.4, float(state.pop('dense_walk_max_s', 75.
 
 
 def yolo(rgb):
+    """Send the training-equivalent view: centre crop of the 110 deg frame at 77.3 deg, as 640x640.
+    Boxes come back in full-frame pixels."""
+    x0, y0, x1, y1 = (round(v) for v in vp.DETECT_BOX)
+    side = x1 - x0
+    crop = Image.fromarray(rgb[y0:y1, x0:x1]).resize((640, 640), Image.BILINEAR)
+    result = _yolo_request(crop)
+    k = side / 640
+    for det in result.get('detections', []):
+        bx = det['bbox_xyxy']
+        det['bbox_xyxy'] = [bx[0] * k + x0, bx[1] * k + y0, bx[2] * k + x0, bx[3] * k + y0]
+    return result
+
+
+def _yolo_request(image):
     buffer = _io.BytesIO()
-    Image.fromarray(rgb).save(buffer, format='JPEG', quality=90)
+    image.save(buffer, format='JPEG', quality=90)
     boundary = 'dense-walk'
     body = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="f.jpg"\r\n'
             'Content-Type: image/jpeg\r\n\r\n').encode() + buffer.getvalue() + f'\r\n--{boundary}--\r\n'.encode()
@@ -81,6 +95,11 @@ def command_to(p, yaw, view):
     return np.array([0.0, 0.0, float(np.clip(1.6 * error, -1.0, 1.0))], np.float32), abs(error) < 0.05
 
 
+# Solid waste only: the layout's floor spill decals stay hidden (they also read as "corrosion").
+from pxr import UsdGeom
+for prim in stage.Traverse():
+    if prim.GetName().startswith('Spill_'):
+        UsdGeom.Imageable(prim).MakeInvisible()
 zero = np.zeros(3, dtype=np.float32)
 spot.restart_from_default_state(zero)
 world.step(render=False)
