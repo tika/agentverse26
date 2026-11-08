@@ -1,0 +1,66 @@
+{
+  "run_id": "20261107T214634Z_a02466",
+  "release": "barrels_v2_1200",
+  "source_commit": "8e62bcff5010983bd3a640630e4c8c8d19180a62",
+  "images": 1200,
+  "splits": {
+    "train": 900,
+    "val": 150,
+    "test": 150
+  },
+  "view_modes": {
+    "inspection": 720,
+    "context": 480
+  },
+  "classes": [
+    "drum",
+    "corrosion",
+    "bulge"
+  ],
+  "class_box_counts": {
+    "drum": 5029,
+    "bulge": 2518,
+    "corrosion": 26224
+  },
+  "scenes": 61,
+  "scene_drum_counts": {
+    "6": 18,
+    "8": 24,
+    "4": 19
+  },
+  "max_observed_concurrent_workers": 10,
+  "requested_worker_limit": 10,
+  "gpu_model": "RTX PRO 6000 Blackwell Server Edition",
+  "render_launcher_monotonic_seconds": 1295.956,
+  "render_launcher_utc_span_seconds": 1294.254163,
+  "mean_worker_seconds": 140.82819281126228,
+  "sum_worker_gpu_minutes": 143.17532935811667,
+  "final_run_failures": 0,
+  "training_started": false,
+  "all_render_gpu_containers_stopped": true,
+  "local_release": "/Users/paramsachdeva/Documents/agentverse26/out/detector_releases/barrels_v2_1200",
+  "remote_release": "detector-data:/releases/barrels_v2_1200",
+  "renderer": "Isaac Sim 6.2.0 RayTracedLighting",
+  "excluded_attempts": [
+    "20261107T213255Z_26d31d",
+    "20261107T214004Z_e5a5b9"
+  ],
+  "limits": [
+    "Painted LLW drum assets only",
+    "Dataset validation is not trained-model accuracy",
+    "Preview/clearance fixes applied before final run; earlier partial captures excluded"
+  ],
+  "remote_hash_verification": {
+    "workspace": "paramsachdeva07",
+    "volume": "detector-data",
+    "remote_path": "/releases/barrels_v2_1200",
+    "images": 1200,
+    "verified_files": 3600,
+    "manifest_sha256": "706bb40c68af8165970b329457ab6fb043328a3017bf8ea5d0da8f641abcab8e"
+  },
+  "published_utc": "2026-11-07T22:13:10.151256+00:00",
+  "dataset_bytes": 72000508,
+  "zip_bytes": 59307329,
+  "archive_sha256": "0aceb3703830010380ef1db2e04de3261a3aa2ae6f8858e8100a59bf9eeffb6f",
+  "archive_remote_path": "detector-data:/archives/barrels_v2_1200.zip"
+}

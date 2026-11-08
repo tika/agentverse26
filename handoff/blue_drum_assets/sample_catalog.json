@@ -1,0 +1,6 @@
+[
+  {"prim_path": "/World/NormalClean", "category": "LLW", "paint": "dark_blue", "condition": "normal", "position_m": [1.90, 0, 0]},
+  {"prim_path": "/World/NormalRusted", "category": "LLW", "paint": "dark_blue", "condition": "corrosion_only", "position_m": [-0.95, 0, 0]},
+  {"prim_path": "/World/BulgedClean", "category": "LLW", "paint": "dark_blue", "condition": "bulge_only", "position_m": [0, 0, 0]},
+  {"prim_path": "/World/BulgedRusted", "category": "LLW", "paint": "dark_blue", "condition": "bulge_and_corrosion", "position_m": [0.95, 0, 0]}
+]
