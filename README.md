@@ -145,6 +145,20 @@ Python assembles `report.json` and `report.md` from inspection memory, sensor ob
 
 The report lists inspected, pending and deferred drums, unresolved findings and operator follow-up. **Coverage and condition are separate:** collecting all required observations does not imply that a drum is fault-free. The recording overlay is composited from the same run data; it is not a separate dashboard service.
 
+## Post-CANIS report
+
+After a run, the logs can be turned into a report for store managers and safety staff. It says which drums need action, where people can safely go and what evidence supports each call. The same process works for any run or detector that logs the same fields.
+
+1. **Collect the run's logs:** drum memory, decisions, telemetry and evidence photos.
+2. **Rate each drum** with fixed rules: *Action needed*, *Check again* or *No problem found*.
+3. **Rate each 2 m of the aisle:** *Safe*, *Restricted*, *Keep out* or *Not checked*. A section is only *Safe* if radiation was measured there.
+4. **Assemble the report:** a summary, the aisle plan, every drum, a photo and next step for each flagged drum, what was not checked, and accuracy against the simulation's seeded faults.
+5. **Check it before sharing,** including that each photo really shows the drum it is filed under.
+
+Anything the run did not log is printed as `not measured`. Fixed rules set every rating; a language model can only add a labelled explanation for a drum that needs action.
+
+[Report framework](docs/report_framework/README.md) · [Worked example with invented data](docs/report_framework/example/expected_report.md)
+
 ## What is demonstrated today
 
 | Workstream | Evidence and current scope |
