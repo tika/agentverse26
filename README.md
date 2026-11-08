@@ -1,4 +1,33 @@
-# Agentverse26 — nuclear-store robot inspection
+# CANIS
+
+**A Spot inspection agent for simulated nuclear waste stores.** Built for the AgentVerse 2026 robotics track.
+
+![Spot inspecting drums in Isaac Sim during the recorded YOLO and Cosmos mission](docs/previews/canis-banner.jpg)
+
+A routine inspection can turn into a judgement call when a drum runs hot or a sensor reading is ambiguous. CANIS uses Spot to collect a second reading, continue the round, or retreat and report the evidence to an operator.
+
+## How the inspection works
+
+1. **Sense.** Spot walks the aisle in Isaac Sim. Body-mounted RGB-D supplies the camera view, YOLO26s flags visible corrosion and bulges, and the simulator supplies thermal, gamma dose and gas readings.
+2. **Associate evidence.** Camera depth and estimated pose tie observations to the store map. Plate reads verify drum identity. Inspection memory tracks what has been checked and what is still missing.
+3. **Choose and execute.** Cosmos Reason 2 chooses from permitted follow-ups. The controller handles walking, and a separate dose rule can stop motion.
+4. **Report.** Each run saves the readings, chosen actions, reasons, unfinished checks and telemetry. The operator can trace a decision back to the evidence available at the time.
+
+## What we demonstrated
+
+The recorded integrated run covered an **eight-drum job in a 28-drum hall**. It logged **64 successful YOLO requests** and **four live Cosmos decisions**, including a simulated swab and an alert followed by retreat. The dense warehouse workstream has a separate 360-drum scene. [Recording and logs](docs/mission_recording_20261108.md) · [Evaluation](eval/EVALUATION.md)
+
+The detector was trained and evaluated on synthetic imagery. Thermal, gas, radiation and swab readings in the demo are simulated.
+
+## Start here
+
+- [Run Spot and the detector on Modal](docs/yolo_cosmos_integration.md)
+- [Architecture and evidence flow](docs/agentic_architecture.md)
+- [Inspection criteria and sources](docs/inspection_source_register.md)
+
+## License
+
+The project’s original code is available under the [MIT License](LICENSE). Third-party simulator software, models, assets and dependencies are subject to their respective licenses.
 
 ## Deployed YOLO26s API
 
