@@ -1,0 +1,119 @@
+{
+  "status": "Simulation arrangement for a visual concept (Levi reference photo, prompt v1.2.1); not certified storage engineering. 208 L LLW drums (r 0.299) on 1.25 m pallets.",
+  "layout": "dense_v2",
+  "enabled": true,
+  "pallet": {
+    "size_m": 1.25,
+    "deck_m": 0.04,
+    "runner_m": 0.104,
+    "height_m": 0.144,
+    "material": "dark_plastic"
+  },
+  "drum_gap_m": 0.02,
+  "zones": [
+    {
+      "category": "LLW",
+      "per_pallet": 4,
+      "pallet_x": [
+        3.1,
+        4.4,
+        5.7,
+        7.0,
+        8.3
+      ]
+    },
+    {
+      "category": "ILW",
+      "per_pallet": 1,
+      "pallet_x": [
+        11.9,
+        13.2,
+        14.5,
+        15.8,
+        17.1
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "name": "south_wall",
+      "y": 0.72,
+      "aisle": 1,
+      "side": "R",
+      "tiers": {
+        "LLW": 2,
+        "ILW": 2
+      },
+      "skip_x_containing": [
+        6.0,
+        15.0
+      ]
+    },
+    {
+      "name": "A-L",
+      "y": 3.38,
+      "aisle": 1,
+      "side": "L",
+      "tiers": {
+        "LLW": 3,
+        "ILW": 2
+      }
+    },
+    {
+      "name": "B-R",
+      "y": 4.64,
+      "aisle": 2,
+      "side": "R",
+      "tiers": {
+        "LLW": 3,
+        "ILW": 2
+      }
+    },
+    {
+      "name": "B-L",
+      "y": 7.36,
+      "aisle": 2,
+      "side": "L",
+      "tiers": {
+        "LLW": 3,
+        "ILW": 2
+      }
+    },
+    {
+      "name": "C-R",
+      "y": 8.62,
+      "aisle": 3,
+      "side": "R",
+      "tiers": {
+        "LLW": 3,
+        "ILW": 2
+      }
+    },
+    {
+      "name": "north_wall",
+      "y": 11.28,
+      "aisle": 3,
+      "side": "L",
+      "tiers": {
+        "LLW": 2,
+        "ILW": 2
+      },
+      "skip_x_containing": [
+        6.0,
+        15.0
+      ]
+    }
+  ],
+  "lanes_by_aisle": {
+    "1": "A",
+    "2": "B",
+    "3": "C"
+  },
+  "aisle_clear_min_m": 1.4,
+  "paint_shades": [
+    "safety_yellow",
+    "warm_yellow",
+    "faded_yellow"
+  ],
+  "first_new_id": 29
+}

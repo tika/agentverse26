@@ -1,0 +1,98 @@
+{
+  "hardware": {
+    "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition, 610.57.04, 97887 MiB",
+    "isaac_version": "6.2.0-rc.14+release.52805.02189a84.gl",
+    "returncode": 0,
+    "wall_s": 145.9
+  },
+  "source_sha256": {
+    "warehouse-v3.usda": "a6e9ec787cc91cef4faf5c3f3808a70341c8f3b74cd9197f0de4bc58f5d084cd",
+    "shell.usda": "ed8b84f84a216073552dfa1e45c5aa31229dce66d873f13d5f8f69d0a118cd9e",
+    "site.usda": "4fe9ab9d38eadc9684228aee9e41ad25a78e8efb15502e5442787a20d2e68f31",
+    "storage.usda": "b92ca4b5d530af31665fdb11a7dd2a48bf4e16b2d6c0746f1cfdfaa3c21c0875",
+    "map.json": "5e88234bbe0a4d603ab207769ffe5bbb25f288e2f540a2280b0008501c728b5d",
+    "physical_config.json": "ede309bed15b41925c9a34dfbe0c42e1e1d410649ce5002ab0963fd8b4847ad2",
+    "warehouse_physics.py": "68a42814d1c4ded774833d859e074cde29b5aadb1ce9d62c16361372a89a1002",
+    "warehouse_sensors.py": "aec7d056d5234164b69afad39a4f6393ed172c78c3840069d85dad5c4add89a8",
+    "drum_faults.py": "05a4027ce704c4be8bc23ed7eafd8d66773d63e92bc2002d15844737b2acb809"
+  },
+  "physics_probes_passed": 79,
+  "labelled_drums": 420,
+  "fault_session": {
+    "affected": 108,
+    "seed": 42
+  },
+  "inspection_thermal_frames": {
+    "llw": {
+      "file": "physical_llw_apparent_c.npy",
+      "package_pixels": 117852,
+      "finite_pixels": 409600,
+      "apparent_range_c": [
+        18.329273223876953,
+        19.73435401916504
+      ],
+      "observations": {
+        "time_s": 0,
+        "dose_timestamp_s": 0,
+        "dose_rate_uSv_h": 1.8125,
+        "dose_integration_s": 2,
+        "mission_dose_mSv": 0.0,
+        "temperature_c": 18.88459767134992,
+        "relative_humidity_pct": 61.953683225634705,
+        "hydrogen_ppm": null,
+        "hydrogen_status": "below_detection",
+        "hydrogen_detection_limit_ppm": 2
+      }
+    },
+    "ilw": {
+      "file": "physical_ilw_apparent_c.npy",
+      "package_pixels": 98628,
+      "finite_pixels": 409600,
+      "apparent_range_c": [
+        18.27544403076172,
+        21.69295883178711
+      ],
+      "observations": {
+        "time_s": 2,
+        "dose_timestamp_s": 2,
+        "dose_rate_uSv_h": 2.2291666666666665,
+        "dose_integration_s": 2,
+        "mission_dose_mSv": 1.1226851851851851e-06,
+        "temperature_c": 20.11189804834622,
+        "relative_humidity_pct": 65.9113393734665,
+        "hydrogen_ppm": null,
+        "hydrogen_status": "below_detection",
+        "hydrogen_detection_limit_ppm": 2
+      }
+    },
+    "warm_ilw": {
+      "file": "physical_warm_ilw_apparent_c.npy",
+      "package_pixels": 111222,
+      "finite_pixels": 409600,
+      "apparent_range_c": [
+        19.49259376525879,
+        23.382829666137695
+      ],
+      "observations": {
+        "time_s": 4,
+        "dose_timestamp_s": 4,
+        "dose_rate_uSv_h": 1.8958333333333333,
+        "dose_integration_s": 2,
+        "mission_dose_mSv": 2.2685185185185184e-06,
+        "temperature_c": 20.150874590764065,
+        "relative_humidity_pct": 66.15424762307075,
+        "hydrogen_ppm": null,
+        "hydrogen_status": "below_detection",
+        "hydrogen_detection_limit_ppm": 2
+      }
+    }
+  },
+  "spot_launch": {
+    "root": "/World/Spot",
+    "body": "/World/Spot/Robot/body",
+    "asset": "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Robots/BostonDynamics/spot/spot.usd",
+    "mode": "static_pose_camera_validation"
+  },
+  "isaac_run": "https://modal.com/apps/levi-stein-26/main/ap-593gbJcwwOgV1ZX6nPg0DH",
+  "spot_run": "https://modal.com/apps/levi-stein-26/main/ap-Sv9jc9Nf6lzcXfXo4PERVd"
+}

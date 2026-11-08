@@ -1,0 +1,18 @@
+{
+  "spawn_xyz_m": [
+    1.0,
+    6.0,
+    0.0
+  ],
+  "drum_prims_and_poses": 420,
+  "inspection_lines_clear_of_other_drums": 420,
+  "aisle_facing_location_plates": 420,
+  "rack_deck_heights": 168,
+  "route_height_colliders": 95,
+  "minimum_route_clearance_m": 0.53,
+  "limiting_collider": "/World/Racks/C_L_P01/Collision",
+  "limiting_route_edge": [
+    "N0_6",
+    "N1_6"
+  ]
+}

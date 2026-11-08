@@ -24,6 +24,11 @@ import modal
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / '.runtime/hot.json'
 OUT = ROOT / 'out/hot'
+WAREHOUSE = os.environ.get('HOT_WAREHOUSE') == '1'
+if WAREHOUSE:
+    STATE = ROOT / '.runtime/hot-warehouse.json'
+    OUT = ROOT / 'out/hot-warehouse'
+SUFFIX = '-warehouse' if WAREHOUSE else ''
 # Same image recipe as tools/run_hall.py, which renders hall textures correctly.
 image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
                                    add_python='3.13', setup_dockerfile_commands=['USER root'])
@@ -31,15 +36,17 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
          .pip_install('imageio[ffmpeg]')
          .env({'ACCEPT_EULA': 'Y', 'PRIVACY_CONSENT': 'N', 'NVIDIA_DRIVER_CAPABILITIES': 'all',
                'HOT_GPU_COUNT':os.environ.get('HOT_GPU_COUNT','1'),
+               'HOT_WAREHOUSE': '1' if WAREHOUSE else '0',
+               'HOT_WAREHOUSE_SEED': os.environ.get('HOT_WAREHOUSE_SEED', ''),
                'HOT_SPAWN_X':os.environ.get('HOT_SPAWN_X','10'), 'HOT_SPAWN_Y':os.environ.get('HOT_SPAWN_Y','6')})
          .add_local_dir(ROOT / 'sim', '/workspace/sim', copy=True,
                         ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc', '*.usda']))
 HOT_GPU_COUNT=int(os.environ.get('HOT_GPU_COUNT','1'))
 if HOT_GPU_COUNT not in (1,2,4):raise ValueError('HOT_GPU_COUNT must be 1, 2 or 4')
-app = modal.App('agentverse-dense-hot-hall')
-requests = modal.Queue.from_name('agentverse-dense-hot-requests', create_if_missing=True)
-results = modal.Dict.from_name('agentverse-dense-hot-results', create_if_missing=True)
-services = modal.Dict.from_name('agentverse-hot-services', create_if_missing=True)
+app = modal.App('agentverse-dense-hot-hall' + SUFFIX)
+requests = modal.Queue.from_name('agentverse-dense-hot-requests' + SUFFIX, create_if_missing=True)
+results = modal.Dict.from_name('agentverse-dense-hot-results' + SUFFIX, create_if_missing=True)
+services = modal.Dict.from_name('agentverse-hot-services' + SUFFIX, create_if_missing=True)
 mission_runs = modal.Volume.from_name('agentverse-mission-runs', create_if_missing=True)
 
 
@@ -57,10 +64,16 @@ def _encode(folder):
         frames.rmdir()
 
 
+# The warehouse worker also gets the detector secret: the CANIS walks call the live YOLO26s API.
+worker_secrets = [modal.Secret.from_name(
+    os.environ.get('CANIS_DETECTOR_SECRET', 'drum-inference'),
+    required_keys=['DETECTOR_API_URL', 'DETECTOR_API_KEY', 'DETECTOR_API_SECRET'])]
+
+
 @app.function(image=image, gpu=([f'RTX-PRO-6000:{HOT_GPU_COUNT}',f'L40S:{HOT_GPU_COUNT}'] if HOT_GPU_COUNT>1 else ['RTX-PRO-6000','L40S','L4']), cpu=16, memory=32768, timeout=4 * 60 * 60,
               volumes={'/mission-runs':mission_runs},
               # Unconditional dependency; external Cosmos credentials are refreshed from the private Dict.
-              secrets=[modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL','DETECTOR_API_KEY','DETECTOR_API_SECRET'])])
+              secrets=worker_secrets)
 def serve():
     hot = Path('/tmp/hot')
     log = open('/tmp/hot.log', 'w')
@@ -75,7 +88,7 @@ def serve():
     refresh_services()
     # Default Cosmos endpoint: our vLLM deployment (tools/cosmos_vllm.py); `cosmos-config` can override it.
     cosmos_url = (services.get('cosmos') or {}).get('COSMOS_URL') or os.environ.get('COSMOS_URL','')
-    if not cosmos_url:
+    if not cosmos_url and not WAREHOUSE:
         cosmos_url = modal.Function.from_name('agentverse-cosmos-vllm', 'serve').get_web_url()
     process = subprocess.Popen(['/isaac-sim/python.sh', '/workspace/sim/hot_server.py', '--allow-root'],
                                cwd='/workspace/sim', stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
