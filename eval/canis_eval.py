@@ -27,11 +27,11 @@ import numpy as np
 from scipy import stats
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DRUMS = os.path.join(HERE, "source", "drums_main.json")
+DRUMS = os.path.join(HERE, "source", "drums_36.json")
 OUT = os.path.join(HERE, "results")
 
-# ---------- world (unchanged from bench/canis_vs_autowalk.py) ----------
-AISLE_Y = {1: 2.0, 2: 6.0, 3: 10.0}
+# ---------- world: aisle A of warehouse-v3, the 36 drums in the final showcase run ----------
+AISLE_Y = {1: 4.83}
 SPEED, DWELL, CLOSE_DWELL = 0.8, 10.0, 20.0
 BACKGROUND, HUMAN_CHECK_S = 0.05, 300.0
 P_DEFECT, P_BULGE = 0.30, 0.35
@@ -75,7 +75,7 @@ def make_episode(rng, drums):
     hot["t1"] = hot["t0"] + 480
     if rng.random() > P_HOTSPOT:
         hot["t0"] = hot["t1"] = -1.0
-    bl = dict(aisle=int(rng.choice([2, 3])))
+    bl = dict(aisle=1)
     bl["xmin"], bl["xmax"] = (5.0, 6.5) if rng.random() < 0.5 else (13.0, 15.0)
     if rng.random() > P_BLOCKED:
         bl["aisle"] = -1
@@ -84,7 +84,7 @@ def make_episode(rng, drums):
 
 def route(drums):
     order = []
-    for a, rev in ((1, False), (2, True), (3, False)):
+    for a, rev in ((1, False),):
         order += sorted([d for d in drums if d["aisle"] == a], key=lambda d: d["x"], reverse=rev)
     return order
 
