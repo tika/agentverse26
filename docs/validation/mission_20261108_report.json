@@ -1,0 +1,461 @@
+{
+  "title": "28-drum hall | YOLO26s + Cosmos inspection",
+  "drums": [
+    {
+      "drum": "B01",
+      "category": "LLW",
+      "plate_read": "B01 LLW",
+      "record": "B01 LLW",
+      "grade": "attention",
+      "checks_done": [
+        "id",
+        "thermal",
+        "visual"
+      ],
+      "missing": [],
+      "complete": true,
+      "evidence": {
+        "id": {
+          "t": 0.0,
+          "result": "match",
+          "read": "B01 LLW",
+          "record": "B01 LLW",
+          "tries": 1,
+          "confirmed": false
+        },
+        "visual": {
+          "t": 25.2,
+          "rust_observed": false,
+          "bulge_observed": true,
+          "views": 9,
+          "coverage_measured": false,
+          "range_m": 1.95,
+          "detector": "trained YOLO26s RGB API",
+          "model_run": "yolo26s_20261107T225757Z_d625ef"
+        },
+        "thermal": {
+          "t": 25.6,
+          "surface_c": 18.2,
+          "apparent_c": 18.2,
+          "delta_c": 0.2,
+          "range_m": 2.5
+        }
+      },
+      "actions": [
+        "reinspect_second_angle",
+        "flag_next_shift"
+      ],
+      "notes": [
+        "YOLO visible bulge; needs corroboration"
+      ]
+    },
+    {
+      "drum": "B02",
+      "category": "LLW",
+      "plate_read": "B02 LLW",
+      "record": "B02 LLW",
+      "grade": "good",
+      "checks_done": [
+        "id",
+        "thermal",
+        "visual"
+      ],
+      "missing": [],
+      "complete": true,
+      "evidence": {
+        "id": {
+          "t": 1.4,
+          "result": "match",
+          "read": "B02 LLW",
+          "record": "B02 LLW",
+          "tries": 1,
+          "confirmed": false
+        },
+        "thermal": {
+          "t": 23.5,
+          "surface_c": 18.1,
+          "apparent_c": 18.1,
+          "delta_c": 0.2,
+          "range_m": 2.2
+        },
+        "visual": {
+          "t": 23.2,
+          "rust_observed": false,
+          "bulge_observed": false,
+          "views": 6,
+          "coverage_measured": false,
+          "range_m": 1.65,
+          "detector": "trained YOLO26s RGB API",
+          "model_run": "yolo26s_20261107T225757Z_d625ef"
+        }
+      },
+      "actions": [
+        "log_continue"
+      ],
+      "notes": []
+    },
+    {
+      "drum": "B03",
+      "category": "LLW",
+      "plate_read": "B03 LLW",
+      "record": "B03 LLW",
+      "grade": "good",
+      "checks_done": [
+        "id",
+        "thermal",
+        "visual"
+      ],
+      "missing": [],
+      "complete": true,
+      "evidence": {
+        "id": {
+          "t": 12.3,
+          "result": "match",
+          "read": "B03 LLW",
+          "record": "B03 LLW",
+          "tries": 1,
+          "confirmed": false
+        },
+        "thermal": {
+          "t": 21.9,
+          "surface_c": 18.1,
+          "apparent_c": 18.1,
+          "delta_c": 0.1,
+          "range_m": 1.9
+        },
+        "visual": {
+          "t": 21.7,
+          "rust_observed": false,
+          "bulge_observed": false,
+          "views": 2,
+          "coverage_measured": false,
+          "range_m": 1.45,
+          "detector": "trained YOLO26s RGB API",
+          "model_run": "yolo26s_20261107T225757Z_d625ef"
+        }
+      },
+      "actions": [
+        "log_continue"
+      ],
+      "notes": []
+    },
+    {
+      "drum": "B04",
+      "category": "LLW",
+      "plate_read": "B04 LLW",
+      "record": "B04 LLW",
+      "grade": "good",
+      "checks_done": [
+        "id",
+        "thermal",
+        "visual"
+      ],
+      "missing": [],
+      "complete": true,
+      "evidence": {
+        "thermal": {
+          "t": 14.4,
+          "surface_c": 18.1,
+          "apparent_c": 18.1,
+          "delta_c": 0.1,
+          "range_m": 2.2
+        },
+        "visual": {
+          "t": 14.1,
+          "rust_observed": false,
+          "bulge_observed": false,
+          "views": 5,
+          "coverage_measured": false,
+          "range_m": 1.59,
+          "detector": "trained YOLO26s RGB API",
+          "model_run": "yolo26s_20261107T225757Z_d625ef"
+        },
+        "id": {
+          "t": 15.6,
+          "result": "match",
+          "read": "B04 LLW",
+          "record": "B04 LLW",
+          "tries": 1,
+          "confirmed": false
+        }
+      },
+      "actions": [
+        "log_continue"
+      ],
+      "notes": []
+    },
+    {
+      "drum": "C01",
+      "category": "LLW",
+      "plate_read": "C01 LLW",
+      "record": "C01 LLW",
+      "grade": "attention",
+      "checks_done": [
+        "id",
+        "thermal",
+        "visual"
+      ],
+      "missing": [],
+      "complete": true,
+      "evidence": {
+        "id": {
+          "t": 0.1,
+          "result": "match",
+          "read": "C01 LLW",
+          "record": "C01 LLW",
+          "tries": 1,
+          "confirmed": false
+        },
+        "visual": {
+          "t": 31.8,
+          "rust_observed": true,
+          "bulge_observed": true,
+          "views": 18,
+          "coverage_measured": false,
+          "range_m": 1.22,
+          "detector": "trained YOLO26s RGB API",
+          "model_run": "yolo26s_20261107T225757Z_d625ef"
+        },
+        "thermal": {
+          "t": 28.1,
+          "surface_c": 18.3,
+          "apparent_c": 18.3,
+          "delta_c": 0.2,
+          "range_m": 1.8
+        }
+      },
+      "actions": [
+        "reinspect_second_angle",
+        "flag_next_shift"
+      ],
+      "notes": [
+        "YOLO visible rust; coverage not measured",
+        "YOLO visible bulge; needs corroboration"
+      ]
+    },
+    {
+      "drum": "C02",
+      "category": "LLW",
+      "plate_read": "C02 LLW",
+      "record": "C02 LLW",
+      "grade": "attention",
+      "checks_done": [
+        "id",
+        "swab",
+        "thermal",
+        "visual"
+      ],
+      "missing": [],
+      "complete": true,
+      "evidence": {
+        "thermal": {
+          "t": 3.7,
+          "surface_c": 18.3,
+          "apparent_c": 18.2,
+          "delta_c": 0.2,
+          "range_m": 1.1
+        },
+        "visual": {
+          "t": 20.7,
+          "rust_observed": true,
+          "bulge_observed": true,
+          "views": 20,
+          "coverage_measured": false,
+          "range_m": 2.22,
+          "detector": "trained YOLO26s RGB API",
+          "model_run": "yolo26s_20261107T225757Z_d625ef"
+        },
+        "id": {
+          "t": 1.5,
+          "result": "match",
+          "read": "C02 LLW",
+          "record": "C02 LLW",
+          "tries": 1,
+          "confirmed": false
+        },
+        "swab": {
+          "t": 8.1,
+          "alpha_bq_cm2": 0.0,
+          "beta_gamma_bq_cm2": 0.0,
+          "positive": false
+        }
+      },
+      "actions": [
+        "reinspect_second_angle",
+        "flag_next_shift"
+      ],
+      "notes": [
+        "YOLO visible rust; coverage not measured",
+        "YOLO visible bulge; needs corroboration"
+      ]
+    },
+    {
+      "drum": "C03",
+      "category": "LLW",
+      "plate_read": "C03 LLW",
+      "record": "C03 LLW",
+      "grade": "good",
+      "checks_done": [
+        "id",
+        "thermal",
+        "visual"
+      ],
+      "missing": [],
+      "complete": true,
+      "evidence": {
+        "thermal": {
+          "t": 20.5,
+          "surface_c": 18.1,
+          "apparent_c": 18.1,
+          "delta_c": 0.2,
+          "range_m": 1.8
+        },
+        "visual": {
+          "t": 20.2,
+          "rust_observed": false,
+          "bulge_observed": false,
+          "views": 8,
+          "coverage_measured": false,
+          "range_m": 1.15,
+          "detector": "trained YOLO26s RGB API",
+          "model_run": "yolo26s_20261107T225757Z_d625ef"
+        },
+        "id": {
+          "t": 12.4,
+          "result": "match",
+          "read": "C03 LLW",
+          "record": "C03 LLW",
+          "tries": 1,
+          "confirmed": false
+        }
+      },
+      "actions": [
+        "log_continue"
+      ],
+      "notes": []
+    },
+    {
+      "drum": "C04",
+      "category": "LLW",
+      "plate_read": "C04 LLW",
+      "record": "C04 LLW",
+      "grade": "bad",
+      "checks_done": [
+        "id",
+        "thermal",
+        "visual"
+      ],
+      "missing": [],
+      "complete": true,
+      "evidence": {
+        "visual": {
+          "t": 17.1,
+          "rust_observed": true,
+          "bulge_observed": true,
+          "views": 10,
+          "coverage_measured": false,
+          "range_m": 0.81,
+          "detector": "trained YOLO26s RGB API",
+          "model_run": "yolo26s_20261107T225757Z_d625ef"
+        },
+        "thermal": {
+          "t": 18.9,
+          "surface_c": 32.1,
+          "apparent_c": 30.8,
+          "delta_c": 14.2,
+          "range_m": 1.1
+        },
+        "id": {
+          "t": 15.7,
+          "result": "match",
+          "read": "C04 LLW",
+          "record": "C04 LLW",
+          "tries": 1,
+          "confirmed": false
+        }
+      },
+      "actions": [
+        "stop",
+        "capture_best_angle",
+        "raise_alert",
+        "route_around_aisle"
+      ],
+      "notes": [
+        "alert raised",
+        "surface 32 C, +14 C vs air"
+      ]
+    },
+    {
+      "drum": "D01",
+      "category": "LLW",
+      "plate_read": "not attempted",
+      "record": "D01 LLW",
+      "grade": "outside job",
+      "checks_done": [],
+      "missing": [],
+      "actions": [
+        "schedule_inspection"
+      ],
+      "notes": [
+        "visible_bulge seen (outside this job)",
+        "visible_corrosion seen (outside this job)"
+      ]
+    },
+    {
+      "drum": "D04",
+      "category": "LLW",
+      "plate_read": "not attempted",
+      "record": "D04 LLW",
+      "grade": "outside job",
+      "checks_done": [],
+      "missing": [],
+      "actions": [
+        "schedule_inspection"
+      ],
+      "notes": [
+        "visible_corrosion seen (outside this job)",
+        "visible_bulge seen (outside this job)"
+      ]
+    }
+  ],
+  "round_status": "ALERT",
+  "patrol_stops_completed": 2,
+  "patrol_stops_total": 4,
+  "environment": {
+    "air_temp_c": 18.0,
+    "rh_pct": 45,
+    "max_h2_ppm": 392,
+    "max_gamma_uSv_h": 10.1
+  },
+  "alerts": [
+    "C04"
+  ],
+  "decisions": [
+    {
+      "t": 0.0,
+      "action_id": "inspect_C02",
+      "reason": "Close inspection of C02 reveals YOLO visible rust and bulge; thermal anomaly (surface 5\u00b0C above ambient) and gas readings warrant confirmation.",
+      "source": "Cosmos Reason 2"
+    },
+    {
+      "t": 4.12,
+      "action_id": "swab_C02",
+      "reason": "Corrosion and bulge on C02 necessitate corroboration; swabbing provides alpha/beta/gamma evidence and validates surface integrity.",
+      "source": "Cosmos Reason 2"
+    },
+    {
+      "t": 14.62,
+      "action_id": "inspect_C04",
+      "reason": "Close inspection of C04 reveals a thermal hotspot (+11 C vs air), elevated hydrogen (132 ppm), and sustained hiss, warranting a retreat to assess further.",
+      "source": "Cosmos Reason 2"
+    },
+    {
+      "t": 18.14,
+      "action_id": "retreat_alert_C04",
+      "reason": "Corroborated evidence: surface 39 C, +21 C vs air; H2 312 ppm measured within 3 m of C04; sustained hiss near C04.",
+      "source": "Cosmos Reason 2"
+    }
+  ],
+  "not_inspected": [],
+  "summary": "8/8 drums fully inspected: 4 good, 3 need attention, 1 bad. B01 attention: YOLO visible bulge; needs corroboration. C01 attention: YOLO visible rust; coverage not measured, YOLO visible bulge; needs corroboration. C02 attention: YOLO visible rust; coverage not measured, YOLO visible bulge; needs corroboration. C04 bad: alert raised, surface 32 C, +14 C vs air. Also seen outside the job: D01 (visible_bulge seen (outside this job), visible_corrosion seen (outside this job)); D04 (visible_corrosion seen (outside this job), visible_bulge seen (outside this job)). H2 peaked at 392 ppm, gamma at 10.1 uSv/h."
+}

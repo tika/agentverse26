@@ -249,7 +249,7 @@ def draw_memory_overlay(canvas, a, p):
                 vdraw.rectangle((tu - 6 - 4.5 * len(label), tv - 14, tu + 6 + 4.5 * len(label), tv + 12), fill=(13, 19, 27, 200))
                 vdraw.text((tu - 4.5 * len(label), tv - 11), label, font=FONT[16], fill=color + (255,))
         centre = project_bird(np.array([[d['x'], d['y']]]), p, d['height'])[0] + [1280, 360]
-        rr = 26
+        rr = 12
         draw.ellipse((centre[0] - rr, centre[1] - rr, centre[0] + rr, centre[1] + rr), fill=color + (60,),
                      outline=color + (255,), width=4)
     layer.paste(view.crop((0, 0, 1280, 668)), (0, 0))  # Stop above the title banner.
@@ -759,18 +759,19 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
              f'Mic hiss {a.hiss["hiss_score"]:.2f} ({a.hiss["band_margin_db"]:4.1f} dB over floor)']
     for i, line in enumerate(lines):
         draw.text((16, y0 + 40 + 26 * i), line, font=FONT[18], fill='white')
-    draw.rectangle((1460, y0 + 84, W, H - 30), fill='#111822')
+    draw.rectangle((1460, y0 + 84, W, H - 28), fill='#111822')
     draw.text((16, y0 + 197), f'ROUND  {a.patrol_index}/{len(a.patrol)} aisle stops  |  {a.status}',
               font=FONT[16], fill='white')
     if a.cosmos:
         c = a.cosmos
         draw.text((1460, y0 + 86), f"{c['source']} decision @ {c['t']:.1f}s", font=FONT[14], fill='#7cc4ff')
         draw.text((1460, y0 + 106), f"-> {c['action_id']}", font=FONT[18], fill='white')
-        reason = c['reason']
-        for i in range(3):
-            draw.text((1460, y0 + 130 + 19 * i), reason[i * 50:(i + 1) * 50], font=FONT[14], fill='#d6e2ee')
-    for i, (et, text) in enumerate(a.events[-5:]):
-        draw.text((1460, y0 + 196 + 24 * i), f'{et:4.1f}s  {text}'[:54], font=FONT[16],
+        import textwrap
+        for i,line in enumerate(textwrap.wrap(c['reason'],width=54,max_lines=3,placeholder='...')):
+            draw.text((1460, y0 + 130 + 19 * i), line, font=FONT[14], fill='#d6e2ee')
+        draw.text((1460,y0+192),f"Decision latency {c['latency_s']:.2f}s | decisions {len(a.decisions)}",font=FONT[14],fill='#9fb2c4')
+    for i, (et, text) in enumerate(a.events[-4:]):
+        draw.text((1460, y0 + 218 + 22 * i), f'{et:4.1f}s  {text}'[:54], font=FONT[16],
                   fill='#ff9f9f' if '!' in text else 'white')
     draw.rectangle((0, H - 28, W, H), fill='#111822')
     if vision:

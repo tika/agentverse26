@@ -11,7 +11,7 @@ def inspect_source():
     result={}
     for path in root.rglob('*.py'):
         text=path.read_text()
-        if 'get_spot_spec' in text or 'class RobotPolicyRunner' in text:
+        if 'get_spot_spec' in text or 'class RobotPolicyRunner' in text or 'def spawn_policy_robot' in text:
             result[str(path)]=text
     return result
 

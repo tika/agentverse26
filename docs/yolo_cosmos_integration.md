@@ -1,7 +1,7 @@
 # YOLO + Cosmos integration into the recorded overlay
 
 The 28-drum hall is the selected environment. This branch merges main through
-`d027bc3` (inspection memory, job-based action choices and status rings) and
+`d21833e` (inspection memory, job-based action choices and status rings) and
 preserves the training/generation code. The dense stacked branch was not merged.
 
 The detector is deployed; see [model API guide](model_api.md). `scripts/hot/yolo.py`
@@ -50,7 +50,8 @@ returns 401 and is recorded as a Cosmos failure; it is not treated as a model de
 ```sh
 HOT_SPAWN_X=3.0 HOT_NO_OPEN=1 python3 tools/hot_hall.py up
 HOT_NO_OPEN=1 python3 tools/hot_hall.py run \
-  scripts/hot/sensing.py scripts/hot/scenario_lib.py scripts/hot/yolo.py \
+  scripts/hot/sensing.py scripts/hot/scenario_lib.py \
+  scripts/hot/prepare_robot_visuals.py scripts/hot/yolo.py \
   scripts/hot/agent.py scripts/hot/agent_yolo_round.py
 python3 tools/hot_hall.py down
 ```
@@ -63,10 +64,29 @@ Safety and navigation enforce their existing independent checks.
 
 Outputs go to a unique `out/hot/RUN_ID/` directory: MP4, structured report,
 inspection memory, decisions, events, timings, telemetry and detector request logs.
-The MP4 uses the existing 1920×1080 overlay at 12 fps with a full-hall bird's-eye map.
+The MP4 uses a 1920×1080 overlay at 12 fps with a full-hall bird's-eye map.
 Log/API latency is wall time; simulation timestamps advance with physics.
+The clip is 35 seconds: 32 seconds of mission frames and a three-second report.
+Physics advances 0.084 seconds per recorded frame, so its final mission timestamp
+is about 32.2 seconds. Wall time also includes rendering, network inference,
+physics, encoding and download.
 
-For independent checks while Cosmos authentication is pending:
+`prepare_robot_visuals.py` expands the 13 instanced render-only Spot visual roots.
+This fixes the invisible body after a policy reset in this Isaac image without
+changing collisions, physics or the walking policy. Run it before the agent on
+each fresh worker; it is safe to repeat. The chase camera is bounded inside the
+hall, and the overhead camera sits below the ceiling at 5.5 m, so neither view
+renders the outside of a wall or the roof. These are presentation cameras;
+YOLO still receives the onboard RGB camera.
+
+The hall contains 28 drums. This demonstration's active inspection job contains
+eight painted LLW drums, B01–B04 and C01–C04. Other visible drums are reported as
+outside the job. A completed check means the required ID, thermal and visual
+observations were collected; a drum with an unresolved fault can still have an
+`attention` or `bad` status. The alert policy retreats and stops rather than
+automatically starting another job.
+
+For independent checks:
 
 ```sh
 HOT_NO_OPEN=1 python3 tools/hot_hall.py run \
@@ -82,15 +102,27 @@ three-second rules-baseline check with Cosmos and plate-model calls explicitly
 off. Its recording must not be represented as a Cosmos-driven mission. A full
 Cosmos recording still requires successful endpoint authentication.
 
-## Current preview checkpoint
+For a two-second integration preflight with both live services, replace the last
+scenario with `scripts/hot/agent_cosmos_preflight.py` in the full run command.
+It asserts that YOLO produced a successful request and Cosmos chose at least one
+valid offered action. It performs no training. The optional
+`scripts/hot/probe_robot_visuals.py` saves mesh visibility diagnostics and a still
+for troubleshooting a different Isaac installation.
+
+## Completed integration
 
 Cosmos text and image authentication passed on 7 November 2026. The reviewed
-barrel designs are now in the 28-drum hall; static screenshots and actual Cosmos
-preview outputs are documented in `docs/hall_barrel_v2.md`. No full mission was
-launched: the user requested screenshots before that stage.
+barrel designs are in the 28-drum hall; static screenshots and Cosmos preview
+outputs are documented in `docs/hall_barrel_v2.md`. On 8 November the integrated
+mission ran with live trained YOLO inference and live external Cosmos decisions,
+including a closer view, swabbing, inspection and retreat/alert at C04.
+The completed MP4, measured run results, Modal download command and known limits
+are documented in [the recording handoff](mission_recording_20261108.md).
 
-Before the final mission recording, inspect Spot's visual meshes: the earlier
-three-second rules-only smoke had valid upright walking poses, but its chase
-camera showed the sensor fixture without the full robot skin. Also retain the
-fixed completion counter: a visual finding alone must not count as completion
-when plate/thermal checks are missing.
+The trained model can produce false positive rust/bulge findings, particularly
+on other asset types. The recording retains its actual predictions and labels
+uncorroborated findings. It does not replace them with authored fault truth.
+Hydrogen, LWIR, gamma, microphone and swab measurements are simulated sensor
+models, not measurements from physical instruments. Rust coverage percentages
+are not inferred from bounding boxes. Completion counts require all three
+checks independently of the status color.
