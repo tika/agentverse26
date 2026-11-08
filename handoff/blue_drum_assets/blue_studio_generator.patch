@@ -1,0 +1,32 @@
+--- a/sim/detector_studio/pilot.py
++++ b/sim/detector_studio/pilot.py
+@@ -11,6 +11,7 @@
+ sys.path.insert(0, str(SIM.parents[0]))
+ from detector.pilot_specs import diversity_spec, CLASSES
+ from detector.annotations import merge_rust_boxes
++from drum_textures import PAINTS
+ 
+ 
+ def export_frame(directory, entries, camera_meta):
+@@ -191,8 +192,10 @@
+     canonical=make_inventory()
+     for spec in entries:
+         entry=next(dict(e) for e in canonical if e['id']==spec['id'])
+-        entry.update(spec);entry.update(prim_path='/World/Drums/'+entry['id'],row='A',paint_color='faded_yellow')
+-        base,oxide,alpha=weathered_maps(seed=spec['rust_seed'])
++        entry.update(spec);entry.update(prim_path='/World/Drums/'+entry['id'],row='A',paint_color='dark_blue')
++        base,oxide,alpha=weathered_maps(
++            seed=spec['rust_seed'], paint_rgb=PAINTS['dark_blue'],
++            prefix=f"pilot_weathered_blue_s{spec['rust_seed']}_v2")
+         # Move the field around the circumference without changing its physical style.
+         # The same shift must be applied to all oxide maps and occupancy alpha.
+         from PIL import Image
+@@ -202,7 +205,7 @@
+             Image.fromarray(np.roll(arr,shift,axis=1)).save(path)
+         alpha=np.roll(alpha,shift,axis=1)
+         paint=material(stage,'PilotPaint_'+entry['id'],(1,1,1),.5,textures=base)
+-        local_materials={**materials,'faded_yellow':paint,'faded_yellow_lid':paint}
++        local_materials={**materials,'dark_blue':paint,'dark_blue_lid':paint}
+         # Shared generator caches by stable ID. Invalidate only this container's copy.
+         (ASSETS/f"plate_{entry['id']}_LLW_v2.png").unlink(missing_ok=True)
+         create_drum(stage,entry,local_materials)
