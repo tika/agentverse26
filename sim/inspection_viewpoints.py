@@ -210,7 +210,12 @@ def inspection_views(inventory, body_z=BODY_Z):
         todo -= gain
     by_id = {d['id']: d for d in drums}
     views = []
-    for view, ids in sorted(chosen, key=lambda c: (c[0]['stop_xy'][0], c[0]['yaw'])):
+    # Out and back: forward-facing views going up the aisle, then turn once and do the
+    # backward-facing views coming back.
+    def leg(c):
+        forward = abs(c[0]['yaw']) < math.pi / 2
+        return (0, c[0]['stop_xy'][0]) if forward else (1, -c[0]['stop_xy'][0])
+    for view, ids in sorted(chosen, key=leg):
         side = by_id[ids[0]]['location']['side']
         columns = sorted({by_id[i]['location']['column'] for i in ids})
         views.append(dict(name=f"{SECTION['lane']}-{side}-{columns[0]:02d}" + (f"-{columns[-1]:02d}" if len(columns) > 1 else ''),
