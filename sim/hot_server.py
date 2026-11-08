@@ -9,6 +9,7 @@ import json
 import math
 import os
 from pathlib import Path
+import sys
 import time
 import traceback
 import numpy as np
@@ -37,13 +38,29 @@ if __name__ == '__main__':
     from sensors import SensorWorld, load_config
 
     context = omni.usd.get_context()
-    context.get_stage().GetRootLayer().Export(str(SIM / 'scene_hot.usda'))
-    context.open_stage(str(SIM / 'scene_hot.usda'))
-    load_layout()
+    warehouse_mode = os.environ.get('HOT_WAREHOUSE') == '1'
+    warehouse_map = None
+    spawn = SPAWN
+    if warehouse_mode:
+        warehouse_dir = SIM / 'warehouse-v3'
+        sys.path.insert(0, str(warehouse_dir))
+        from drum_faults import generate_session
+
+        warehouse_map = json.loads((warehouse_dir / 'map.json').read_text())
+        spawn = tuple(warehouse_map['robot_start'][:2])
+        seed_text = os.environ.get('HOT_WAREHOUSE_SEED')
+        session = generate_session(HOT / 'warehouse-session' / 'warehouse.usda',
+                                   seed=int(seed_text) if seed_text else None)
+        if not context.open_stage(str(session)):
+            raise RuntimeError(f'Could not open {session}')
+    else:
+        context.get_stage().GetRootLayer().Export(str(SIM / 'scene_hot.usda'))
+        context.open_stage(str(SIM / 'scene_hot.usda'))
+        load_layout()
     stage = context.get_stage()
     UsdPhysics.Scene.Define(stage, '/World/PhysicsScene')
     SimulationManager.set_physics_sim_device('cpu')
-    spot = RobotPolicyRunner(get_spot_spec(default_spawn_position=(*SPAWN, 0.5)), prim_path='/World/WalkingSpot')
+    spot = RobotPolicyRunner(get_spot_spec(default_spawn_position=(*spawn, 0.5)), prim_path='/World/WalkingSpot')
     spot.spawn()
     dt = spot.physics_dt
     world = World(physics_dt=dt, rendering_dt=dt)
@@ -57,8 +74,8 @@ if __name__ == '__main__':
     zero = np.zeros(3, dtype=np.float32)
     world.step(render=False)
     spot.restart_from_default_state(zero)
-    inventory = json.loads((SIM / 'drums.json').read_text())
-    sensor = SensorWorld(inventory, load_config())
+    inventory = warehouse_map['drums'] if warehouse_mode else json.loads((SIM / 'drums.json').read_text())
+    sensor = None if warehouse_mode else SensorWorld(inventory, load_config())
     font = ImageFont.load_default(size=16)
 
     def aim(camera, eye, target):
@@ -88,6 +105,10 @@ if __name__ == '__main__':
 
     def default_hud(draw, t, position, reading):
         drum_id, distance = nearest_drum(position)
+        if not reading:
+            draw.text((10, VIEW[1] + 6), f'Locomotion smoke | t={t:.1f}s | simulator pose',
+                      font=font, fill='white')
+            return
         dew = reading.get('dew_point_c')
         lines = [f"t {t:5.1f}s   Spot ({position[0]:.1f}, {position[1]:.1f})   nearest drum {drum_id} @ {distance:.1f} m",
                  f"SIM gamma {reading['dose_rate_uSv_h']:6.1f} uSv/h   air {reading['temperature_c']:.1f} C   "
@@ -104,7 +125,7 @@ if __name__ == '__main__':
         canvas = Image.new('RGB', (2 * VIEW[0], VIEW[1] + 50), '#111822')
         canvas.paste(Image.fromarray(left), (0, 0))
         canvas.paste(Image.fromarray(right), (VIEW[0], 0))
-        reading = sensor.sample(position, t)
+        reading = sensor.sample(position, t) if sensor is not None else {}
         (hud or default_hud)(ImageDraw.Draw(canvas), t, position, reading)
         return canvas, reading
 
@@ -155,7 +176,7 @@ if __name__ == '__main__':
         fixed_exposure()
     namespace = {'app': app, 'stage': stage, 'world': world, 'spot': spot, 'sensor': sensor,
                  'inventory': inventory, 'walk': walk, 'still': still, 'pose': pose, 'np': np,
-                 'chase': chase, 'onboard': onboard, 'state': {}}
+                 'chase': chase, 'onboard': onboard, 'state': {}, 'warehouse_map': warehouse_map}
     (HOT / 'req').mkdir(parents=True, exist_ok=True)
     (HOT / 'out').mkdir(parents=True, exist_ok=True)
     print(f'HOT_READY {time.perf_counter() - started:.1f}s', flush=True)
