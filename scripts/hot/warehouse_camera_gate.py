@@ -32,8 +32,8 @@ try:
         raise RuntimeError('First inspection stop was not reached')
     x, y = result['final_xy']
     # The chase camera stays within the open aisle, looking across it.
-    gate_view(chase, (x - 0.95, y - 0.85, 1.5), (x + 0.4, y + 0.8, 0.6), 20.0)
-    gate_view(onboard, (x, y + 0.35, 0.68), tuple(target['centre']), 22.5)
+    gate_view(chase, (x - 1.15, y - 1.05, 1.65), (x + 0.25, y + 0.45, 0.55), 16.0)
+    gate_view(onboard, (x, y + 0.35, 0.68), tuple(target['centre']), 15.0)
     capture_pair('inspection')
 finally:
     for camera in (chase, onboard):

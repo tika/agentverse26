@@ -91,7 +91,12 @@ if __name__ == '__main__':
 
     def place_cameras(position, yaw):
         heading = np.array([math.cos(yaw), math.sin(yaw), 0.0])
-        aim(chase, position - 2.4 * heading + [0, 0, 1.5], position + 1.2 * heading + [0, 0, 0.2])
+        if warehouse_mode:
+            # Fixed interior overview for the first aisle route. A rear follow
+            # offset at the dock crosses the west wall when Spot faces east.
+            aim(chase, [1.65, 3.65, 2.2], position + [0, 0, -0.1])
+        else:
+            aim(chase, position - 2.4 * heading + [0, 0, 1.5], position + 1.2 * heading + [0, 0, 0.2])
         eye = position + 0.47 * heading + [0, 0, 0.22]
         aim(onboard, eye, eye + heading + [0, 0, -0.12])
 
