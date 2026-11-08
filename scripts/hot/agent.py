@@ -447,7 +447,7 @@ def read_plate_for(a, drum, t, p, yaw):
         world.render()
     crop = _rgb(PTZ)
     Image.fromarray(crop).save(OUT / f"ptz_{drum['display_id']}_{t:04.1f}.jpg", quality=85)
-    answer = cosmos_call('read_plate', crop)
+    answer = cosmos_call('read_plate', crop,structured=bool(getattr(a,'mission',None)))
     readability = answer.get('readability', 'unreadable')
     expected = a.scene['records'].get(drum['id'])  # What the inventory says is at this map position.
     plate_text = f"{answer['drum_id']} {answer['category']}" if readability == 'readable' else None
@@ -550,12 +550,18 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
     world.step(render=False)
     p, yaw, _, _ = full_pose()
     a.nav = RealNav([p[0], p[1], yaw])  # Known docking pose at start; estimated from sensors afterwards.
+    mission=getattr(a,'mission',None)
+    if mission:mission.start(a,OUT/name)
+    mission_done_at=None
     lagged = LaggedGas()
     frames_dir = OUT / name / 'frames'
     frames_dir.mkdir(parents=True, exist_ok=True)
     dt = spot.physics_dt
     stride = max(1, round(1 / (FPS * dt)))
     frame_dt = stride * dt
+    if mission:
+        (OUT/name/'runtime.json').write_text(json.dumps(dict(physics_dt_s=dt,policy_decimation=spot.decimation,
+            observation_frame_dt_s=frame_dt,video_fps=FPS,mission_max_s=duration),indent=2))
     cam_yaw = yaw
     log = []
     timing = {}
@@ -569,7 +575,6 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         mark = clock()
         t = index * frame_dt
         p, yaw, roll, pitch = full_pose()
-        a.trail.append(tuple(p[:2]))
         a.scene['look'] = a.look
         place_cameras(p, cam_yaw, a.scene, onboard_yaw=yaw)
         cam_yaw += 0.25 * wrap(yaw - cam_yaw)
@@ -577,6 +582,8 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         world.render()
         mark = lap('render', mark)
         a.nav.lidar_update(frame_dt)
+        if not a.trail or math.dist(a.trail[-1],a.nav.fused[:2])>.04:
+            a.trail.append(tuple(map(float,a.nav.fused[:2])))
         mark = lap('lidar_icp', mark)
         frames = {'third': _rgb(THIRD), 'first': _rgb(onboard), 'bird': _rgb(BIRD)}
         mark = lap('camera_readback', mark)
@@ -676,14 +683,18 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                 a.swab_contact = None
         observe_for_memory(a, t, perception, reading, est)
         a.memory.update_status(a)
+        if mission:mission.observe(a,t,perception.get('yolo'),est,frames['first'])
         mark = lap('sensing_findings', mark)
-        if a.use_cosmos and a.status != 'RETREAT':
+        if not mission and a.use_cosmos and a.status != 'RETREAT':
             read_plates(a, t, p, yaw)
         mark = lap('plate_reads', mark)
         # Finish a follow-up before considering another. The hard dose stop can interrupt it.
         arrived = a.status in ('INVESTIGATE', 'RETREAT') and not a.route
         facing_target = a.face is None or abs(wrap(math.atan2(a.face[1] - est[1], a.face[0] - est[0]) - est[2])) < 0.25
-        if reading['dose_rate_uSv_h'] > DOSE_BACKOFF and a.status not in ('RETREAT', 'ALERT', 'DOSE STOP'):
+        if mission:
+            if not mission.finished:mission.tick(a,t,frames,perception,reading,p,yaw)
+            if mission.finished and mission_done_at is None:mission_done_at=t
+        elif reading['dose_rate_uSv_h'] > DOSE_BACKOFF and a.status not in ('RETREAT', 'ALERT', 'DOSE STOP'):
             a.status, a.hold = 'DOSE STOP', True
             a.event(t, 'Dose limit exceeded. Motion stopped and operator review required!')
         elif arrived and a.status == 'RETREAT':
@@ -706,7 +717,8 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         mark = lap('compose_write', mark)
         log.append({'t': round(t, 3), 'truth': p.tolist(), 'estimate': est.tolist(), 'status': a.status, 'patrol_stops_completed': a.patrol_index,
                     'action': a.action['id'], 'h2': a.gas.get('hydrogen_ppm', 0.0), 'hiss': a.hiss['hiss_score']})
-        command = drive(a, est) if not a.hold else zero
+        if mission:log[-1]['coverage']=mission.ledger.counts()
+        command = mission.command(a,est) if mission else drive(a, est) if not a.hold else zero
         for k in range(stride):
             spot.step(dt, command)
             world.step(render=False)
@@ -714,6 +726,10 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         mark = lap('physics_odometry', mark)
         if index % 24 == 0:
             print(f'[hot] frame {index} t={t:.1f}s ' + ' '.join(f'{k}={v:.0f}s' for k, v in timing.items()), flush=True)
+        if mission_done_at is not None and t-mission_done_at>=2.:break
+    if mission:
+        if not mission.finished:a.status='TIME LIMIT';a.hold=True
+        mission.checkpoint(a,t,True)
     (OUT / name / 'timing.json').write_text(json.dumps({k: round(v, 1) for k, v in timing.items()}, indent=2))
     report = build_report(a)
     (OUT / name / 'report.json').write_text(json.dumps(report, indent=2, default=float))
@@ -721,7 +737,7 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
     (OUT / name / 'memory.json').write_text(json.dumps(a.memory.drums, indent=2, default=float))
     state.setdefault('memory_log', []).append({'run': name, 'drums': a.memory.drums})  # For comparing rounds later.
     last = Image.open(frames_dir / f'{index:05d}.jpg')
-    card = report_card(last, report)
+    card = mission.report_card(last, report) if mission else report_card(last, report)
     for k in range(int(report_seconds * FPS)):
         card.save(frames_dir / f'{index + 1 + k:05d}.jpg', quality=90)
     (OUT / name / 'log.jsonl').write_text(''.join(json.dumps(r, default=float) + '\n' for r in log))
@@ -780,11 +796,12 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
     draw.text((16, H - 26), 'RGB: trained YOLO26s + depth/map association. Navigation: LiDAR/IMU/encoders. '
               'LWIR/H2/mic/swab are simulated sensors. Cosmos chooses safety-checked actions; fallback is labelled.',
               font=FONT[14], fill='#6f8396')
+    if getattr(a,'mission',None):a.mission.draw_map(canvas,a,t)
     return canvas
 
 
 def build_report(a):
-    """Grade each inspected drum with sim/criteria.py; Cosmos writes the summary from the structured result."""
+    """Build a factual report from measured inspection memory and recorded decisions."""
     temps = [e[0] for e in a.data.get('env', [])] or [float('nan')]
     rhs = [e[1] for e in a.data.get('env', [])] or [float('nan')]
     a.memory.update_status(a)
@@ -817,8 +834,7 @@ def build_report(a):
               'decisions': [{k: d[k] for k in ('t', 'action_id', 'reason', 'source')} for d in a.decisions],
               'not_inspected': [DRUMS[d]['display_id'] for d, e in a.memory.drums.items() if not e.get('complete',False)]}
     report['summary'] = factual_summary(report)
-
-    return report
+    return a.mission.final_report(a,report) if getattr(a,'mission',None) else report
 
 
 def factual_summary(r):

@@ -201,8 +201,14 @@ def thermal_inset(perception, size=(256, 144)):
 
 
 def place_cameras(p, cam_yaw, scene, onboard_yaw=None):
+    onboard.prim.GetAttribute('focalLength').Set(10.0 if scene.get('coverage_mission') else 15.0)
     heading = np.array([math.cos(cam_yaw), math.sin(cam_yaw), 0.0])
     chase_eye = p - 3.4 * heading + [0, 0, 1.70]
+    if scene.get('coverage_mission'):
+        for angle in (cam_yaw+math.pi,cam_yaw+math.pi-.8,cam_yaw+math.pi+.8,cam_yaw):
+            candidate=p+np.array([3.4*math.cos(angle),3.4*math.sin(angle),2.0])
+            if .65<candidate[0]<19.35 and .65<candidate[1]<11.35:
+                chase_eye=candidate;break
     # Keep the presentation camera inside the 20 x 12 m hall at the docking pose.
     chase_eye[:2] = np.clip(chase_eye[:2], [.65, .65], [19.35, 11.35])
     _aim(THIRD, chase_eye, p + .65 * heading + [0, 0, .10])
@@ -213,9 +219,10 @@ def place_cameras(p, cam_yaw, scene, onboard_yaw=None):
         eye = p + 0.35 * heading + [0, 0, 0.45]
     else:
         eye = p + 0.62 * heading + [0, 0, 0.30]
+        if scene.get('coverage_mission'):eye=p+.25*heading+[0,0,.45]
     look = scene.get('look')
-    target = np.array([*look, 0.5]) if look is not None else eye + heading + [0, 0, -0.32]
-    if onboard_yaw is not None and np.dot(target[:2] - eye[:2], heading[:2]) <= 0.1:
+    target = np.array([*look, scene.get('look_height',0.5)]) if look is not None else eye + heading + [0, 0, -0.32]
+    if not scene.get('coverage_mission') and onboard_yaw is not None and np.dot(target[:2] - eye[:2], heading[:2]) <= 0.1:
         target = eye + heading + [0, 0, -0.32]
     _aim(onboard, eye, target)
     _aim(BIRD, (10.0, 6.0, 5.5), (10.0, 6.0, 0.0), up=(0, 1, 0))
@@ -256,7 +263,7 @@ def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
     if len(m.nav.hits_world):
         for u, v in project_bird(m.nav.hits_world, p):
             bd.rectangle((u - 1, v - 1, u + 1, v + 1), fill='#33e0ff')
-    route = [tuple(p[:2])] + [tuple(w) for w in m.route]
+    route = [tuple(m.nav.fused[:2])] + [tuple(w) for w in m.route]
     if len(route) > 1:
         bd.line([tuple(x) for x in project_bird(np.array(route), p, 0.0)], fill='#ffffff', width=2)
     if len(m.trail) > 1:

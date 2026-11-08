@@ -308,7 +308,7 @@ def extract_json(text):
     raise ValueError(f'No JSON in model output: {text[-200:]}')
 
 
-def cosmos_chat(content, system=None, max_tokens=512, timeout_s=180):
+def cosmos_chat(content, system=None, max_tokens=512, timeout_s=180, schema=None):
     """POST to the vLLM OpenAI-compatible endpoint. The simulation waits for the answer."""
     import os as _os
     import urllib.request as _url
@@ -322,7 +322,9 @@ def cosmos_chat(content, system=None, max_tokens=512, timeout_s=180):
     if not url:
         raise RuntimeError('External Cosmos endpoint has not been configured')
     messages = ([{'role': 'system', 'content': system}] if system else []) + [{'role': 'user', 'content': content}]
-    body = json.dumps({'model': model, 'messages': messages, 'max_tokens': max_tokens, 'temperature': 0.0}).encode()
+    payload={'model':model,'messages':messages,'max_tokens':max_tokens,'temperature':0.0}
+    if schema:payload['response_format']={'type':'json_schema','json_schema':{'name':'inspection_response','schema':schema,'strict':True}}
+    body=json.dumps(payload).encode()
     headers={'Content-Type':'application/json'}
     if key:headers['Authorization']=f'Bearer {key}'
     request = _url.Request(url.rstrip('/') + '/v1/chat/completions', data=body, method='POST',
@@ -342,13 +344,15 @@ def _image_part(rgb, max_side=640):
     return {'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + _b64.b64encode(buffer.getvalue()).decode()}}
 
 
-def cosmos_call(method, rgb, snapshot=None):
+def cosmos_call(method, rgb, snapshot=None, structured=False):
     """read_plate -> {drum_id, category}; decide -> {action_id, reason, valid}. Errors are returned, not raised."""
     import time as _time
     started = _time.perf_counter()
     try:
         if method == 'read_plate':
-            text = cosmos_chat([_image_part(rgb), {'type': 'text', 'text': PLATE_PROMPT}], max_tokens=256)
+            schema={'type':'object','properties':{'drum_id':{'type':['string','null'],'pattern':'^[A-Z][0-9]{2}$'},
+                    'category':{'enum':['LLW','ILW',None]}},'required':['drum_id','category'],'additionalProperties':False} if structured else None
+            text = cosmos_chat([_image_part(rgb), {'type': 'text', 'text': PLATE_PROMPT}], max_tokens=256,schema=schema)
             answer = extract_json(text)
             drum_id, category = answer.get('drum_id'), answer.get('category')
             import re as _re
@@ -359,7 +363,9 @@ def cosmos_call(method, rgb, snapshot=None):
                       'readability': 'readable' if valid_id and valid_cat else ('partial' if drum_id or category else 'unreadable'),
                       'raw_read': [drum_id, category]}
         else:
-            text = cosmos_chat([_image_part(rgb), {'type': 'text', 'text': json.dumps(snapshot)}], system=DECIDE_PROMPT)
+            schema={'type':'object','properties':{'action_id':{'type':'string','enum':[a['id'] for a in snapshot['actions']]},
+                    'reason':{'type':'string'}},'required':['action_id','reason'],'additionalProperties':False} if structured else None
+            text = cosmos_chat([_image_part(rgb), {'type': 'text', 'text': json.dumps(snapshot)}], system=DECIDE_PROMPT,schema=schema)
             answer = extract_json(text)
             offered = {a['id'] for a in snapshot['actions']}
             valid = answer.get('action_id') in offered

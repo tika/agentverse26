@@ -1,5 +1,9 @@
 # YOLO + Cosmos integration into the recorded overlay
 
+For the newer all-28-drum coverage mission, estimated full trail and persistent
+checkpoints, see [the full-store mission guide](full_store_mission.md). This page
+also retains the commands and evidence for the original eight-drum job.
+
 The 28-drum hall is the selected environment. This branch merges main through
 `d21833e` (inspection memory, job-based action choices and status rings) and
 preserves the training/generation code. The dense stacked branch was not merged.

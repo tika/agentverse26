@@ -37,6 +37,7 @@ app = modal.App('agentverse-hot-hall')
 requests = modal.Queue.from_name('agentverse-hot-requests', create_if_missing=True)
 results = modal.Dict.from_name('agentverse-hot-results', create_if_missing=True)
 services = modal.Dict.from_name('agentverse-hot-services', create_if_missing=True)
+mission_runs = modal.Volume.from_name('agentverse-mission-runs', create_if_missing=True)
 
 
 def _encode(folder):
@@ -45,7 +46,7 @@ def _encode(folder):
         images = sorted(frames.glob('*.jpg'))
         if images:
             with imageio.get_writer(frames.parent.with_suffix('.mp4'), fps=12, codec='libx264',
-                                    quality=8, macro_block_size=1) as writer:
+                                    quality=7, macro_block_size=1, ffmpeg_params=['-movflags','+faststart']) as writer:
                 for path in images:
                     writer.append_data(imageio.imread(path))
         for path in images:
@@ -54,6 +55,7 @@ def _encode(folder):
 
 
 @app.function(image=image, gpu=['RTX-PRO-6000','L40S','L4'], cpu=8, memory=32768, timeout=4 * 60 * 60,
+              volumes={'/mission-runs':mission_runs},
               # Unconditional dependency; external Cosmos credentials are refreshed from the private Dict.
               secrets=[modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL','DETECTOR_API_KEY','DETECTOR_API_SECRET'])])
 def serve():
@@ -101,17 +103,22 @@ def serve():
         staged.write_text(request['source'])
         staged.rename(staged.with_suffix('.py'))
         done = hot / 'out' / rid / 'done'
+        committed=0.
         while not done.exists() and process.poll() is None:
+            # Isaac writes atomic checkpoints. Commit them without importing Modal
+            # or ML dependencies into Isaac's bundled Python interpreter.
+            if time.monotonic()-committed>15:
+                mission_runs.commit();committed=time.monotonic()
             time.sleep(0.2)
         folder = hot / 'out' / rid
         if folder.exists():
             _encode(folder)
-        buffer = io.BytesIO()
-        with tarfile.open(fileobj=buffer, mode='w:gz') as archive:
-            if folder.exists():
-                archive.add(folder, arcname=rid)
+            import shutil
+            shutil.copytree(folder,Path('/mission-runs/runs')/rid,dirs_exist_ok=True)
+            mission_runs.commit()
         tail = Path('/tmp/hot.log').read_text(errors='replace')[-6000:]
-        results[rid] = {'archive': buffer.getvalue(), 'alive': process.poll() is None, 'log_tail': tail}
+        # Keep long recordings on the volume rather than serializing a large MP4 into a Dict.
+        results[rid] = {'volume_path': '/runs/'+rid, 'alive': process.poll() is None, 'log_tail': tail}
     results['_status'] = {'ready': False, 'exited': process.returncode,
                           'log_tail': Path('/tmp/hot.log').read_text(errors='replace')[-9000:]}
 
@@ -134,7 +141,7 @@ def up():
         time.sleep(10)
 
 
-def run(*scripts, timeout_s=1800):
+def run(*scripts, timeout_s=7200):
     rid = time.strftime('%H%M%S-') + Path(scripts[-1]).stem + '-' + uuid.uuid4().hex[:4]
     status = results.get('_status') or {}
     if not status.get('ready'):
@@ -147,9 +154,22 @@ def run(*scripts, timeout_s=1800):
         time.sleep(1)
     results.pop(rid)
     OUT.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(fileobj=io.BytesIO(result['archive'])) as archive:
-        archive.extractall(OUT, **({'filter': 'data'} if sys.version_info >= (3, 12) else {}))
     folder = OUT / rid
+    if 'volume_path' in result:
+        from modal.volume import FileEntryType
+        folder.mkdir(parents=True,exist_ok=True)
+        for entry in mission_runs.iterdir(result['volume_path'],recursive=True):
+            relative=Path(entry.path.lstrip('/')).relative_to(result['volume_path'].lstrip('/'))
+            target=folder/relative
+            if entry.type==FileEntryType.DIRECTORY:
+                target.mkdir(parents=True,exist_ok=True)
+            elif entry.type==FileEntryType.FILE:
+                target.parent.mkdir(parents=True,exist_ok=True)
+                with target.open('wb') as output:
+                    for chunk in mission_runs.read_file(entry.path):output.write(chunk)
+    else:  # Compatibility with an already-running worker from the earlier recording.
+        with tarfile.open(fileobj=io.BytesIO(result['archive'])) as archive:
+            archive.extractall(OUT, **({'filter': 'data'} if sys.version_info >= (3, 12) else {}))
     print(f'{rid}: {time.perf_counter() - started:.1f}s round trip -> {folder}')
     error = folder / 'error.txt'
     if error.exists():

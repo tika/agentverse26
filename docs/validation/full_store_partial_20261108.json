@@ -1,0 +1,18 @@
+{
+  "run_id": "011259-agent_full_store-9b11",
+  "status": "stopped_at_user_request",
+  "video_duration_s": 149.58333333333334,
+  "video_fps": 12.0,
+  "coverage": {
+    "total": 28,
+    "complete": 11,
+    "deferred": 1,
+    "pending": 16
+  },
+  "checkpoint_time_s": 150.612,
+  "known_issue": "Localization estimate drifts near the end; the 28-drum mission did not finish.",
+  "model_sources": {
+    "Cosmos Reason 2": 25
+  },
+  "video_sha256": "5e8cd81fc61241f29861dfc78be18557f8a1aa1a83596b399a91a94f1aadaf35"
+}

@@ -1,5 +1,9 @@
 **Agentic inspection architecture — implemented version, 8 November 2026**
 
+The subsequent [full-store mission](full_store_mission.md) extends this baseline
+with all-row routing, two-angle coverage, persistence and a labelled Cosmos RGB
+visual fallback for missing YOLO target boxes.
+
 This describes the code and recording at commit `382786d`, rather than the
 larger proposed product. Three learned components participate: the fine-tuned
 YOLO26s detector, the external Cosmos vision-language service, and Isaac's
