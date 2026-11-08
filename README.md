@@ -15,24 +15,23 @@ Robotic dogs such as Boston Dynamics Spot already inspect nuclear facilities, in
 
 ## CANIS: from an observation to a decision
 
-CANIS is an **autonomous, agentic inspection system for robotic dogs**, demonstrated with Boston Dynamics Spot in NVIDIA Isaac Sim. It combines visual findings, sensor readings and inspection memory to decide what to investigate next. The agent can revisit a suspect drum, move for a clearer view, reread a plate, collect another measurement, request a virtual swab, or retreat and alert an operator.
+CANIS is an **agentic inspection system for robot dogs**, demonstrated with Boston Dynamics Spot in a simulated 420-drum waste store in NVIDIA Isaac Sim. Spot walks the aisles, a detector checks every drum it sees, fixed rules decide which drums are confirmed, cleared or still unclear, and Cosmos Reason 2 chooses the next step when the evidence is not good enough. A fixed dose rule can stop the round and back the robot off regardless of any model.
 
-The mission goal is to collect the required evidence for every assigned drum and report what remains unresolved. A separate safety layer constrains the choices available to the reasoning model and can stop motion independently.
+Each run ends in a report for store managers: which drums need action, where gamma was measured and what was not checked.
 
 ![CANIS detecting a bulging drum with elevated surface temperature in warehouse-v3](docs/previews/canis-banner.jpg)
 
-*Frame from the latest six-drum recording: YOLO26s detects a bulging drum with a 38.4°C surface reading (19.0°C air), flagged as suspected pressurisation. The run uses Cosmos Reason 2–8B and a rigid camera mounted 15° upward.*
+*Frame from a six-drum warehouse-v3 recording with a body-fixed camera mounted 15° upward. YOLO26s flags a bulging drum; the overlay shows a 38.4°C surface reading against 19.0°C air and marks it as suspected pressurisation.*
 
-| What CANIS observes | How it responds |
-|---|---|
-| Rust or a bulging barrel in the front camera | Associate the finding with a drum; inspect again if evidence is uncertain |
-| An unreadable plate or a possible inventory mismatch | Reposition the robot and request another plate read |
-| Bulging together with elevated surface temperature | Flag suspected pressurisation for review; retain the supporting readings |
-| Missing inspection evidence | Keep the drum pending, retry within a budget, or explicitly defer it |
+| What CANIS observes | How it responds | Where it runs today |
+|---|---|---|
+| Rust or bulging on a drum | Confirms it only when the fault appears in at least two of three views; otherwise takes a closer look | Aisle patrol and rigid-camera walk |
+| A drum only partly in frame, or an unclear detector result | Cosmos chooses another view or hands the drum to an operator; a partial view never clears a drum | Rigid-camera walk and upper-tier recheck |
+| Missing evidence | Marks the drum or aisle section *not checked* in the report instead of guessing | All runs that produce the report |
 
-The recording overlay shows the robot's camera, detections, sensor values, visited trail, inspection progress and actual model decisions. Each run also produces a structured report linking findings to the evidence collected.
+An earlier 28-drum hall prototype also read drum ID plates, took virtual swabs and chose retreat-and-alert through a Cosmos planner. Those features are described in [the earlier mission recording](docs/mission_recording_20261108.md) and are not part of the warehouse-v3 runs.
 
-[Recorded mission and artifacts](docs/mission_recording_20261108.md) · [Front-camera recording workflow](docs/front_camera_recording.md) · [Environment previews and walkthrough](docs/previews/README.md)
+[Rigid-camera runs](docs/rigid_camera_demos.md) · [Environment previews and walkthrough](docs/previews/README.md)
 
 ## Latest detector for teammates
 
@@ -49,7 +48,7 @@ Modal provides the GPU infrastructure for the simulation, synthetic-data pipelin
 | **Synthetic dataset curation** | Independent GPU workers generate seeded scenes, render camera views and export semantic ground truth as YOLO boxes | Produces labeled examples with randomized faults, printed IDs, viewpoints and lighting |
 | **Training and fine-tuning** | Separate PyTorch/Ultralytics containers fine-tune pretrained YOLO26 models | Keeps training dependencies separate from Isaac's bundled Python and compares models on the same held-out data |
 | **Detector hosting** | YOLO26s behind an authenticated FastAPI service on an RTX PRO 6000 | Gives the robot and teammates a shared image-to-condition API; scales to zero when idle |
-| **NVIDIA model serving** | Cosmos Reason 2 behind vLLM's OpenAI-compatible `/v1/chat/completions` API | Serves image-and-state reasoning and plate-reading requests independently of the simulator |
+| **NVIDIA model serving** | Cosmos Reason 2 8B (`nvidia/Cosmos-Reason2-8B`) behind vLLM's OpenAI-compatible `/v1/chat/completions` API | Serves image-and-state decisions independently of the simulator; one shared endpoint for the team |
 | **Persistence and access** | Modal Volumes for datasets, checkpoints, caches and run artifacts; Secrets for service credentials | Preserves work between jobs and keeps credentials out of Git and recordings |
 
 ### From rendered scenes to a trained detector
@@ -87,79 +86,87 @@ The dataset, best weights, training logs and test artifacts persist in Modal Vol
 
 ## Technical architecture
 
-The **Python agent coordinates the models**. YOLO supplies visual observations; Cosmos selects a permitted task; the navigation controller and learned walking policy execute it. The models communicate through the agent's structured state and authenticated HTTPS services.
+Everything runs on Modal. One warm Isaac Sim worker holds the warehouse, Spot and the mission script in a single Python process. The detector and Cosmos are separate GPU services reached over authenticated HTTPS, and the report is built from the run's logs afterwards. **The mission script coordinates everything**: models never call each other, and no model output becomes a verdict without passing a fixed rule.
 
 ```mermaid
-flowchart TD
-    subgraph Modal["Modal GPU services and persistent storage"]
-        subgraph Simulator["Headless Isaac Sim worker"]
-            World["Warehouse, drum assets and Spot physics"]
-            Sensors["Fixed front RGB-D, LiDAR, IMU and encoders<br/>Thermal, gamma, gas and other sensor models"]
-            Agent["Python agent<br/>Map association, inspection memory and offered tasks"]
-            Guard["Action validation and independent dose checks"]
-            Control["Route controller and pretrained Spot walking policy"]
-            Output["Camera overlay, map, decision trace and report"]
-            World --> Sensors --> Agent
-            Agent --> Guard --> Control --> World
-            Agent --> Output
-        end
-        YOLO["YOLO26s<br/>FastAPI detector service"]
-        Cosmos["Cosmos Reason 2<br/>vLLM OpenAI-compatible service"]
-        Storage[("Modal Volumes<br/>Datasets, checkpoints and run artifacts")]
-        Agent -->|"Front-camera RGB, about 2 Hz"| YOLO
-        YOLO -->|"Boxes, conditions, confidence and provenance"| Agent
-        Agent -->|"RGB or crop, sensor state and allowed actions"| Cosmos
-        Cosmos -->|"Action ID and reason, or plate reading"| Agent
-        Output --> Storage
+flowchart LR
+    subgraph Worker["Warm Isaac Sim worker on Modal: one Python process"]
+        Scene["warehouse-v3 session<br/>420 drums, seeded faults"]
+        Cam["Inspection camera<br/>pan/tilt head or body-fixed +15°"]
+        Backend["Sensor backend<br/>LWIR, gamma, dose, air, H2"]
+        Mission["Mission script<br/>route, view plan, per-drum ledger"]
+        Rules["Fixed rules<br/>verdicts, framing gate, dose stop"]
+        Spot["Spot<br/>pretrained walking policy"]
+        Logs["Overlay video and run logs"]
+        Scene --> Cam --> Mission
+        Scene --> Backend --> Mission
+        Mission <--> Rules
+        Mission -->|"body velocity and posture"| Spot --> Scene
+        Mission --> Logs
     end
+    YOLO["YOLO26s detector<br/>FastAPI on Modal"]
+    Cosmos["Cosmos Reason 2 8B<br/>vLLM on Modal"]
+    Report["Report builder<br/>PDF and HTML, fixed rules"]
+    Truth[("Seeded fault manifest")]
+    Mission -->|"640×640 camera crop"| YOLO -->|"whole-barrel condition and confidence"| Mission
+    Mission -->|"image, detector summary, offered actions"| Cosmos -->|"one offered action"| Mission
+    Logs --> Report
+    Truth -.->|"scoring only, never sent to the mission"| Report
 ```
 
-### 1. Build the world and acquire observations
+### Three mission scripts on one stack
 
-USD scene assets describe the hall, drum geometry, printed plates and authored faults. Isaac Sim provides Spot's articulated body, contact physics, rendered RGB/depth, RTX LiDAR, IMU and joint-state sensing. Additional Python sensor models supply thermal, gamma dose, accumulated dose, gas, humidity, microphone and virtual-swab observations.
+The warehouse runs share the scene, detector, rules and report, and differ in how the camera is aimed and who chooses the next step:
 
-The **front RGB-D camera is rigidly mounted to Spot's physical body**. It follows the robot's translation, gait, height and orientation. YOLO receives that camera's RGB; Cosmos receives the same view or a declared digital crop for plate reading. The small third-person recording view is for presentation. Thermal imagery is registered to the front view.
+| Mission | Camera | Who decides | Live sensors | Output |
+|---|---|---|---|---|
+| [`aisle_patrol.py`](scripts/hot/full_hall/aisle_patrol.py): aisle A, 36 drums | Simulated pan/tilt head | Fixed rules, plus the dose stop | LWIR, depth, gamma, dose, air, hydrogen | Patrol video and run files for the report |
+| [`wh_rigid_walk.py`](scripts/hot/full_hall/wh_rigid_walk.py) with Cosmos ([six-drum clip](scripts/hot/full_hall/wh_rigid_cosmos.py), [full aisle](scripts/hot/full_hall/wh_rigid_full_cosmos.py)) | Fixed to Spot's body, aimed by turning and leaning | Rules set verdicts; Cosmos reviews each drum and can only ask for more evidence | None | Walk video and run files for the report |
+| [`rigid_middle_upper.py`](scripts/hot/full_hall/rigid_middle_upper.py) with [`ambiguity_cosmos.py`](scripts/hot/full_hall/ambiguity_cosmos.py): two-drum upper-tier recheck | Fixed to Spot's body; body pitch for higher views | A framing gate and YOLO votes set the verdict; Cosmos chooses the follow-up | Scripted heat cue in the inspection course | `tilt_report.json`, `report.md` and exact model inputs |
 
-Sensor fixtures derive readings from the simulated world. Authored fault labels are used for dataset generation and evaluation, not supplied to the planner as inspection findings.
+### 1. World and observations
 
-[Environment handoff](docs/environment_handoff.md) · [Camera mechanics](docs/front_camera_recording.md) · [Sensor models and criteria](docs/sensors_and_criteria.md)
+The warehouse is a 24 × 28.3 m USD stage with 420 yellow LLW and blue-teal ILW drums on three-tier racks. Each session is generated from a seed (`HOT_WAREHOUSE_SEED`): rust, bulging, package contents, radiation sources and hydrogen vents change per seed and replay for a fixed seed. The fault manifest stays on the simulator side; the mission script never receives it.
 
-### 2. Detect, locate and remember
+[`sim/warehouse-v3/warehouse_sensors.py`](sim/warehouse-v3/warehouse_sensors.py) derives readings from that private inventory: gamma dose rate from Poisson counts through each drum's shielding, accumulated dose, air temperature and humidity, a hydrogen plume at the gas inlet, and LWIR surface temperature from the camera's depth image and the map. Isaac Sim does not model these channels natively, so they are simulated instruments, not measurements.
 
-The selected YOLO26s model returns one box per detected barrel with a condition and confidence. It does not predict individual rust-patch counts, a corrosion-area percentage, temperature or gas pressure.
+Spot uses Isaac's pretrained walking policy. In the warehouse runs the robot's position comes from the simulator and the target drum is chosen from the map; there is no onboard localisation or SLAM yet.
 
-The agent back-projects box-interior depth samples using camera calibration and the estimated robot pose, then associates the result with a drum in the known store map. LiDAR scan matching corrects the pose estimated from leg odometry and the IMU. A plate read is a separate identity check against inventory.
+[Physical sensor interface](sim/warehouse-v3/PHYSICAL_SENSORS.md) · [Seeded defects](sim/warehouse-v3/DEFECTS.md) · [Camera mechanics](docs/rigid_camera_demos.md#camera-movement-and-outputs)
 
-A per-drum ledger retains visual observations, identity reads, thermal readings, optional swab results, missing checks and derived condition status. The coverage workflow requires two sufficiently distinct visual viewpoints; repeated frames from one stationary pose do not count as another angle. The map displays the estimated visited trail, current route and pending, complete or deferred inspections.
+### 2. Detect and judge
 
-[Detector contract](detector/v2/API_USAGE.md) · [Map, ledger and coverage implementation](docs/full_store_mission.md)
+When the camera has settled on a drum, the mission script sends a 640 × 640 crop to YOLO26s at most every 0.4 s of simulation time. The detector returns one box per barrel with a whole-barrel condition (`normal`, `rust`, `bulge`, `rust_and_bulge`) and a confidence. It does not measure rust area, temperature or pressure.
 
-### 3. Reason, constrain and act
+Fixed rules turn views into a verdict. From the side, a fault scoring at least 0.50 in two of three views confirms a defect, and two normal views with no fault clear the drum. Anything else, and every top-tier drum, gets a closer look from a second position. An empty detector response never clears a drum. In the rigid-camera recheck, a framing gate also requires the drum's projected box to sit fully inside the detector's input before any verdict.
 
-On an eligible planning event, the agent sends Cosmos the front image, a JSON snapshot of sensor readings and findings, inspection progress and the currently offered actions. Cosmos returns an `action_id` and a short reason. Python validates the choice, updates the task state and uses a labeled rules fallback if the response is invalid or the service fails.
+### 3. Cosmos and its limits
 
-The route controller converts the chosen task into waypoints and body-relative velocity commands. Isaac's pretrained Spot locomotion policy converts those commands into joint targets. Cosmos chooses inspection tasks; it does not output individual footsteps.
+Cosmos Reason 2 8B is called only when a decision is open, and it can choose only from actions the script offers for that moment:
 
-Dose checks can veto motion independently of model inference. Visible bulging plus surface temperature at least **5°C above ambient** is a configurable **suspected-pressurisation screen**. It does not establish internal gas pressure; gas and acoustic observations remain separate evidence.
+- **Rigid-camera walk:** for an unclear drum it may choose `closer_look` or `mark_suspect`; for a drum the rules cleared it may choose `accept_ok` or `closer_look`, at most twice per stop. It is never asked about a confirmed defect and cannot clear a drum the rules left unclear. The reply must name an offered action or it is rejected.
+- **Upper-tier recheck:** the request uses a strict JSON schema whose `enum` lists only the offered actions, such as `continue_inspection`, `recheck_higher` or `recheck_xy`, and `defer_for_operator`. The executor adds a view only when Cosmos selects it.
+
+The dose stop sits outside the model. In the aisle patrol, a dose rate above 7.5 µSv/h starts a dose watch, and above 100 µSv/h the round stops and Spot backs off to the last point that read below 50 µSv/h. The thresholds come from [`sim/inspection_config.json`](sim/inspection_config.json) and are simulation policy, not site limits.
+
+### 4. Motion
+
+The mission script plans stops along the aisle centre line and turns each decision into body velocity commands, plus body posture in the rigid-camera runs. Isaac's pretrained Spot policy converts those into joint targets. Cosmos chooses inspection steps; it never outputs footsteps or joint commands.
 
 | Component | Update pattern |
 |---|---|
-| Physics and locomotion | Physics substeps and the loaded walking policy's control rate |
-| Camera, sensor features, memory and overlay | Approximately 12 agent cycles per simulated second in the recorded workflow |
-| YOLO detection | Approximately 2 requests per simulated second; latest result reused between requests |
-| Cosmos planning | Event-driven: new findings, eligible task transitions and follow-up decisions |
-| Plate reading | When a plate is visible and eligible for an initial read or requested reread |
-| Report | Evidence accumulates during the run; final structured report is assembled when it ends |
+| Physics and walking policy | Physics substeps and the policy's control rate |
+| Camera, sensors and overlay | Every recorded frame, 24 frames per simulated second |
+| YOLO26s | At most every 0.4 s of simulation time, once the camera has settled on a drum |
+| Cosmos Reason 2 8B | Per drum review (rigid-camera walk) or per ambiguous upper-tier view (recheck) |
+| Dose rule | Every gamma sample in the aisle patrol |
+| Report | Once, from the run's logs, after the mission ends |
 
-Inference calls are synchronous in this prototype, so simulation time pauses while waiting for a model response. Video playback rate is not a claim of real-time execution speed.
+Model calls are synchronous, so simulation time pauses while waiting for a reply. Videos are recorded at simulation time; their playback speed is not a claim about real-time performance.
 
-[Detailed evidence flow and timing](docs/agentic_architecture.md) · [Inspection criteria and source rationale](docs/inspection_source_register.md)
+### 5. Evidence and handoff
 
-### 4. Produce an evidence-backed handoff
-
-The integrated mission assembles `report.json` and `report.md` from inspection memory, sensor observations and status rules. Its bundle also includes decisions, telemetry, model-request provenance, timings and the MP4. The warehouse-v3 two-drum recheck demo writes its own `tilt_report.json` and `report.md` beside the recording, with the original and repeat views saved in `inputs/`.
-
-The report lists inspected, pending and deferred drums, unresolved findings and operator follow-up. **Coverage and condition are separate:** collecting all required observations does not imply that a drum is fault-free. The recording overlay is composited from the same run data; it is not a separate dashboard service.
+Each run writes per-drum memory, decisions, detector requests, telemetry and evidence stills. The report builder turns those files into the store-manager report described below. Fixed rules set every rating, anything not logged is printed as *not measured*, and the seeded fault manifest is used only for the report's accuracy section.
 
 ## Post-CANIS report
 
@@ -181,13 +188,14 @@ Build it with [`tools/full_hall_report/report/build_report.py`](tools/full_hall_
 
 | Workstream | Evidence and current scope |
 |---|---|
-| **Warehouse-v3 recheck** | In the two-drum simulation, a clipped upper-tier view led Cosmos Reason 2 8B to add a higher look. The projected drum box went from 78% to 100% in frame. The detector endpoint returned HTTP 404, so the run left drum condition unresolved. [Reproduce the test](docs/rigid_camera_demos.md#ambiguous-upper-tier-view-with-cosmos-reason-2-8b) |
-| **Integrated mission** | A recorded eight-drum job in the 28-drum hall: 64 successful YOLO requests and four live Cosmos decisions, including virtual swabbing and retreat/alert. This recording used the earlier detector. [Run and artifacts](docs/mission_recording_20261108.md) |
-| **Full-store coverage** | Routing, a visited trail, a ledger and checkpoints for all 28 drums. The documented partial run reached 11/28 observation sets before it was cut; full completion is not validated. [Coverage status](docs/full_store_mission.md) |
-| **Current perception model** | The expanded 2,500-image YOLO26s is served separately and used in recent rigid-camera tests; the previous 1,500-image model remains the default and available. These tests are separate from the earlier Cosmos mission. [Latest model and exact version](detector/v2/LATEST_MODEL.md) |
-| **Warehouse development** | A separate dense stacked warehouse workstream extends the environment beyond the recorded 28-drum baseline. [Scene and run guidance](sim/README.md) |
+| **36-drum aisle patrol** | Aisle A, 24 LLW and 12 ILW drums on both sides and three tiers, with live LWIR, depth, gamma and hydrogen readings. The recorded run checked 36 of 36 drums in 4 min 38 s of simulation time with 166 detector calls and no failures. Against the seeded faults it found 5 of 9 damaged drums with 1 false alarm; 3 of the 4 misses were blue-teal ILW drums. Fixed rules decide; Cosmos is not used in this run. |
+| **Rigid-camera walk with Cosmos** | A six-drum clip and a full-aisle variant with the camera fixed to Spot's body. Cosmos Reason 2 8B reviews each drum and can only ask for more evidence; rules set verdicts. [Example 36-drum report](tools/full_hall_report/report/example/CANIS_report_083203-wh_rigid_walk-de01.pdf) |
+| **Upper-tier recheck** | In the recorded two-drum course, the upper drum was 61% in frame on the first look. Cosmos Reason 2 8B chose `recheck_higher`, Spot pitched its body up, and the drum was 100% in frame on the second look. The current course version offers a ground reposition instead and adds a scripted heat cue. [Reproduce it](docs/rigid_camera_demos.md#barrel-inspection-course) |
+| **Radiation retreat** | The dose watch, stop and back-off rule is implemented in the aisle patrol. A recorded run with a high-activity drum is not yet in the repository. |
+| **Detector** | The expanded 2,500-image YOLO26s scores 87.9% on held-out synthetic images: 98.8% on yellow LLW drums and 70.0% on blue-teal ILW drums. [Latest model](detector/v2/LATEST_MODEL.md) |
+| **Earlier 28-drum hall prototype** | A recorded eight-drum job with four live Cosmos planner decisions, plate reads, a virtual swab and retreat-and-alert, using the earlier detector. [Run and artifacts](docs/mission_recording_20261108.md) |
 
-CANIS is a simulation prototype. Domain sensor channels are simulated, thresholds are demonstration policy, and the new detector's reported accuracy is on synthetic images. The statistical policy comparison in [the evaluation](eval/EVALUATION.md) is a separate Python simulation, not a measured improvement from paired physical-robot or Isaac missions.
+CANIS is a simulation prototype. Every result above is from simulation: sensor channels are simulated, thresholds are demonstration policy, and detector accuracy is measured on synthetic images. The policy comparison in [the evaluation](eval/EVALUATION.md) is a separate Python simulation of the decision rules on the 28-drum layout, using the latest detector's rates. It is not a measured result from Isaac or physical-robot missions.
 
 ## Run it and explore the implementation
 
@@ -196,14 +204,17 @@ Start with the workflow you need:
 | Goal | Entry point |
 |---|---|
 | Set up a team checkout and Modal workspace | [Team quickstart](docs/team_quickstart.md) |
-| Run the headless simulator and live model integration | [Integration guide](docs/yolo_cosmos_integration.md) |
+| Run the earlier 28-drum hall integration | [Integration guide](docs/yolo_cosmos_integration.md) |
 | Reproduce the fixed front-camera recording | [Recording guide](docs/front_camera_recording.md) |
 | Build the environment or export screenshots/video | [Environment handoff](docs/environment_handoff.md) |
 | Use the selected detector from another application | [YOLO26s API usage](detector/v2/API_USAGE.md) |
 | Regenerate data, train or redeploy the detector | [Dataset and training pipeline](detector/v2/README.md) |
 | Serve Cosmos on Modal | [vLLM deployment recipe](tools/cosmos_vllm.py) |
 | Launch the 420-drum warehouse-v3 with fresh corrosion and bulging | [Warehouse-v3 defects](sim/warehouse-v3/DEFECTS.md) |
-| Run the CANIS warehouse aisle walk (LLW + ILW, live YOLO26s) | [`scripts/hot/full_hall/wh_cond_walk.py`](scripts/hot/full_hall/wh_cond_walk.py) via [`tools/full_hall_report/hot_hall_canis.py`](tools/full_hall_report/hot_hall_canis.py) |
+| Run the 36-drum aisle patrol with live sensors | [`aisle_patrol_full.py`](scripts/hot/full_hall/aisle_patrol_full.py) then [`aisle_patrol.py`](scripts/hot/full_hall/aisle_patrol.py), via [`tools/full_hall_report/hot_hall_canis.py`](tools/full_hall_report/hot_hall_canis.py) |
+| Run the rigid-camera walk with Cosmos | [`wh_rigid_cosmos.py`](scripts/hot/full_hall/wh_rigid_cosmos.py) or [`wh_rigid_full_cosmos.py`](scripts/hot/full_hall/wh_rigid_full_cosmos.py) then [`wh_rigid_walk.py`](scripts/hot/full_hall/wh_rigid_walk.py) |
+| Reproduce the upper-tier recheck | [Rigid-camera run guide](docs/rigid_camera_demos.md) |
+| Build the inspection report from a run | [Report builder](tools/full_hall_report/report/README.md) |
 | Explore earlier prototypes and detailed commands | [Earlier development workflows](docs/legacy_workflows.md) |
 
 The integration guides retain commands for their recorded versions. Use the selected detector's current API guide for its endpoint, credentials and four-condition response contract.
@@ -212,8 +223,10 @@ The integration guides retain commands for their recorded versions. Use the sele
 sim/                        USD environment, sensors, camera and coverage logic
 sim/warehouse-v3/           420-drum LLW/ILW warehouse, seeded faults and physical sensors
 scripts/hot/                Perception, agent tasks and mission scripts
+scripts/hot/full_hall/      Current warehouse-v3 missions: aisle patrol, rigid-camera walk, recheck
+tools/full_hall_report/     Warm worker launcher for warehouse-v3 and the report builder
 tools/hot_hall.py           Warm Modal simulator supervisor
-tools/cosmos_vllm.py        Cosmos Reason 2 serving recipe
+tools/cosmos_vllm.py        Cosmos Reason 2 serving recipe (8B on the shared endpoint)
 detector/v2/                Dataset generation, training, serving and API client
 docs/                       Setup, architecture, sources, recordings and handoffs
 eval/                       Separate policy-comparison simulation
