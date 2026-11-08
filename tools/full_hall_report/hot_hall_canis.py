@@ -63,7 +63,7 @@ def _encode(folder):
 @app.function(image=image, gpu=([f'RTX-PRO-6000:{HOT_GPU_COUNT}',f'L40S:{HOT_GPU_COUNT}'] if HOT_GPU_COUNT>1 else ['RTX-PRO-6000','L40S','L4']), cpu=16, memory=32768, timeout=4 * 60 * 60,
               volumes={'/mission-runs':mission_runs},
               # Unconditional dependency; external Cosmos credentials are refreshed from the private Dict.
-              secrets=[modal.Secret.from_name('drum-inference', required_keys=['DETECTOR_API_URL','DETECTOR_API_KEY','DETECTOR_API_SECRET'])])
+              secrets=[modal.Secret.from_name(os.environ.get('CANIS_DETECTOR_SECRET', 'drum-inference'), required_keys=['DETECTOR_API_URL','DETECTOR_API_KEY','DETECTOR_API_SECRET'])])
 def serve():
     hot = Path('/tmp/hot')
     log = open('/tmp/hot.log', 'w')
