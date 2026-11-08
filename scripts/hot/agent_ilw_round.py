@@ -7,5 +7,5 @@ scene = copy.deepcopy(BASE_SCENE)
 scene['drum_offsets_c'] = {'D24': 24.0}
 scene['gas_vents'] = [{'position_m': VENT, 'hydrogen_ppm': 900.0}]
 scene['acoustic'] = [{'kind': 'hiss', 'position_m': VENT, 'time_s': 0.0, 'duration_s': 60.0, 'amplitude': 0.02}]
-a = Agent(1, 'ILW inspection round  |  rows B and C, drums 05-07', scene, [(16.6, AISLE_Y)])
-run_agent(a, 'ilw_round')
+a = Agent(1, 'ILW inspection round  |  rows B and C, drums 05-07', scene, [(x, AISLE_Y) for x in (12.0, 14.0, 16.0, 16.6)])
+run_agent(a, 'ilw_round', duration=28.0)

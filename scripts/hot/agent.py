@@ -218,6 +218,21 @@ def update_station_scan(a, t, p, yaw, perception, reading):
         update_station_scan(a, t, p, yaw, perception, reading)
 
 
+def project_camera(camera, points):
+    """World points -> pixel (u, v) and depth for a Camera, using its pose and intrinsics."""
+    k = camera.get_intrinsics_matrix()
+    position, quat = camera.get_world_pose(camera_axes='world')
+    qw, qx, qy, qz = quat
+    rot = np.array([[1 - 2 * (qy * qy + qz * qz), 2 * (qx * qy - qz * qw), 2 * (qx * qz + qy * qw)],
+                    [2 * (qx * qy + qz * qw), 1 - 2 * (qx * qx + qz * qz), 2 * (qy * qz - qx * qw)],
+                    [2 * (qx * qz - qy * qw), 2 * (qy * qz + qx * qw), 1 - 2 * (qx * qx + qy * qy)]])
+    local = (np.asarray(points) - position) @ rot  # Camera world axes: +x forward, +y left, +z up.
+    depth = local[:, 0]
+    u = k[0, 2] - k[0, 0] * local[:, 1] / np.maximum(depth, 1e-3)
+    v = k[1, 2] - k[1, 1] * local[:, 2] / np.maximum(depth, 1e-3)
+    return np.stack([u, v], 1), depth
+
+
 def draw_memory_overlay(canvas, a):
     # Job progress in the bird's-eye corner.
     draw = ImageDraw.Draw(canvas)
@@ -785,7 +800,9 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
     if vision:
         draw.text((16,974),f"YOLO26s {vision['status']} | {len(vision['associations'])} mapped drums | {len(vision['detections'])} boxes",font=FONT[16],fill='#35d7ff')
         draw.text((16,1000),f"API {vision['wall_seconds']*1000:.0f} ms | age {vision['age_s']:.2f}s | calls {vision['calls']} | errors {vision['failures']}",font=FONT[16],fill='white')
-    draw.text((16, H - 26), 'RGB: onboard camera; visual check uses simulator segmentation. Navigation: estimated pose on known map. '
+    draw.text((16, H - 26), ('RGB: trained YOLO26s + depth/map association. ' if vision else
+                            'RGB: onboard camera; visual check uses simulator segmentation. ') +
+              'Navigation: estimated pose on known map. '
               'LWIR/H2/mic/swab are simulated sensors. Cosmos chooses safety-checked actions; fallback is labelled.',
               font=FONT[14], fill='#6f8396')
     return canvas

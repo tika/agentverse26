@@ -1,0 +1,116 @@
+{
+  "run_id": "20261107T200140Z",
+  "completed_images": 40,
+  "requested_and_verified_gpus": 8,
+  "gpu_type": "L40S",
+  "wall_seconds_including_build_schedule_download": 213.747,
+  "dispatch_download_seconds": 202.822,
+  "worker_seconds_range": [
+    123.31653785099999,
+    187.516061308
+  ],
+  "summed_worker_gpu_minutes": 20.9194222609,
+  "class_counts": {
+    "drum": 140,
+    "corrosion": 1970,
+    "bulge": 68
+  },
+  "sub_2px_boxes_ignored": 2094,
+  "unique_printed_ids": [
+    "A01",
+    "A02",
+    "A03",
+    "A05",
+    "A07",
+    "B01",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "C01",
+    "C02",
+    "C03",
+    "C06",
+    "C07",
+    "D01",
+    "D02",
+    "D03",
+    "D05",
+    "D06"
+  ],
+  "radial_fraction_range": [
+    0.07098875713296228,
+    0.08943420899342712
+  ],
+  "lid_rise_mm_range": [
+    65.18863892990643,
+    74.39325370973324
+  ],
+  "failed_workers": [],
+  "automated_checks": "40 non-black 640x640 RGBs; YOLO bounds/class IDs checked; all 3 classes present per worker; 8 distinct active L40S GPUs",
+  "limits": [
+    "pilot only; no model trained",
+    "24 wide views and 16 close views; expand angular and background diversity before bulk generation",
+    "many fine rust clusters; annotation granularity requires review before production",
+    "five simultaneous camera products per worker; does not benchmark sustained one-camera throughput"
+  ],
+  "per_worker": [
+    {
+      "seed": 1,
+      "build_seconds": 65.154790204,
+      "capture_and_export_seconds": 0.9484639060000006,
+      "total_script_seconds": 145.964554546,
+      "camera_setup_and_warmup_seconds": 79.861300436
+    },
+    {
+      "seed": 2,
+      "build_seconds": 66.05535939500001,
+      "capture_and_export_seconds": 0.946643746999996,
+      "total_script_seconds": 142.939567084,
+      "camera_setup_and_warmup_seconds": 75.937563942
+    },
+    {
+      "seed": 3,
+      "build_seconds": 56.623215647,
+      "capture_and_export_seconds": 0.8088088270000071,
+      "total_script_seconds": 116.71297197,
+      "camera_setup_and_warmup_seconds": 59.28094749599999
+    },
+    {
+      "seed": 4,
+      "build_seconds": 66.24459434799999,
+      "capture_and_export_seconds": 2.4893240469999967,
+      "total_script_seconds": 149.95316277700002,
+      "camera_setup_and_warmup_seconds": 81.21924438200003
+    },
+    {
+      "seed": 5,
+      "build_seconds": 66.63124108,
+      "capture_and_export_seconds": 2.2486432949999937,
+      "total_script_seconds": 173.910196942,
+      "camera_setup_and_warmup_seconds": 105.03031256700001
+    },
+    {
+      "seed": 6,
+      "build_seconds": 65.153156233,
+      "capture_and_export_seconds": 0.9830757660000131,
+      "total_script_seconds": 143.78178071899998,
+      "camera_setup_and_warmup_seconds": 77.64554871999997
+    },
+    {
+      "seed": 7,
+      "build_seconds": 65.35740502600001,
+      "capture_and_export_seconds": 0.8424066959999834,
+      "total_script_seconds": 140.679570344,
+      "camera_setup_and_warmup_seconds": 74.47975862200002
+    },
+    {
+      "seed": 8,
+      "build_seconds": 71.242853298,
+      "capture_and_export_seconds": 0.9309878939999976,
+      "total_script_seconds": 176.126046734,
+      "camera_setup_and_warmup_seconds": 103.952205542
+    }
+  ],
+  "elapsed_seconds_first_attempt_to_successful_completion": 275.694351
+}

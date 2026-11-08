@@ -1,0 +1,27 @@
+{
+  "seed": 1001,
+  "images": 1,
+  "rtx_pro_6000": {
+    "worker_seconds": 106.16312123399999,
+    "build_seconds": 45.314742859999996,
+    "capture_including_warmup_seconds": 50.509720209,
+    "mean_frame_seconds_after_first": null
+  },
+  "l40s": {
+    "worker_seconds": 166.151173129,
+    "build_seconds": 68.265090284,
+    "capture_including_warmup_seconds": 92.19236582899998,
+    "mean_frame_seconds_after_first": null
+  },
+  "whole_job_speedup": 1.5650554655677185,
+  "after_first_frame_speedup": null,
+  "note": "One cold scene per GPU; includes CPU/driver/startup effects. A one-image run cannot measure sustained throughput. Control images excluded from release.",
+  "run_id": "20261107T210903Z_c8644c",
+  "source_commit": "daa20dbb0ed675ee051a3ae46f2c27bd840c1d08",
+  "matched_camera_and_authored_drums": true,
+  "images_per_gpu": 1,
+  "rtx_time_reduction_pct": 36.10450095854888,
+  "all_gpu_workers_stopped": true,
+  "full_dataset_started": false,
+  "training_started": false
+}

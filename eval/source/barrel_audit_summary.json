@@ -1,0 +1,188 @@
+{
+  "run_id": "yolo26s_20261107T225757Z_d625ef",
+  "split": "test",
+  "images": 150,
+  "counting": "Per-image visible barrel instances; repeated views also grouped separately by seed+drum ID.",
+  "association": "Predicted drum -> GT drum at IoU >= 0.5; rust via patch center/containment in predicted drum; bulge via box IoU >= 0.5. Approximate 2D associations, no identity labels in inference.",
+  "correctness": "Detected drum and correct visible-rust/bulge flags. Rust-enabled drums with no visible labeled rust are excluded from condition accuracy, not called clean.",
+  "patch_matching": "One-to-one confidence-ordered IoU >= 0.5. A patch with a loose box can count as missed even if rust presence was recognized.",
+  "threshold_protocol": "Two fixed conventional confidence levels plus already-frozen validation thresholds. No weights or thresholds selected using these test results.",
+  "profiles": {
+    "fixed_confidence_025": {
+      "thresholds": {
+        "drum": 0.25,
+        "corrosion": 0.25,
+        "bulge": 0.25
+      },
+      "counts": {
+        "visible_drum_instances": 567,
+        "detected_drum_instances": 555,
+        "false_positive_drum_boxes": 15,
+        "visible_patch_boxes": 3011,
+        "matched_patch_boxes": 1278,
+        "rust_evaluable_instances": 562,
+        "rust_ambiguous_instances": 5,
+        "correct_rust_condition_instances": 545,
+        "correct_bulge_condition_instances": 506,
+        "correct_both_conditions_instances": 500,
+        "both_conditions_denominator": 562,
+        "rusty_barrel_instances": 259,
+        "rusty_barrels_flagged": 251,
+        "correct_rusty_barrels_patch_total": 3002,
+        "correct_rusty_barrels_patches_matched": 1276,
+        "both_conditions_correct_rusty_barrels": 237,
+        "both_correct_patch_total": 2908,
+        "both_correct_patches_matched": 1221,
+        "clean_barrel_instances": 303,
+        "clean_false_rust_alerts": 2,
+        "all_patches_missed": 1733,
+        "all_patch_miss_fraction": 0.5755562935901694,
+        "rust_correct_patches_missed": 1726,
+        "rust_correct_patch_miss_fraction": 0.5749500333111259,
+        "both_correct_patches_missed": 1687,
+        "both_correct_patch_miss_fraction": 0.5801237964236589
+      },
+      "unique_scene_drums": {
+        "total": 46,
+        "detected_in_any_view": 46,
+        "both_conditions_correct_in_at_least_one_view": 46,
+        "rusty": 21,
+        "rust_flagged_in_any_view": 21,
+        "clean": 25,
+        "clean_false_alert_in_any_view": 2
+      }
+    },
+    "fixed_confidence_050": {
+      "thresholds": {
+        "drum": 0.5,
+        "corrosion": 0.5,
+        "bulge": 0.5
+      },
+      "counts": {
+        "visible_drum_instances": 567,
+        "detected_drum_instances": 547,
+        "false_positive_drum_boxes": 5,
+        "visible_patch_boxes": 3011,
+        "matched_patch_boxes": 318,
+        "rust_evaluable_instances": 562,
+        "rust_ambiguous_instances": 5,
+        "correct_rust_condition_instances": 421,
+        "correct_bulge_condition_instances": 517,
+        "correct_both_conditions_instances": 399,
+        "both_conditions_denominator": 562,
+        "rusty_barrel_instances": 259,
+        "rusty_barrels_flagged": 130,
+        "correct_rusty_barrels_patch_total": 1871,
+        "correct_rusty_barrels_patches_matched": 316,
+        "both_conditions_correct_rusty_barrels": 127,
+        "both_correct_patch_total": 1833,
+        "both_correct_patches_matched": 302,
+        "clean_barrel_instances": 303,
+        "clean_false_rust_alerts": 0,
+        "all_patches_missed": 2693,
+        "all_patch_miss_fraction": 0.8943872467618731,
+        "rust_correct_patches_missed": 1555,
+        "rust_correct_patch_miss_fraction": 0.8311063602351684,
+        "both_correct_patches_missed": 1531,
+        "both_correct_patch_miss_fraction": 0.8352427714129842
+      },
+      "unique_scene_drums": {
+        "total": 46,
+        "detected_in_any_view": 46,
+        "both_conditions_correct_in_at_least_one_view": 46,
+        "rusty": 21,
+        "rust_flagged_in_any_view": 21,
+        "clean": 25,
+        "clean_false_alert_in_any_view": 0
+      }
+    },
+    "validation_suspect": {
+      "thresholds": {
+        "drum": 0.77,
+        "corrosion": 0.01,
+        "bulge": 0.59
+      },
+      "counts": {
+        "visible_drum_instances": 567,
+        "detected_drum_instances": 512,
+        "false_positive_drum_boxes": 0,
+        "visible_patch_boxes": 3011,
+        "matched_patch_boxes": 2468,
+        "rust_evaluable_instances": 562,
+        "rust_ambiguous_instances": 5,
+        "correct_rust_condition_instances": 447,
+        "correct_bulge_condition_instances": 496,
+        "correct_both_conditions_instances": 436,
+        "both_conditions_denominator": 562,
+        "rusty_barrel_instances": 259,
+        "rusty_barrels_flagged": 240,
+        "correct_rusty_barrels_patch_total": 2953,
+        "correct_rusty_barrels_patches_matched": 2434,
+        "both_conditions_correct_rusty_barrels": 234,
+        "both_correct_patch_total": 2902,
+        "both_correct_patches_matched": 2394,
+        "clean_barrel_instances": 303,
+        "clean_false_rust_alerts": 64,
+        "all_patches_missed": 543,
+        "all_patch_miss_fraction": 0.18033875788774492,
+        "rust_correct_patches_missed": 519,
+        "rust_correct_patch_miss_fraction": 0.1757534710463935,
+        "both_correct_patches_missed": 508,
+        "both_correct_patch_miss_fraction": 0.17505168849069608
+      },
+      "unique_scene_drums": {
+        "total": 46,
+        "detected_in_any_view": 46,
+        "both_conditions_correct_in_at_least_one_view": 46,
+        "rusty": 21,
+        "rust_flagged_in_any_view": 21,
+        "clean": 25,
+        "clean_false_alert_in_any_view": 22
+      }
+    },
+    "validation_confirm": {
+      "thresholds": {
+        "drum": 0.77,
+        "corrosion": 0.72,
+        "bulge": 0.59
+      },
+      "counts": {
+        "visible_drum_instances": 567,
+        "detected_drum_instances": 512,
+        "false_positive_drum_boxes": 0,
+        "visible_patch_boxes": 3011,
+        "matched_patch_boxes": 43,
+        "rust_evaluable_instances": 562,
+        "rust_ambiguous_instances": 5,
+        "correct_rust_condition_instances": 308,
+        "correct_bulge_condition_instances": 496,
+        "correct_both_conditions_instances": 297,
+        "both_conditions_denominator": 562,
+        "rusty_barrel_instances": 259,
+        "rusty_barrels_flagged": 37,
+        "correct_rusty_barrels_patch_total": 616,
+        "correct_rusty_barrels_patches_matched": 43,
+        "both_conditions_correct_rusty_barrels": 36,
+        "both_correct_patch_total": 605,
+        "both_correct_patches_matched": 42,
+        "clean_barrel_instances": 303,
+        "clean_false_rust_alerts": 0,
+        "all_patches_missed": 2968,
+        "all_patch_miss_fraction": 0.9857190302225174,
+        "rust_correct_patches_missed": 573,
+        "rust_correct_patch_miss_fraction": 0.9301948051948052,
+        "both_correct_patches_missed": 563,
+        "both_correct_patch_miss_fraction": 0.9305785123966942
+      },
+      "unique_scene_drums": {
+        "total": 46,
+        "detected_in_any_view": 46,
+        "both_conditions_correct_in_at_least_one_view": 40,
+        "rusty": 21,
+        "rust_flagged_in_any_view": 16,
+        "clean": 25,
+        "clean_false_alert_in_any_view": 0
+      }
+    }
+  }
+}
