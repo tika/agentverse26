@@ -1,0 +1,1293 @@
+[
+  {
+    "id": "D01",
+    "category": "LLW",
+    "zone": "A",
+    "row": "A",
+    "x": 3.0,
+    "y": 3.45,
+    "yaw": 4.862909272689599,
+    "facing_aisle": 1,
+    "prim_path": "/World/Drums/D01",
+    "scene_seed": 42,
+    "appearance_seed": 1405681632,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "faded_yellow",
+    "display_id": "A01"
+  },
+  {
+    "id": "D02",
+    "category": "LLW",
+    "zone": "A",
+    "row": "A",
+    "x": 4.5,
+    "y": 3.45,
+    "yaw": 5.3947298351621535,
+    "facing_aisle": 1,
+    "prim_path": "/World/Drums/D02",
+    "scene_seed": 42,
+    "appearance_seed": 942484272,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "faded_yellow",
+    "display_id": "A02"
+  },
+  {
+    "id": "D03",
+    "category": "LLW",
+    "zone": "A",
+    "row": "A",
+    "x": 6.0,
+    "y": 3.45,
+    "yaw": 4.381692553882582,
+    "facing_aisle": 1,
+    "prim_path": "/World/Drums/D03",
+    "scene_seed": 42,
+    "appearance_seed": 432652533,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 1,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "stage1",
+        "location": "top",
+        "z": 0.8052305039667834,
+        "angle": -1.571735105622747,
+        "size": [
+          0.2443778253732368,
+          0.14353899206643325
+        ],
+        "variant": 0,
+        "mesh_seed": 1176290586,
+        "severity": 1,
+        "prim_path": "/World/Defects/D03/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "runoff",
+        "location": "top",
+        "z": 0.7357644115568887,
+        "angle": -1.571735105622747,
+        "size": [
+          0.06,
+          0.13893218481978942
+        ],
+        "variant": 0,
+        "mesh_seed": 151227035,
+        "severity": 1,
+        "prim_path": "/World/Defects/D03/Corrosion_1"
+      }
+    ],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "faded_yellow",
+    "display_id": "A03"
+  },
+  {
+    "id": "D04",
+    "category": "LLW",
+    "zone": "A",
+    "row": "A",
+    "x": 7.5,
+    "y": 3.45,
+    "yaw": 6.13001602516006,
+    "facing_aisle": 1,
+    "prim_path": "/World/Drums/D04",
+    "scene_seed": 42,
+    "appearance_seed": 202244314,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 2,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "stage2",
+        "location": "bottom",
+        "z": 0.07407400097749747,
+        "angle": -1.870073598901865,
+        "size": [
+          0.4439810717600817,
+          0.14214800195499494
+        ],
+        "variant": 1,
+        "mesh_seed": 1081530687,
+        "severity": 2,
+        "prim_path": "/World/Defects/D04/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "top",
+        "z": 0.8468767674923433,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.44475606623645964,
+          0.060246465015313326
+        ],
+        "variant": 1,
+        "mesh_seed": 846428920,
+        "severity": 2,
+        "prim_path": "/World/Defects/D04/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "runoff",
+        "location": "top",
+        "z": 0.7918389311965237,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.06,
+          0.1100756725916393
+        ],
+        "variant": 1,
+        "mesh_seed": 1841261663,
+        "severity": 2,
+        "prim_path": "/World/Defects/D04/Corrosion_2"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "bottom",
+        "z": 0.046487035074182316,
+        "angle": -1.2722442464359691,
+        "size": [
+          0.3624383660747275,
+          0.08697407014836463
+        ],
+        "variant": 0,
+        "mesh_seed": 907713895,
+        "severity": 2,
+        "prim_path": "/World/Defects/D04/Corrosion_3"
+      }
+    ],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "mid_grey",
+    "display_id": "A04"
+  },
+  {
+    "id": "D05",
+    "category": "LLW",
+    "zone": "A",
+    "row": "B",
+    "x": 3.0,
+    "y": 4.55,
+    "yaw": 4.782381792256834,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D05",
+    "scene_seed": 42,
+    "appearance_seed": 1540770720,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "faded_yellow",
+    "display_id": "B01"
+  },
+  {
+    "id": "D06",
+    "category": "LLW",
+    "zone": "A",
+    "row": "B",
+    "x": 4.5,
+    "y": 4.55,
+    "yaw": 0.8049616944763924,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D06",
+    "scene_seed": 42,
+    "appearance_seed": 1688060241,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "residue",
+    "faults": [
+      "residue"
+    ],
+    "corrosion_severity": 0,
+    "defects": [
+      {
+        "type": "spill",
+        "subtype": "dried_residue",
+        "prim_path": "/World/Defects/D06/Spill_2",
+        "centre_xy": [
+          4.553986424247207,
+          5.103692337423566
+        ],
+        "size": [
+          0.32147146494952245,
+          0.6026360384682348
+        ],
+        "z": 0.002,
+        "angle": 1.473600986743596
+      },
+      {
+        "type": "spill",
+        "subtype": "dry_deposit",
+        "prim_path": "/World/Defects/D06/Spill_3",
+        "angle": 1.473600986743596,
+        "z": 0.79,
+        "size": [
+          0.14,
+          0.075
+        ],
+        "mesh_seed": 652926460
+      }
+    ],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "faded_yellow",
+    "display_id": "B02"
+  },
+  {
+    "id": "D07",
+    "category": "LLW",
+    "zone": "A",
+    "row": "B",
+    "x": 6.0,
+    "y": 4.55,
+    "yaw": 2.829858307545725,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D07",
+    "scene_seed": 42,
+    "appearance_seed": 1074497556,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "faded_yellow",
+    "display_id": "B03"
+  },
+  {
+    "id": "D08",
+    "category": "LLW",
+    "zone": "A",
+    "row": "B",
+    "x": 7.5,
+    "y": 4.55,
+    "yaw": 5.823036161141988,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D08",
+    "scene_seed": 42,
+    "appearance_seed": 796282693,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "mid_grey",
+    "display_id": "B04"
+  },
+  {
+    "id": "D09",
+    "category": "LLW",
+    "zone": "A",
+    "row": "C",
+    "x": 3.0,
+    "y": 7.45,
+    "yaw": 4.0455238622962515,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D09",
+    "scene_seed": 42,
+    "appearance_seed": 864178267,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "mid_grey",
+    "display_id": "C01"
+  },
+  {
+    "id": "D10",
+    "category": "LLW",
+    "zone": "A",
+    "row": "C",
+    "x": 4.5,
+    "y": 7.45,
+    "yaw": 2.7860535790666945,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D10",
+    "scene_seed": 42,
+    "appearance_seed": 1766867110,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "corrosion+leak",
+    "faults": [
+      "corrosion",
+      "leak"
+    ],
+    "corrosion_severity": 3,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "scrape",
+        "z": 0.49148208801098286,
+        "angle": -1.7030885378385276,
+        "size": [
+          0.4049013869083915,
+          0.065
+        ],
+        "variant": 0,
+        "mesh_seed": 968499809,
+        "severity": 3,
+        "prim_path": "/World/Defects/D10/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "bottom",
+        "z": 0.06257629342566623,
+        "angle": -1.9009287987990053,
+        "size": [
+          0.32254846776950685,
+          0.11915258685133245
+        ],
+        "variant": 1,
+        "mesh_seed": 1889640181,
+        "severity": 3,
+        "prim_path": "/World/Defects/D10/Corrosion_1"
+      },
+      {
+        "type": "spill",
+        "subtype": "wet_puddle",
+        "prim_path": "/World/Defects/D10/Spill_0",
+        "centre_xy": [
+          4.592385246531998,
+          6.925151990316945
+        ],
+        "size": [
+          0.2642296843761458,
+          0.5558338839519824
+        ],
+        "z": 0.002,
+        "angle": -1.3965583694878694
+      },
+      {
+        "type": "spill",
+        "subtype": "wet_trail",
+        "prim_path": "/World/Defects/D10/Spill_1",
+        "angle": -1.3965583694878694,
+        "z": 0.44,
+        "size": [
+          0.065,
+          0.8200000000000001
+        ],
+        "mesh_seed": 245516522
+      },
+      {
+        "type": "spill",
+        "subtype": "wet_base_band",
+        "prim_path": "/World/Defects/D10/Spill_4",
+        "angle": -1.3965583694878694,
+        "z": 0.04,
+        "size": [
+          0.14,
+          0.035
+        ],
+        "mesh_seed": 232882008
+      }
+    ],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "mid_grey",
+    "display_id": "C02"
+  },
+  {
+    "id": "D11",
+    "category": "LLW",
+    "zone": "A",
+    "row": "C",
+    "x": 6.0,
+    "y": 7.45,
+    "yaw": 1.42778299794038,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D11",
+    "scene_seed": 42,
+    "appearance_seed": 197860369,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "mid_grey",
+    "display_id": "C03"
+  },
+  {
+    "id": "D12",
+    "category": "LLW",
+    "zone": "A",
+    "row": "C",
+    "x": 7.5,
+    "y": 7.45,
+    "yaw": 0.40097564589827117,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D12",
+    "scene_seed": 42,
+    "appearance_seed": 1190961761,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 3,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "bottom",
+        "z": 0.07407400097749747,
+        "angle": -1.870073598901865,
+        "size": [
+          0.4439810717600817,
+          0.14214800195499494
+        ],
+        "variant": 1,
+        "mesh_seed": 1081530687,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage4",
+        "location": "bottom",
+        "z": 0.03312323250765666,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.44475606623645964,
+          0.060246465015313326
+        ],
+        "variant": 1,
+        "mesh_seed": 846428920,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "rust_flakes",
+        "location": "bottom",
+        "z": 0.03312323250765666,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.12,
+          0.08
+        ],
+        "variant": 1,
+        "mesh_seed": 1841261663,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_2"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "stage3",
+        "location": "hoop",
+        "z": 0.29333333333333333,
+        "angle": -2.177135078897793,
+        "size": [
+          0.45895367670496595,
+          0.10873150982241825
+        ],
+        "variant": 0,
+        "mesh_seed": 1033071480,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_3"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "runoff",
+        "location": "hoop",
+        "z": 0.23908538266151388,
+        "angle": -2.177135078897793,
+        "size": [
+          0.06,
+          0.1084959013436389
+        ],
+        "variant": 0,
+        "mesh_seed": 907713895,
+        "severity": 3,
+        "prim_path": "/World/Defects/D12/Corrosion_4"
+      }
+    ],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "dark_blue",
+    "display_id": "C04"
+  },
+  {
+    "id": "D13",
+    "category": "LLW",
+    "zone": "A",
+    "row": "D",
+    "x": 3.0,
+    "y": 8.55,
+    "yaw": 5.200160019627613,
+    "facing_aisle": 3,
+    "prim_path": "/World/Drums/D13",
+    "scene_seed": 42,
+    "appearance_seed": 594336918,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "faded_yellow",
+    "display_id": "D01"
+  },
+  {
+    "id": "D14",
+    "category": "LLW",
+    "zone": "A",
+    "row": "D",
+    "x": 4.5,
+    "y": 8.55,
+    "yaw": 4.763205750057398,
+    "facing_aisle": 3,
+    "prim_path": "/World/Drums/D14",
+    "scene_seed": 42,
+    "appearance_seed": 1356488968,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "mid_grey",
+    "display_id": "D02"
+  },
+  {
+    "id": "D15",
+    "category": "LLW",
+    "zone": "A",
+    "row": "D",
+    "x": 6.0,
+    "y": 8.55,
+    "yaw": 2.2275523539672073,
+    "facing_aisle": 3,
+    "prim_path": "/World/Drums/D15",
+    "scene_seed": 42,
+    "appearance_seed": 145857092,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "dark_blue",
+    "display_id": "D03"
+  },
+  {
+    "id": "D16",
+    "category": "LLW",
+    "zone": "A",
+    "row": "D",
+    "x": 7.5,
+    "y": 8.55,
+    "yaw": 5.611645507023389,
+    "facing_aisle": 3,
+    "prim_path": "/World/Drums/D16",
+    "scene_seed": 42,
+    "appearance_seed": 2084558134,
+    "radius": 0.299,
+    "height": 0.88,
+    "source_strength": 1,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.299,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": "mid_grey",
+    "display_id": "D04"
+  },
+  {
+    "id": "D17",
+    "category": "ILW",
+    "zone": "B",
+    "row": "A",
+    "x": 12.0,
+    "y": 3.45,
+    "yaw": 4.890727752164925,
+    "facing_aisle": 1,
+    "prim_path": "/World/Drums/D17",
+    "scene_seed": 42,
+    "appearance_seed": 1631871624,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 1,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "tea_stain",
+        "location": "weld",
+        "z": 1.0011552046919878,
+        "angle": -1.870073598901865,
+        "size": [
+          0.28265404784005443,
+          0.1837251310960354
+        ],
+        "variant": 1,
+        "mesh_seed": 1081530687,
+        "severity": 1,
+        "prim_path": "/World/Defects/D17/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "pitting",
+        "location": "bottom",
+        "z": 0.04212323250765666,
+        "angle": -1.2724507975156987,
+        "size": [
+          0.17790242649458385,
+          0.060246465015313326
+        ],
+        "variant": 1,
+        "mesh_seed": 846428920,
+        "severity": 1,
+        "prim_path": "/World/Defects/D17/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "pitting",
+        "location": "weld",
+        "z": 1.120634245088791,
+        "angle": -2.177135078897793,
+        "size": [
+          0.18358147068198635,
+          0.10873150982241825
+        ],
+        "variant": 1,
+        "mesh_seed": 172656924,
+        "severity": 1,
+        "prim_path": "/World/Defects/D17/Corrosion_2"
+      }
+    ],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "A05"
+  },
+  {
+    "id": "D18",
+    "category": "ILW",
+    "zone": "B",
+    "row": "A",
+    "x": 14.0,
+    "y": 3.45,
+    "yaw": 2.93249455316981,
+    "facing_aisle": 1,
+    "prim_path": "/World/Drums/D18",
+    "scene_seed": 42,
+    "appearance_seed": 417983442,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "corrosion",
+    "faults": [
+      "corrosion"
+    ],
+    "corrosion_severity": 3,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "pitting",
+        "location": "weld",
+        "z": 1.1276379183084861,
+        "angle": -2.0115313082750577,
+        "size": [
+          0.13224129453426525,
+          0.09472416338302786
+        ],
+        "variant": 1,
+        "mesh_seed": 1965527187,
+        "severity": 3,
+        "prim_path": "/World/Defects/D18/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "pitting",
+        "location": "weld",
+        "z": 1.1178134365446233,
+        "angle": -1.4260502857462218,
+        "size": [
+          0.1381061370688959,
+          0.11437312691075371
+        ],
+        "variant": 0,
+        "mesh_seed": 335903540,
+        "severity": 3,
+        "prim_path": "/World/Defects/D18/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "crevice",
+        "location": "weld",
+        "z": 1.1175796938329703,
+        "angle": -0.9237035415950271,
+        "size": [
+          0.1851309719722667,
+          0.11484061233405932
+        ],
+        "variant": 0,
+        "mesh_seed": 1045664770,
+        "severity": 3,
+        "prim_path": "/World/Defects/D18/Corrosion_2"
+      }
+    ],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "A06"
+  },
+  {
+    "id": "D19",
+    "category": "ILW",
+    "zone": "B",
+    "row": "A",
+    "x": 16.0,
+    "y": 3.45,
+    "yaw": 0.27522717759345167,
+    "facing_aisle": 1,
+    "prim_path": "/World/Drums/D19",
+    "scene_seed": 42,
+    "appearance_seed": 1173749072,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "A07"
+  },
+  {
+    "id": "D20",
+    "category": "ILW",
+    "zone": "B",
+    "row": "B",
+    "x": 12.0,
+    "y": 4.55,
+    "yaw": 4.291723147097387,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D20",
+    "scene_seed": 42,
+    "appearance_seed": 331334161,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "leak",
+    "faults": [
+      "leak"
+    ],
+    "corrosion_severity": 0,
+    "defects": [
+      {
+        "type": "spill",
+        "subtype": "wet_puddle",
+        "prim_path": "/World/Defects/D20/Spill_0",
+        "centre_xy": [
+          11.891671759786428,
+          5.214211113149707
+        ],
+        "size": [
+          0.37095192575604785,
+          0.6159738637274391
+        ],
+        "z": 0.002,
+        "angle": 1.7324660047745728
+      },
+      {
+        "type": "spill",
+        "subtype": "wet_trail",
+        "prim_path": "/World/Defects/D20/Spill_1",
+        "angle": 1.7324660047745728,
+        "z": 0.6,
+        "size": [
+          0.065,
+          1.14
+        ],
+        "mesh_seed": 1153237677
+      }
+    ],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "B05"
+  },
+  {
+    "id": "D21",
+    "category": "ILW",
+    "zone": "B",
+    "row": "B",
+    "x": 14.0,
+    "y": 4.55,
+    "yaw": 4.679478635343389,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D21",
+    "scene_seed": 42,
+    "appearance_seed": 787359109,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "B06"
+  },
+  {
+    "id": "D22",
+    "category": "ILW",
+    "zone": "B",
+    "row": "B",
+    "x": 16.0,
+    "y": 4.55,
+    "yaw": 2.047221102960163,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D22",
+    "scene_seed": 42,
+    "appearance_seed": 2077711329,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "B07"
+  },
+  {
+    "id": "D23",
+    "category": "ILW",
+    "zone": "B",
+    "row": "C",
+    "x": 12.0,
+    "y": 7.45,
+    "yaw": 2.327666981860357,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D23",
+    "scene_seed": 42,
+    "appearance_seed": 163945743,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "C05"
+  },
+  {
+    "id": "D24",
+    "category": "ILW",
+    "zone": "B",
+    "row": "C",
+    "x": 14.0,
+    "y": 7.45,
+    "yaw": 1.1904836595297312,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D24",
+    "scene_seed": 42,
+    "appearance_seed": 1008363426,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "C06"
+  },
+  {
+    "id": "D25",
+    "category": "ILW",
+    "zone": "B",
+    "row": "C",
+    "x": 16.0,
+    "y": 7.45,
+    "yaw": 0.8163208934104896,
+    "facing_aisle": 2,
+    "prim_path": "/World/Drums/D25",
+    "scene_seed": 42,
+    "appearance_seed": 1474200732,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "corrosion+residue",
+    "faults": [
+      "corrosion",
+      "residue"
+    ],
+    "corrosion_severity": 2,
+    "defects": [
+      {
+        "type": "corrosion",
+        "subtype": "crevice",
+        "location": "weld",
+        "z": 1.102409039879927,
+        "angle": -1.1089030573832197,
+        "size": [
+          0.10042192679198689,
+          0.1451819202401457
+        ],
+        "variant": 1,
+        "mesh_seed": 1296733791,
+        "severity": 2,
+        "prim_path": "/World/Defects/D25/Corrosion_0"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "crevice",
+        "location": "bottom",
+        "z": 0.07861475053675408,
+        "angle": -2.217376347080707,
+        "size": [
+          0.12865004156243298,
+          0.13322950107350817
+        ],
+        "variant": 1,
+        "mesh_seed": 1934500994,
+        "severity": 2,
+        "prim_path": "/World/Defects/D25/Corrosion_1"
+      },
+      {
+        "type": "corrosion",
+        "subtype": "crevice",
+        "location": "weld",
+        "z": 1.139733205243622,
+        "angle": -1.6510322653004488,
+        "size": [
+          0.15989621047024188,
+          0.07053358951275597
+        ],
+        "variant": 0,
+        "mesh_seed": 1954263999,
+        "severity": 2,
+        "prim_path": "/World/Defects/D25/Corrosion_2"
+      },
+      {
+        "type": "spill",
+        "subtype": "dried_residue",
+        "prim_path": "/World/Defects/D25/Spill_2",
+        "centre_xy": [
+          15.960971221724845,
+          6.768370382182713
+        ],
+        "size": [
+          0.2824851842484339,
+          0.6354921184970517
+        ],
+        "z": 0.002,
+        "angle": -1.6279919198621542
+      },
+      {
+        "type": "spill",
+        "subtype": "dry_deposit",
+        "prim_path": "/World/Defects/D25/Spill_3",
+        "angle": -1.6279919198621542,
+        "z": 1.1099999999999999,
+        "size": [
+          0.14,
+          0.075
+        ],
+        "mesh_seed": 1665082143
+      }
+    ],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "C07"
+  },
+  {
+    "id": "D26",
+    "category": "ILW",
+    "zone": "B",
+    "row": "D",
+    "x": 12.0,
+    "y": 8.55,
+    "yaw": 1.4257134880181992,
+    "facing_aisle": 3,
+    "prim_path": "/World/Drums/D26",
+    "scene_seed": 42,
+    "appearance_seed": 1021568550,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "D05"
+  },
+  {
+    "id": "D27",
+    "category": "ILW",
+    "zone": "B",
+    "row": "D",
+    "x": 14.0,
+    "y": 8.55,
+    "yaw": 4.208565449932414,
+    "facing_aisle": 3,
+    "prim_path": "/World/Drums/D27",
+    "scene_seed": 42,
+    "appearance_seed": 2019291965,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "D06"
+  },
+  {
+    "id": "D28",
+    "category": "ILW",
+    "zone": "B",
+    "row": "D",
+    "x": 16.0,
+    "y": 8.55,
+    "yaw": 5.2318714070794075,
+    "facing_aisle": 3,
+    "prim_path": "/World/Drums/D28",
+    "scene_seed": 42,
+    "appearance_seed": 938776597,
+    "radius": 0.4,
+    "height": 1.2,
+    "source_strength": 20,
+    "state": "clean",
+    "faults": [],
+    "corrosion_severity": 0,
+    "defects": [],
+    "shape": {
+      "max_radius": 0.4,
+      "lid_rise": 0.0,
+      "dents": []
+    },
+    "obstructed": false,
+    "internal_corrosion": false,
+    "paint_color": null,
+    "display_id": "D07"
+  }
+]

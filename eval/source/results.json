@@ -1,0 +1,321 @@
+{
+  "run_id": "yolo26s_20261107T225757Z_d625ef",
+  "model": "YOLO26s",
+  "classes": [
+    "drum",
+    "corrosion",
+    "bulge"
+  ],
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "best_sha256": "63dc5dfd9933aff58bc0cfc5a759de4b78ef9f25b6c7b74f3f818bceb72e6f04",
+  "selection": "Best validation fitness from one training run; validation-only thresholds.",
+  "scope": "Synthetic painted LLW drums; not measured real-world or full-hall performance.",
+  "metrics_note": "Ultralytics P/R summarize its confidence curve. Fixed-threshold P/R use validation-frozen thresholds and class-wise IoU >= 0.5 matching.",
+  "val": {
+    "images": 150,
+    "overall": {
+      "metrics/precision(B)": 0.776736032697703,
+      "metrics/recall(B)": 0.777642503633852,
+      "metrics/mAP50(B)": 0.7924755390482986,
+      "metrics/mAP50-95(B)": 0.6432431041687018,
+      "fitness": 0.6432431041687018
+    },
+    "per_class": [
+      {
+        "Class": "drum",
+        "Images": 150,
+        "Instances": 653,
+        "Box-P": 0.97421,
+        "Box-R": 0.9755,
+        "Box-F1": 0.97485,
+        "mAP50": 0.98253,
+        "mAP75": 0.95023,
+        "mAP50-95": 0.90333
+      },
+      {
+        "Class": "corrosion",
+        "Images": 145,
+        "Instances": 3849,
+        "Box-P": 0.54414,
+        "Box-R": 0.42505,
+        "Box-F1": 0.47727,
+        "mAP50": 0.4422,
+        "mAP75": 0.10404,
+        "mAP50-95": 0.16908
+      },
+      {
+        "Class": "bulge",
+        "Images": 138,
+        "Instances": 281,
+        "Box-P": 0.81186,
+        "Box-R": 0.93238,
+        "Box-F1": 0.86796,
+        "mAP50": 0.9527,
+        "mAP75": 0.8966,
+        "mAP50-95": 0.85731
+      }
+    ],
+    "speed_ms": {
+      "preprocess": 0.09647914666667626,
+      "inference": 1.6066716800000098,
+      "loss": 0.00042016666666218805,
+      "postprocess": 0.6099995333333356
+    },
+    "operating_points": {
+      "drum": {
+        "suspect": {
+          "threshold": 0.77,
+          "tp": 589,
+          "fp": 0,
+          "fn": 64,
+          "precision": 1.0,
+          "recall": 0.9019908116385911,
+          "false_positives_per_image": 0.0
+        },
+        "confirm": {
+          "threshold": 0.77,
+          "tp": 589,
+          "fp": 0,
+          "fn": 64,
+          "precision": 1.0,
+          "recall": 0.9019908116385911,
+          "false_positives_per_image": 0.0
+        },
+        "ground_truth_instances": 653
+      },
+      "corrosion": {
+        "suspect": {
+          "threshold": 0.01,
+          "tp": 3105,
+          "fp": 22492,
+          "fn": 744,
+          "precision": 0.12130327772785873,
+          "recall": 0.8067030397505845,
+          "false_positives_per_image": 149.94666666666666
+        },
+        "confirm": {
+          "threshold": 0.72,
+          "tp": 83,
+          "fp": 8,
+          "fn": 3766,
+          "precision": 0.9120879120879121,
+          "recall": 0.02156404260846973,
+          "false_positives_per_image": 0.05333333333333334
+        },
+        "ground_truth_instances": 3849
+      },
+      "bulge": {
+        "suspect": {
+          "threshold": 0.59,
+          "tp": 254,
+          "fp": 13,
+          "fn": 27,
+          "precision": 0.951310861423221,
+          "recall": 0.9039145907473309,
+          "false_positives_per_image": 0.08666666666666667
+        },
+        "confirm": {
+          "threshold": 0.59,
+          "tp": 254,
+          "fp": 13,
+          "fn": 27,
+          "precision": 0.951310861423221,
+          "recall": 0.9039145907473309,
+          "false_positives_per_image": 0.08666666666666667
+        },
+        "ground_truth_instances": 281
+      }
+    }
+  },
+  "test": {
+    "images": 150,
+    "overall": {
+      "metrics/precision(B)": 0.7767993302208657,
+      "metrics/recall(B)": 0.7806038584787659,
+      "metrics/mAP50(B)": 0.7926177227622192,
+      "metrics/mAP50-95(B)": 0.645936363160706,
+      "fitness": 0.645936363160706
+    },
+    "per_class": [
+      {
+        "Class": "drum",
+        "Images": 150,
+        "Instances": 567,
+        "Box-P": 0.96782,
+        "Box-R": 0.97707,
+        "Box-F1": 0.97243,
+        "mAP50": 0.98263,
+        "mAP75": 0.93341,
+        "mAP50-95": 0.90176
+      },
+      {
+        "Class": "corrosion",
+        "Images": 137,
+        "Instances": 3011,
+        "Box-P": 0.51845,
+        "Box-R": 0.44138,
+        "Box-F1": 0.47682,
+        "mAP50": 0.43759,
+        "mAP75": 0.10358,
+        "mAP50-95": 0.17352
+      },
+      {
+        "Class": "bulge",
+        "Images": 141,
+        "Instances": 274,
+        "Box-P": 0.84412,
+        "Box-R": 0.92336,
+        "Box-F1": 0.88196,
+        "mAP50": 0.95764,
+        "mAP75": 0.89979,
+        "mAP50-95": 0.86253
+      }
+    ],
+    "speed_ms": {
+      "preprocess": 0.079418466666669,
+      "inference": 1.3008383733333535,
+      "loss": 0.0004397866666868329,
+      "postprocess": 0.6174305733333322
+    },
+    "operating_points": {
+      "drum": {
+        "suspect": {
+          "threshold": 0.77,
+          "tp": 512,
+          "fp": 0,
+          "fn": 55,
+          "precision": 1.0,
+          "recall": 0.9029982363315696,
+          "false_positives_per_image": 0.0
+        },
+        "confirm": {
+          "threshold": 0.77,
+          "tp": 512,
+          "fp": 0,
+          "fn": 55,
+          "precision": 1.0,
+          "recall": 0.9029982363315696,
+          "false_positives_per_image": 0.0
+        },
+        "ground_truth_instances": 567
+      },
+      "corrosion": {
+        "suspect": {
+          "threshold": 0.01,
+          "tp": 2468,
+          "fp": 19286,
+          "fn": 543,
+          "precision": 0.11345039992645031,
+          "recall": 0.8196612421122551,
+          "false_positives_per_image": 128.57333333333332
+        },
+        "confirm": {
+          "threshold": 0.72,
+          "tp": 43,
+          "fp": 8,
+          "fn": 2968,
+          "precision": 0.8431372549019608,
+          "recall": 0.014280969777482564,
+          "false_positives_per_image": 0.05333333333333334
+        },
+        "ground_truth_instances": 3011
+      },
+      "bulge": {
+        "suspect": {
+          "threshold": 0.59,
+          "tp": 243,
+          "fp": 10,
+          "fn": 31,
+          "precision": 0.9604743083003953,
+          "recall": 0.8868613138686131,
+          "false_positives_per_image": 0.06666666666666667
+        },
+        "confirm": {
+          "threshold": 0.59,
+          "tp": 243,
+          "fp": 10,
+          "fn": 31,
+          "precision": 0.9604743083003953,
+          "recall": 0.8868613138686131,
+          "false_positives_per_image": 0.06666666666666667
+        },
+        "ground_truth_instances": 274
+      }
+    }
+  },
+  "thresholds": {
+    "drum": {
+      "suspect": 0.77,
+      "confirm": 0.77,
+      "recall_target_met": true,
+      "precision_target_met": true,
+      "validation_suspect": {
+        "threshold": 0.77,
+        "tp": 589,
+        "fp": 0,
+        "fn": 64,
+        "precision": 1.0,
+        "recall": 0.9019908116385911,
+        "false_positives_per_image": 0.0
+      },
+      "validation_confirm": {
+        "threshold": 0.77,
+        "tp": 589,
+        "fp": 0,
+        "fn": 64,
+        "precision": 1.0,
+        "recall": 0.9019908116385911,
+        "false_positives_per_image": 0.0
+      }
+    },
+    "corrosion": {
+      "suspect": 0.01,
+      "confirm": 0.72,
+      "recall_target_met": false,
+      "precision_target_met": true,
+      "validation_suspect": {
+        "threshold": 0.01,
+        "tp": 3105,
+        "fp": 22492,
+        "fn": 744,
+        "precision": 0.12130327772785873,
+        "recall": 0.8067030397505845,
+        "false_positives_per_image": 149.94666666666666
+      },
+      "validation_confirm": {
+        "threshold": 0.72,
+        "tp": 83,
+        "fp": 8,
+        "fn": 3766,
+        "precision": 0.9120879120879121,
+        "recall": 0.02156404260846973,
+        "false_positives_per_image": 0.05333333333333334
+      }
+    },
+    "bulge": {
+      "suspect": 0.59,
+      "confirm": 0.59,
+      "recall_target_met": true,
+      "precision_target_met": true,
+      "validation_suspect": {
+        "threshold": 0.59,
+        "tp": 254,
+        "fp": 13,
+        "fn": 27,
+        "precision": 0.951310861423221,
+        "recall": 0.9039145907473309,
+        "false_positives_per_image": 0.08666666666666667
+      },
+      "validation_confirm": {
+        "threshold": 0.59,
+        "tp": 254,
+        "fp": 13,
+        "fn": 27,
+        "precision": 0.951310861423221,
+        "recall": 0.9039145907473309,
+        "false_positives_per_image": 0.08666666666666667
+      }
+    }
+  },
+  "evaluation_seconds": 12.925773071000002
+}
