@@ -350,11 +350,6 @@
   .app-one-screen .app-main { min-height: 0; display: flex; flex-direction: column; padding: 8px 10px; }
   .app-one-screen .grid-sim { flex: 1; min-height: 0; }
   .app-one-screen .app-foot { display: none; }
-  .app-one-screen .app-header { padding: 5px 10px; row-gap: 4px; }
-  .app-one-screen .brand-mark { height: 38px; }
-  .app-one-screen .brand-word { height: 19px; }
-  .app-one-screen .feed-row { padding-top: 4px; }
-  .app-one-screen .replay-banner, .app-one-screen .offline-banner { padding: 3px 12px; font-size: 11.5px; }
 }
 
 /* fallback: stacked, fixed cell heights so frames still scale */
@@ -504,11 +499,6 @@
 .cfg-row input { background: var(--panel-2); border: 1px solid var(--border-strong); border-radius: 3px; padding: 5px 8px; font-family: var(--font-mono); font-size: 12px; }
 .cfg-error { color: var(--alert); font-size: 12px; }
 
-@media (min-width: 1100px) and (min-height: 680px) {
-  .app-one-screen .app-header { padding: 7px 12px 5px; }
-  .app-one-screen .brand-mark { height: 46px; }
-  .app-one-screen .brand-word { height: 20px; }
-}
 @media (max-width: 1400px) {
   .brand-sub { display: none; }
   .tab { padding: 7px 10px; font-size: 12px; }
@@ -535,7 +525,6 @@
 .replay-banner .replay-controls button { background: rgba(0,0,0,.12); border: 1px solid rgba(0,0,0,.35); color: #111; padding: 1px 8px; font-size: 11.5px; }
 .brand-text { align-items: flex-start; }
 .brand .brand-word { height: 25px; }
-.app-one-screen .brand .brand-word { height: 24px; }
 
 .overlay-toggle { position: absolute; right: 6px; bottom: 6px; display: inline-flex; gap: 5px; align-items: center; background: rgba(0,0,0,.7); border: 1px solid var(--border-strong); color: var(--text); border-radius: 3px; padding: 2px 7px; font-family: var(--font-mono); font-size: 10.5px; }
 
