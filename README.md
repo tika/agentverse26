@@ -1,6 +1,6 @@
 # CANIS
 
-**Agentic inspection for nuclear waste stores.** Built for the AgentVerse 2026 robotics track with NVIDIA Isaac Sim, YOLO26s, Cosmos Reason 2 and Modal.
+**Autonomous, agentic robotic inspection for nuclear waste stores.** Built for the AgentVerse 2026 robotics track with NVIDIA Isaac Sim, YOLO26s, Cosmos Reason 2 and Modal.
 
 ## The problem
 
@@ -15,7 +15,7 @@ Robotic dogs such as Boston Dynamics Spot already inspect nuclear facilities, in
 
 ## CANIS: from an observation to a decision
 
-CANIS is a simulated Spot inspection agent that combines visual findings, sensor readings and inspection memory to choose its next task. It can investigate a suspect drum, move to a different viewing angle, reread its plate, collect another measurement, request a virtual swab, or retreat and alert an operator.
+CANIS is an **autonomous, agentic inspection system for robotic dogs**, demonstrated with Boston Dynamics Spot in NVIDIA Isaac Sim. It combines visual findings, sensor readings and inspection memory to decide what to investigate next. The agent can revisit a suspect drum, move for a clearer view, reread a plate, collect another measurement, request a virtual swab, or retreat and alert an operator.
 
 The mission goal is to collect the required evidence for every assigned drum and report what remains unresolved. A separate safety layer constrains the choices available to the reasoning model and can stop motion independently.
 
@@ -37,7 +37,7 @@ The recording overlay shows the robot's camera, detections, sensor values, visit
 
 ## Latest detector for teammates
 
-The recent warehouse-v3 rigid-camera recordings use the separately hosted **expanded YOLO26s**, fine-tuned on **2,500 images** (1,500 yellow LLW + 1,000 blue-teal ILW targets). Start with [the latest-model handoff](detector/v2/LATEST_MODEL.md) for the exact endpoint, private credential setup, checkpoint hash and worker configuration. **Select its URL explicitly:** the previous 1,500-image model remains deployed and is still the default in the client and `selected_model.json`. The expanded model is experimental and does not improve every test subset.
+The latest warehouse-v3 recordings use the separately hosted **expanded YOLO26s**, fine-tuned using a **2,500-image synthetic dataset**: **2,000 training / 235 validation / 265 test images**, with 1,500 yellow LLW and 1,000 metallic/blue-teal ILW primary targets overall. Start with [the latest-model handoff](detector/v2/LATEST_MODEL.md) for the exact endpoint, private credential setup, checkpoint hash and worker configuration. **Select its URL explicitly:** the previous 1,500-image model remains deployed and is still the default in the client and `selected_model.json`. The expanded model is experimental and does not improve every test subset.
 
 ## How we used Modal
 
@@ -55,24 +55,36 @@ Modal provides the GPU infrastructure for the simulation, synthetic-data pipelin
 
 ### From rendered scenes to a trained detector
 
-We iterated through small visual pilots, a 40-image diversity pilot and an earlier 1,200-image release before generating the original **1,500-image condition dataset**. That run submitted **10 RTX PRO 6000 worker jobs**; Modal initially allocated eight while two queued. Each worker reused one Isaac process across five procedural scene seeds.
+The latest **YOLO26s** uses **2,500 procedurally generated Isaac Sim images**. We retained the original 1,500 mixed-material images and added **750 yellow LLW + 250 blue-teal ILW images**, producing the current dataset:
 
-That 1,500-image dataset contains **23,935 whole-barrel boxes** with four simple classes: **normal**, **rust**, **bulge** and **rust_and_bulge**. Printed IDs are randomized independently of condition. Scene seeds stay within one split: **1,200 training / 150 validation / 150 test images**, rendered at 384 × 384.
+| Dataset property | Latest expanded release |
+|---|---|
+| Images | **2,500** warehouse views, rendered at **384 × 384** |
+| Primary-target materials | **1,500 yellow LLW + 1,000 metallic/blue-teal ILW** |
+| Split | **2,000 training / 235 validation / 265 test** |
+| Condition classes | `normal`, `rust`, `bulge`, `rust_and_bulge` |
+| Labels | Whole-barrel bounding boxes in YOLO format: `class x_center y_center width height`, with normalized coordinates |
+| Dataset version | `canis_colors_20261108T053740Z` |
 
-YOLO26 nano and small were fine-tuned concurrently on **one RTX PRO 6000 each**. We selected **YOLO26s** for its stronger held-out results and retired nano's API while retaining both checkpoints and evaluation reports.
+Images include the target drum and visible surrounding drums, with one condition label per labeled barrel. Printed IDs, rust patterns, bulge shape, viewpoints and lighting are randomized independently of the condition. Requested viewing angles span approximately **−60° to +60°**. Training examples cover **tiers 1–2**; tier-3 fault accuracy has not been established.
 
-| Held-out synthetic test metric | YOLO26n | **YOLO26s — selected** |
-|---|---:|---:|
-| Primary-barrel condition accuracy | 75.3% | **85.3%** |
-| Detection mAP50 across all labeled barrels | 73.3% | **77.9%** |
-| Yellow LLW primary-barrel accuracy | 96.0% | **96.0%** |
-| Metallic ILW primary-barrel accuracy | 54.7% | **74.7%** |
+Independent **RTX PRO 6000 render jobs** reuse a warm Isaac process across scene seeds. The original generation submitted ten jobs; the expansion recipe uses five yellow and five ILW jobs. Scene seeds are kept disjoint across training, validation and test, and the original split assignments are preserved. The combined training list and training sampler shuffle yellow and ILW examples together.
 
-These baseline measurements come from 150 held-out synthetic frames, not the expanded model. The later 2,500-image continuation uses 2,000 training / 235 validation / 265 test frames. On matched test subsets, original-yellow accuracy is 97.3% versus 96.0% previously, while original-ILW accuracy is 70.7% versus 74.7%. [Expanded results and limitations](detector/v2/RUN_RESULTS.md) report the full comparison.
+The current small model continued from the previous YOLO26s checkpoint for **20 epochs**, with learning rate **0.0001**, batch size **64**, AdamW and **one RTX PRO 6000**. Training took **68.8 seconds**, or **76.6 seconds including evaluation**, excluding dataset generation and GPU startup. Validation selected the expanded candidate; test images were held out for final evaluation.
 
-Primary-target accuracy and mAP measure different things; the [full results](detector/v2/RUN_RESULTS.md) include background barrels, per-condition errors, timings and limitations.
+| Latest held-out synthetic test metric | Expanded YOLO26s |
+|---|---:|
+| Primary-barrel condition accuracy | **233/265 (87.9%)** |
+| Yellow LLW primary-barrel accuracy | **163/165 (98.8%)** |
+| Metallic/blue-teal ILW primary-barrel accuracy | **70/100 (70.0%)** |
+| Detection mAP50 across all labeled barrels | **82.9%** |
+| Detection mAP50–95 across all labeled barrels | **78.3%** |
 
-[Generate and train](detector/v2/README.md) · [Call the selected YOLO26s API](detector/v2/API_USAGE.md) · [Cosmos vLLM deployment](tools/cosmos_vllm.py)
+Primary-barrel accuracy scores the designated target in each frame; mAP includes all labeled barrels. These are synthetic test results. On the same 265 test frames, the previous model also scored 87.9% overall; the expanded model improved the yellow subsets and regressed on the original ILW subset. The earlier nano/small comparison and full per-group results remain in [the versioned evaluation](detector/v2/RUN_RESULTS.md).
+
+The dataset, best weights, training logs and test artifacts persist in Modal Volumes. The expanded model is served at its own authenticated endpoint, while the previous model remains available as the repository default. [Exact model, endpoint and artifact paths](detector/v2/LATEST_MODEL.md).
+
+[Generate the expanded dataset and fine-tune](detector/v2/COLOR_RETRAIN.md) · [Call the latest YOLO26s API](detector/v2/API_USAGE.md) · [Cosmos vLLM deployment](tools/cosmos_vllm.py)
 
 ## Technical architecture
 
