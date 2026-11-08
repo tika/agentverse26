@@ -56,7 +56,7 @@
 \newcommand{\dotA}{\dotc{camber}}
 \newcommand{\dotG}{\dotc{cgreen}}
 \newcommand{\result}[1]{\ifstrequal{#1}{RED}{\chip{cred}{Action needed}}{\ifstrequal{#1}{AMBER}{\chip{camber}{Check again}}{\chip{cgreen}{No problem found}}}}
-\newcommand{\zone}[1]{\ifstrequal{#1}{KEEP OUT}{\chip{cred}{Keep out}}{\ifstrequal{#1}{RESTRICTED}{\chip{camber}{Restricted}}{\ifstrequal{#1}{SAFE}{\chip{cgreen}{Safe}}{\chip{cgrey}{Not checked}}}}}
+\newcommand{\zone}[1]{\ifstrequal{#1}{KEEP OUT}{\chip{cred}{Keep out}}{\ifstrequal{#1}{RESTRICTED}{\chip{camber}{Restricted}}{\ifstrequal{#1}{LOW GAMMA}{\chip{cgreen}{Low gamma}}{\chip{cgrey}{Not checked}}}}}
 
 \newtcolorbox{summarybox}{enhanced,colback=panel,frame hidden,arc=0pt,left=12pt,right=12pt,top=10pt,bottom=10pt}
 \newtcolorbox{finding}{enhanced,colback=white,colframe=ink!25,boxrule=0.5pt,arc=0pt,

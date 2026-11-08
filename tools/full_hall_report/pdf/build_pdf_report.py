@@ -34,12 +34,11 @@ GAMMA_KEEPOUT = 100.0      # uSv/h, HSE L121
 SWAB_ALPHA, SWAB_BG = 0.4, 4.0  # Bq/cm2, IAEA SSR-6 Rev. 2 para 508
 HEAT_RISE = 5.0            # degC above air, team demo rule
 SECTION_M = 2.0
-DETECTOR_RUN = 'yolo26s_20261107T225757Z_d625ef'
 CAMERA_CROP = (0, 100, 1280, 620)   # chase-camera panel of the 1920x1080 overlay frame
 
 INK = '#1A1A18'
 COL = {'RED': '#B3261E', 'AMBER': '#C98A00', 'GREEN': '#2E7D32', 'GREY': '#8A8A85'}
-ZONE_COL = {'KEEP OUT': COL['RED'], 'RESTRICTED': COL['AMBER'], 'SAFE': COL['GREEN'], 'NOT CHECKED': COL['GREY']}
+ZONE_COL = {'KEEP OUT': COL['RED'], 'RESTRICTED': COL['AMBER'], 'LOW GAMMA': COL['GREEN'], 'NOT CHECKED': COL['GREY']}
 FINDING = {'corrosion': 'Rust', 'bulge': 'Bulging', 'bulge+corrosion': 'Rust and bulging',
            'corrosion+bulge': 'Rust and bulging', 'none': 'Nothing found', '': 'Nothing found'}
 WASTE = {'LLW': 'Low-level', 'ILW': 'Intermediate-level'}
@@ -99,7 +98,7 @@ def drum_colour(d):
     swab, heat, dose = d.get('swab'), d.get('heat_rise_c'), d.get('dose_rate_at_drum_uSv_h')
     red = d['status'] == 'Confirmed defect'
     if red:
-        why.append(f'{finding(d).lower()} seen clearly from more than one angle')
+        why.append(f'{finding(d).lower()} recorded as a confirmed finding')
     if swab and (swab.get('alpha', 0) > SWAB_ALPHA or swab.get('beta_gamma', 0) > SWAB_BG):
         red = True; why.append('surface wipe found contamination above the limit')
     if heat is not None and heat >= HEAT_RISE and 'bulge' in (d.get('finding') or ''):
@@ -110,7 +109,7 @@ def drum_colour(d):
         return 'RED', why
     amber = d['status'] in ('Suspect', "Couldn't inspect")
     if d['status'] == 'Suspect':
-        why.append(f'possible {finding(d).lower()}, seen from only one angle')
+        why.append(f'possible {finding(d).lower()}, flagged for review')
     if d['status'] == "Couldn't inspect":
         why.append('the robot could not get a clear look')
     if heat is not None and heat >= HEAT_RISE:
@@ -156,6 +155,8 @@ def aisle_label(y, rows):
 
 def zones(tele, drums, colours, rows):
     aisles = sorted({round(t['aisle_y'], 2) for t in tele if t.get('aisle_y') is not None})
+    if not aisles or not drums:
+        return []
     xs = [d['x'] for d in drums]
     x0 = math.floor(min(xs) - 1.0)
     n = math.ceil((max(xs) + 1.0 - x0) / SECTION_M)
@@ -179,22 +180,27 @@ def zones(tele, drums, colours, rows):
             if not ts:
                 out.append(dict(base, zone='NOT CHECKED', reason='The robot did not go here this time.'))
                 continue
-            top = max(ts, key=lambda t: t['dose_rate_uSv_h'])
-            g = top['dose_rate_uSv_h']
+            gamma = [t['dose_rate_uSv_h'] for t in ts if t.get('dose_rate_uSv_h') is not None]
+            g = max(gamma, default=None)
             h2 = [t['hydrogen_ppm'] for t in ts if 'hydrogen_ppm' in t]
             base.update(gmax=g, h2max=max(h2) if h2 else None)
             reds = [d['drum_id'] for d in near if colours[d['drum_id']][0] == 'RED']
-            if g > GAMMA_KEEPOUT:
+            unresolved = [d['drum_id'] for d in near if colours[d['drum_id']][0] == 'AMBER']
+            if g is not None and g > GAMMA_KEEPOUT:
                 z, r = 'KEEP OUT', f'Radiation reached {g:.0f} µSv/h, above the keep-out level.'
             elif any(d.get('heat_rise_c') is not None and d['heat_rise_c'] >= HEAT_RISE
                      and 'bulge' in (d.get('finding') or '') for d in near):
                 z, r = 'KEEP OUT', 'A bulging drum here is warmer than the air: possible pressure build-up.'
-            elif g > GAMMA_RESTRICT:
+            elif g is not None and g > GAMMA_RESTRICT:
                 z, r = 'RESTRICTED', f'Radiation reached {g:.0f} µSv/h, above the controlled-area level.'
             elif reds:
                 z, r = 'RESTRICTED', 'Damaged drum here: ' + ', '.join(reds) + '.'
+            elif unresolved:
+                z, r = 'RESTRICTED', 'Unresolved drum findings: ' + ', '.join(unresolved) + '.'
+            elif g is None:
+                z, r = 'NOT CHECKED', 'No gamma reading was logged here.'
             else:
-                z, r = 'SAFE', f'Radiation stayed normal (highest {g:.1f} µSv/h).'
+                z, r = 'LOW GAMMA', f'Highest logged gamma was {g:.1f} µSv/h.'
             out.append(dict(base, zone=z, reason=r))
     return out
 
@@ -278,11 +284,11 @@ def fig_map(path, inventory, drums, colours, zs, trail, spike, rows):
     ax.set_aspect('equal'); ax.axis('off')
     ys = [d['y'] for d in inventory]
     ax.set_xlim(min(xs) - 2.6, max(xs) + 0.8); ax.set_ylim(min(ys) - 1.4, max(ys) + 1.4)
-    h = [Rectangle((0, 0), 1, 1, facecolor=ZONE_COL[k], alpha=0.4) for k in ('SAFE', 'RESTRICTED', 'KEEP OUT', 'NOT CHECKED')]
+    h = [Rectangle((0, 0), 1, 1, facecolor=ZONE_COL[k], alpha=0.4) for k in ('LOW GAMMA', 'RESTRICTED', 'KEEP OUT', 'NOT CHECKED')]
     h += [Line2D([], [], marker='o', ls='', mfc=COL[k], mec=INK, ms=7) for k in ('RED', 'AMBER', 'GREEN')]
     h += [Line2D([], [], marker='o', ls='', mfc='white', mec='#C4C4BE', ms=7), Line2D([], [], color=INK),
           Line2D([], [], marker='x', ls='', color=COL['RED'], mew=1.6)]
-    names = ['Safe area', 'Restricted area', 'Keep out', 'Not checked', 'Drum: action needed', 'Drum: check again',
+    names = ['Low gamma', 'Restricted area', 'Keep out', 'Not checked', 'Drum: action needed', 'Drum: check again',
              'Drum: no problem', 'Not in this round', "Robot's route", 'Robot stepped back']
     ax.legend(h, names, fontsize=7.5, ncol=5, loc='upper center', bbox_to_anchor=(0.5, -0.02), frameon=False,
               handlelength=1.3, columnspacing=1.2)
@@ -434,7 +440,7 @@ def main():
     w(r'\begin{summarybox}')
     w(r'{\bfseries\large Summary}\par\vspace{6pt}')
     w(r'\begin{tabularx}{\linewidth}{@{}X r@{\hspace{28pt}}X r@{}}')
-    w(rf'Drums checked & \textbf{{{inspected} of {expected}}} & Areas safe to enter & \textbf{{{zc["SAFE"]}}}\\')
+    w(rf'Drums checked & \textbf{{{inspected} of {expected}}} & Areas with low gamma & \textbf{{{zc["LOW GAMMA"]}}}\\')
     w(rf'\dotR\ Need action & \textbf{{{n["RED"]}}} & Areas restricted & \textbf{{{zc["RESTRICTED"]}}}\\')
     w(rf'\dotA\ Check again & \textbf{{{n["AMBER"]}}} & Areas to keep out of & \textbf{{{zc["KEEP OUT"]}}}\\')
     w(rf'\dotG\ No problem found & \textbf{{{n["GREEN"]}}} & Areas not checked & \textbf{{{zc["NOT CHECKED"]}}}\\')
@@ -446,25 +452,25 @@ def main():
     w(r'{\bfseries How to read this report}\par\vspace{2pt}')
     w(r'\begin{tabularx}{\textwidth}{@{}l X@{\hspace{14pt}}l X@{}}')
     w(r'\dotR & \textbf{Action needed.} Damage seen clearly. An engineer should assess the drum. & '
-      r'\zone{SAFE} & Normal access.\\')
+      r'\zone{LOW GAMMA} & Gamma below the demo threshold.\\')
     w(r'\dotA & \textbf{Check again.} Possible damage, not yet confirmed. & '
-      r'\zone{RESTRICTED} & Enter only under controlled-area rules.\\')
+      r'\zone{RESTRICTED} & Simulation flags this section for review.\\')
     w(r'\dotG & \textbf{No problem found} in this inspection. & '
-      r'\zone{KEEP OUT} & Do not enter.\\')
+      r'\zone{KEEP OUT} & Highest priority simulation flag.\\')
     w(r' & & \zone{NOT CHECKED} & The robot did not measure here: treat as unknown.\\')
     w(r'\end{tabularx}')
     w(r'\par\vspace{4pt}{\small\color{muted} Radiation is given in microsieverts per hour (\textmu Sv/h). '
-      r'Above 7.5\,\textmu Sv/h an area needs controlled-area rules; above 100\,\textmu Sv/h people should keep out.}')
+      r'Simulation flags start above 7.5 and escalate above 100\,\textmu Sv/h.}')
 
     # ---------- areas
-    w(r'\clearpage\section{Who can go where}')
+    w(r'\clearpage\section{Aisle survey results}')
     w(r'The robot measured radiation as it walked. Each aisle is split into 2-metre sections, and each section is given '
-      r'one of four ratings. A section is only marked safe if the robot actually measured it.')
+      r'a simulation rating. Site staff must assess access separately.')
     w(r'\begin{figure}[H]\centering\includegraphics[width=\textwidth]{map.pdf}'
       r'\caption{Plan of the store. Coloured bands are the aisle sections; circles are drums.}\end{figure}')
     w(r'\begin{longtable}{@{}p{0.32\textwidth} l l p{0.38\textwidth}@{}}\toprule')
     w(r'Where & Section & Rating & Why\\\midrule\endhead')
-    for z in sorted(zs, key=lambda z: (['KEEP OUT', 'RESTRICTED', 'SAFE', 'NOT CHECKED'].index(z['zone']), z['aisle'], z['lo'])):
+    for z in sorted(zs, key=lambda z: (['KEEP OUT', 'RESTRICTED', 'LOW GAMMA', 'NOT CHECKED'].index(z['zone']), z['aisle'], z['lo'])):
         w(rf'{tex(z["name"])} & {z["part"]} & \zone{{{z["zone"]}}} & {tex(z["reason"])}\\')
     w(r'\bottomrule\end{longtable}')
     w(r'{\small\color{muted} Sections are measured along the aisle from the end nearest drum 1. '
@@ -615,8 +621,8 @@ def main():
     w(r'\begin{tabularx}{\textwidth}{@{}>{\color{muted}}l X@{}}')
     w(rf'Run ID & \texttt{{{tex(run_id)}}}\\')
     w(rf'Software version & \texttt{{{tex(a.commit)}}}\\')
-    w(rf'Damage detector & YOLO26s, run \texttt{{{tex(DETECTOR_RUN)}}}, reporting cut-off 0.25\\')
-    w(r'Written explanations & NVIDIA Cosmos Reason 2B (drums needing action only; checked against the recorded facts)\\')
+    w(rf'Damage detector run & {tex(mem.get("detector_run_id") or "not recorded")}\\')
+    w(rf'Explanation model & {tex(mem.get("cosmos_model") or "not recorded")}\\')
     if any('HTTPError' in (x.get('source') or '') for x in decisions):
         w(r'Note & The explanation service was unavailable during this run, so the fixed rules made every decision.\\')
     w(r'Simulator & NVIDIA Isaac Sim\\')

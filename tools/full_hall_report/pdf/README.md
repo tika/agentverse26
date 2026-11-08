@@ -12,4 +12,6 @@ Needs `matplotlib`, `Pillow` and a TeX install with `pdflatex` (MacTeX on a Mac;
 - Reads only `memory.json`, `telemetry.jsonl`, `decisions.jsonl`, `ground_truth.json` (self-check only), `route.json`, `stills/` and `sim/drums.json`.
 - Anything not logged prints as *n/m* (not measured). No language model writes a fact in the report.
 - Rules and sources are in `.claude/skills/canis-run-report/SKILL.md`.
-- Example output from the 8 Nov test run: [`example/CANIS_report_preview8_014613.pdf`](example/CANIS_report_preview8_014613.pdf).
+- Historical layout preview with older zone labels: [`example/CANIS_report_preview8_014613.pdf`](example/CANIS_report_preview8_014613.pdf).
+
+Aisle ratings are simulation flags. Low gamma records a measurement below the demo threshold. Access decisions require a separate site assessment.

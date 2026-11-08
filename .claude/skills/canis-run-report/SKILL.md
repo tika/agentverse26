@@ -5,13 +5,13 @@ description: Build the CANIS post-run inspection report (a professional PDF plus
 
 # CANIS run report
 
-After every run, the dog produces one report that says three things: **which drums need action**, **which parts of the aisle are safe for people**, and **the evidence behind every claim**. The report is built only from files the run logged. No model writes facts into it.
+After every run, the dog produces one report that says three things: **which drums need action**, **where the simulated survey found readings or issues that warrant review**, and **the evidence behind every claim**. The report is built only from files the run logged. No model writes facts into it.
 
 ## 0. Ground rules (read first)
 
 1. **Logged data only.** Every number, status, photo and timestamp comes from the run folder. If a value wasn't measured, print `not measured`. Never estimate or fill one in.
 2. **The model can't invent facts.** Cosmos Reason 2B writes free text in one place only: the "context" paragraph for each red drum (section 3). Its input is that drum's logged readings. Its output is shown in quotes, labelled "Cosmos explanation", and the builder checks it (step 5). Everything else (statuses, zones, tables, numbers) is computed by deterministic Python.
-3. **No area is "safe" by default.** If the robot didn't measure an area, the area is `NOT SURVEYED`, never `SAFE`.
+3. **No area is "safe" by default.** Without a logged gamma reading, report `NOT CHECKED` unless other evidence warrants escalation. Report `LOW GAMMA` only when readings are below the demo threshold and no nearby unresolved finding needs review. These labels do not clear access.
 4. **Re-runnable.** The same run folder always gives the same PDF: sorted output, and the only timestamp is the run's own.
 5. **Work inside the repo's report folders.** New code goes in `tools/full_hall_report/` (extend `build_report.py`, don't fork it). Don't edit the detector, Cosmos, safety or sim code; import from them. Never commit secrets.
 
@@ -37,7 +37,7 @@ First, list which fields this run actually has. A sensor that's missing (e.g. no
 | Part | Job | Never does |
 |---|---|---|
 | **YOLO26s** (`yolo26s_20261107T225757Z_d625ef`, cut-off 0.25) | Draws boxes: `drum`, `corrosion`, `bulge`, each with a confidence | Decide status or safety |
-| **Our rules** (Python, below) | Turn boxes + sensor readings into a **drum colour** (red / amber / green) and an **area zone** (safe / restricted / keep out) | Use free text |
+| **Our rules** (Python, below) | Turn boxes + sensor readings into a **drum colour** (red / amber / green) and an **area zone** (low gamma / restricted / keep out / not checked) | Use free text |
 | **Cosmos Reason 2B** | For each **red** drum, explains the context: what the fault is, how severe, what to do next | Change a colour, a zone or a number |
 | **Report builder** | Assembles the PDF from the logs | Write any fact that isn't in the logs |
 
@@ -53,7 +53,7 @@ Use the run's final status from `memory.json`, then raise the colour using the s
 
 "Above" means strictly above: a value exactly on a limit isn't over it. `Couldn't inspect` is never green; always show the reason (dose spike, blocked, out of budget).
 
-## 4. Area safety verdict (for people)
+## 4. Aisle survey ratings
 
 Split each aisle into **2 m sections** along its length, using the drum positions from `drums.json`. For each section, take the **highest** logged value while the robot was in that section:
 
@@ -61,8 +61,8 @@ Split each aisle into **2 m sections** along its length, using the drum position
 |---|---|
 | **KEEP OUT** | gamma > **100 µSv/h** (hot spot), OR a failed swab (above the limits in section 3), OR H2 ≥ **H2 alarm**, OR a RED bulge + heat drum (possible pressurisation) |
 | **RESTRICTED** | gamma > **7.5 µSv/h** (controlled-zone level), OR a RED drum in the section, OR any drum ≥ 5 °C above air, OR H2 ≥ **H2 warning**, OR an AMBER drum with a suspected leak and no swab |
-| **SAFE** | measured, and none of the above |
-| **NOT SURVEYED** | the robot logged no readings there (blocked, skipped, out of budget) |
+| **LOW GAMMA** | gamma measured, below the demo threshold, and no unresolved nearby finding |
+| **NOT CHECKED** | the robot logged no readings there (blocked, skipped, out of budget) |
 
 For each section print the zone, the reason ("gamma 142 µSv/h at 00:04:12"), and the readings it was based on.
 
@@ -99,7 +99,7 @@ A4, portrait, page numbers, run ID and "Simulated store (Isaac Sim)" in the foot
      - robot dose used vs budget
      - mission time
      - a one-line verdict, e.g. "2 drums need action; aisle B section 4–6 m is KEEP OUT."
-2. **Safety verdict per area**
+2. **Aisle survey results**
    - a hall map with each 2 m section shaded green / amber / red / grey hatched (not surveyed), the drum dots coloured by status, and the robot's route
    - then a table: aisle, section, zone, reason, max gamma, max H2, max drum heat rise, swab
 3. **Drum register (every drum, worst first):**
@@ -120,7 +120,7 @@ A4, portrait, page numbers, run ID and "Simulated store (Isaac Sim)" in the foot
    - against time: gamma with the 7.5 / 100 lines, robot dose with the budget line, air temperature + RH, H2 (or "not measured"), each drum's heat rise
    - events (spike, block, back-off) marked on each trace
 
-Design and audience: written for store managers and safety staff who are NOT engineers. Plain words only: drum names and "Row B, drum 3" / "Aisle between rows B and C, 2–4 m" instead of coordinates; "Action needed / Check again / No problem found" instead of status codes; "How sure: High (88%)" instead of confidence scores; no YOLO, model names or run IDs outside the final "Technical details" appendix. Source Sans (sans-serif) throughout, black and grey, red / amber / green only for labels, no decorative colour bars. Photos are cropped to the camera view and shown full width. The reference output is `example/CANIS_report_preview8_014613.pdf`.
+Design and audience: written for store managers and safety staff who are NOT engineers. Plain words only: drum names and "Row B, drum 3" / "Aisle between rows B and C, 2–4 m" instead of coordinates; "Action needed / Check again / No problem found" instead of status codes; "How sure: High (88%)" instead of confidence scores; no YOLO, model names or run IDs outside the final "Technical details" appendix. Source Sans (sans-serif) throughout, black and grey, red / amber / green only for labels, no decorative colour bars. Photos are cropped to the camera view and shown full width. The historical layout preview uses older labels and is `example/CANIS_report_preview8_014613.pdf`.
 
 ## 7. Fixed recommended actions (used when there's no Cosmos text, and always printed as well)
 
@@ -148,7 +148,7 @@ If the report fails, the run still counts. Log the error to `report/report_error
 
 - [ ] Every number in the PDF matches the run files (spot-check 5 drums and 3 areas).
 - [ ] Every flagged drum has a photo with its YOLO box on it.
-- [ ] No area shows SAFE without readings, and NOT SURVEYED areas are listed.
+- [ ] Low gamma requires a logged gamma reading and no unresolved nearby finding. Include areas without readings.
 - [ ] H2 shows a cited level, or "not yet set (no cited source)".
 - [ ] Cosmos text appears only on red drums, quoted and labelled, and passed the number check.
 - [ ] Running it twice gives the same PDF content.
