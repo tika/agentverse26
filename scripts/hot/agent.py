@@ -13,6 +13,7 @@ DOSE_AMBER, DOSE_BACKOFF = CONFIG['thresholds']['controlled_zone'], CONFIG['thre
 SPEED_NEAR_DRUMS = CONFIG['robot']['max_speed_near_drums_mps']
 H2_DETECTED_PPM = 10.0                  # Reporting floor above sensor noise; the docs set no H2 alarm level.
 FOLLOWUP_TIMEOUT_S = 8.0
+SCAN_DWELL_S = 1.0                      # Hold each scan heading long enough for a fresh detector frame.
 
 if 'ptz' not in state:
     ptz = Camera('/World/SpotCamPTZ', resolution=(640, 480))
@@ -54,7 +55,8 @@ class Agent:
         self.history = {'gamma': [], 'h2': []}
         self.trail, self.swab_contact, self.swab_text = [], None, 'idle'
         self.mic_db, self.nearest = -60.0, ('-', 0.0)
-        self.look, self.face, self.hold, self.speed = None, None, False, SPEED_NEAR_DRUMS
+        self.face, self.hold, self.speed = None, False, SPEED_NEAR_DRUMS
+        self.scan = []
         self.action = {'id': 'continue_patrol', 'kind': 'patrol'}
         self.last_decision_t, self.pending_decision = -99.0, True
         self.hiss_frames, self.cosmos = 0, None
@@ -179,8 +181,9 @@ def update_station_scan(a, t, p, yaw, perception, reading):
         drum_id = todo.pop(0)
         drum = DRUMS[drum_id]
         a.data['station_scan'] = {'id': drum_id, 'start_s': t, 'clear_frames': 0}
-        a.scene['scan_look'] = [drum['x'], drum['y'], drum['base_z'] + drum['height'] * 0.5]
-        a.status, a.hold = 'SCANNING', True
+        # Body-fixed camera: the robot turns in place to face the drum (see drive()).
+        a.face = np.array([drum['x'], drum['y']])
+        a.status, a.hold = 'SCANNING', False
         a.action = {'id': f"scan_{drum['display_id']}", 'since': t}
         a.event(t, f"Station scan {drum['display_id']}")
         return
@@ -188,7 +191,12 @@ def update_station_scan(a, t, p, yaw, perception, reading):
     drum_id = scan['id']
     drum = DRUMS[drum_id]
     elapsed = t - scan['start_s']
-    if elapsed < 0.3:
+    est = a.nav.fused
+    facing = abs(wrap(math.atan2(drum['y'] - est[1], drum['x'] - est[0]) - est[2])) < 0.1
+    if not facing and elapsed < 4.0:
+        return
+    scan.setdefault('facing_s', t)
+    if t - scan['facing_s'] < 0.3:
         return
     pixels = perception['drum_px'].get(drum_id, 0)
     apparent = perception['drum_temps'].get(drum_id)
@@ -206,13 +214,12 @@ def update_station_scan(a, t, p, yaw, perception, reading):
             a.memory.record(drum_id, 'visual', t, rust_pct=round(100 * rust_px / (pixels + rust_px), 1),
                             range_m=round(distance, 1), detector='segmentation placeholder')
         a.memory.record(drum_id, 'direct_view', t, visible_pixels=pixels, frames=scan['clear_frames'])
-    elif elapsed < 2.0:
+    elif t - scan['facing_s'] < 2.0:
         return
     else:
         a.event(t, f"{drum['display_id']} direct view unresolved")
-    a.scene.pop('scan_look', None)
     a.data.pop('station_scan')
-    a.status, a.hold = 'PATROL', False
+    a.status, a.hold, a.face = 'PATROL', False, None
     a.action = {'id': 'continue_patrol', 'since': t}
     if a.data['scan_queue'] and abs(a.nav.fused[0] - DRUMS[a.data['scan_queue'][0]]['x']) < 0.2:
         update_station_scan(a, t, p, yaw, perception, reading)
@@ -350,8 +357,10 @@ def apply_action(a, choice, t, p_est):
     for d in inventory:
         if action_id.endswith('_' + d['display_id']):
             drum = d
+    if action_id not in ('continue_patrol', 'hold'):
+        a.scan = []  # A follow-up abandons the scan at this stop.
     if action_id == 'continue_patrol':
-        a.status, a.hold, a.face, a.look, a.speed = 'PATROL', False, None, None, SPEED_NEAR_DRUMS
+        a.status, a.hold, a.face, a.speed = 'PATROL', False, None, SPEED_NEAR_DRUMS
         a.route = a.patrol[a.patrol_index:]
         if not a.route:
             a.status = 'ROUND COMPLETE'
@@ -361,7 +370,7 @@ def apply_action(a, choice, t, p_est):
         a.followed_up.add(drum['id'])
         a.status, a.hold, a.speed = 'INVESTIGATE', False, SPEED_NEAR_DRUMS
         a.route = [standoff_for(drum)]
-        a.face = a.look = np.array([drum['x'], drum['y']])
+        a.face = np.array([drum['x'], drum['y']])
     elif action_id.startswith('better_view_'):
         a.followed_up.add(drum['id'])
         target = standoff_for(drum)
@@ -369,7 +378,7 @@ def apply_action(a, choice, t, p_est):
             target = target + [0.8 if p_est[0] <= drum['x'] else -0.8, 0.0]
         a.status, a.hold, a.speed = 'INVESTIGATE', False, SPEED_NEAR_DRUMS
         a.route = [target]
-        a.face = a.look = np.array([drum['x'], drum['y']])
+        a.face = np.array([drum['x'], drum['y']])
         a.data['reread'] = drum['id']
     elif action_id.startswith('swab_'):
         a.status, a.hold = 'SAMPLING', True
@@ -388,7 +397,7 @@ def apply_action(a, choice, t, p_est):
         a.flagged.append(drum['id'])
         away = -1 if drum['x'] > p_est[0] else 1
         a.route = [np.array([float(np.clip(drum['x'] + away * a.scene.get('retreat_m', 3.5), 1.5, 18.0)), AISLE_Y])]
-        a.face = a.look = None
+        a.face = None
         a.event(t, f"ALERT raised for {drum['display_id']}!")
 
 
@@ -481,9 +490,27 @@ def read_plates(a, t, p, yaw):
             return
 
 
-def drive(a, est):
-    """Track the aisle continuously and stop only at the final or follow-up goal."""
+def scan_headings(stop):
+    """Body headings that square the fixed camera onto the drum rows beside a patrol stop."""
+    rows = {d['row']: d['y'] for d in inventory
+            if d['row'] in STANDOFF and d.get('visible_face', True) and abs(d['x'] - stop[0]) < 0.8}
+    return [{'row': row, 'yaw': math.atan2(y - stop[1], 0.0)} for row, y in sorted(rows.items())]
+
+
+def drive(a, est, t):
+    """Track the aisle, and at each patrol stop turn the body to face each adjacent drum row."""
     x, y, yaw = est
+    if a.status == 'SCANNING' and a.face is not None:  # Station scan: turn in place to face the drum.
+        return np.array([0.0, 0.0, float(np.clip(1.2 * wrap(math.atan2(a.face[1] - y, a.face[0] - x) - yaw), -0.8, 0.8))],
+                        dtype=np.float32)
+    if a.scan and a.status == 'PATROL':
+        target = a.scan[0]
+        error = wrap(target['yaw'] - yaw)
+        if abs(error) < 0.06:
+            target.setdefault('since', t)
+            if t - target['since'] >= SCAN_DWELL_S:
+                a.scan.pop(0)
+        return np.array([0.0, 0.0, float(np.clip(1.2 * error, -0.8, 0.8))], dtype=np.float32)
     if a.route:
         goal = a.route[0]
         reached = np.linalg.norm(est[:2] - goal) < 0.2
@@ -493,9 +520,13 @@ def drive(a, est):
             reached = reached or (direction != 0 and direction * (x - goal[0]) >= -0.18
                                   and abs(y - AISLE_Y) < 0.3)
         if reached:
-            a.route.pop(0)
+            stop = a.route.pop(0)
             if a.status == 'PATROL':
+                # Station scans (verify_at_stops) already turn to each job drum; don't scan twice.
+                a.scan = [] if a.scene.get('verify_at_stops') else scan_headings(stop)
                 a.patrol_index += 1
+                if a.scan:
+                    a.event(t, f"Stop {a.patrol_index}: turning to scan row {' and '.join(s['row'] for s in a.scan)}")
                 if not a.route:
                     a.status = 'ROUND COMPLETE'
 
@@ -581,7 +612,6 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         if incident and t >= incident.get('clear_at_s', math.inf):
             a.scene['drum_offsets_c'].pop(incident['drum_id'], None)
         p, yaw, roll, pitch = full_pose()
-        a.scene['look'] = a.look if not a.route or a.hold else None
         place_cameras(p, cam_yaw, a.scene, onboard_yaw=yaw)
         cam_yaw += 0.25 * wrap(yaw - cam_yaw)
         world.render()
@@ -722,10 +752,14 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         mark = lap('cosmos_decide', mark)
         compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t).save(frames_dir / f'{index:05d}.jpg', quality=90)
         mark = lap('compose_write', mark)
-        command = drive(a, est) if not a.hold else zero
+        command = drive(a, est, t) if not a.hold else zero
         log.append({'t': round(t, 3), 'truth': p.tolist(), 'estimate': est.tolist(), 'odometry': a.nav.odom.tolist(), 'status': a.status, 'patrol_stops_completed': a.patrol_index,
                     'action': a.action['id'], 'h2': a.gas.get('hydrogen_ppm', 0.0), 'hiss': a.hiss['hiss_score'],
-                    'gamma_uSv_h': reading['dose_rate_uSv_h'], 'goal_xy_m': a.route[0].tolist() if a.route else None, 'velocity_command': command.tolist()})
+                    'gamma_uSv_h': reading['dose_rate_uSv_h'], 'goal_xy_m': a.route[0].tolist() if a.route else None, 'velocity_command': command.tolist(),
+                    'scan_rows': [s['row'] for s in a.scan],
+                    'yolo': None if not perception.get('yolo') or not perception['yolo']['fresh'] else
+                            {'status': perception['yolo']['status'], 'boxes': len(perception['yolo']['detections']),
+                             'drums': {o['display_id']: o['faults'] for o in perception['yolo']['associations']}}})
         for k in range(stride):
             spot.step(dt, command)
             world.step(render=False)

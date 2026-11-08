@@ -205,17 +205,14 @@ def place_cameras(p, cam_yaw, scene, onboard_yaw=None):
     # Keep the chase camera in the clear aisle when Spot turns toward a rack.
     _aim(THIRD, (max(0.7, p[0] - 2.7), 6.0, 2.4), (p[0] + 0.85, p[1], 0.65))
     if onboard_yaw is not None:
+        # Body-fixed front camera, as in detector training: the robot turns to aim it; scene['look'] is ignored.
         heading = np.array([math.cos(onboard_yaw), math.sin(onboard_yaw), 0.0])
-    if onboard_yaw is not None:
-        # Match the elevated PTZ mount and leave clearance from the drum at standoff.
         eye = p + 0.35 * heading + [0, 0, 0.45]
+        _aim(onboard, eye, eye + heading + [0, 0, -0.32])
     else:
         eye = p + 0.62 * heading + [0, 0, 0.30]
-    look = scene.get('look')
-    target = np.array([*look, 0.5]) if look is not None else eye + heading + [0, 0, -0.32]
-    if onboard_yaw is not None and np.dot(target[:2] - eye[:2], heading[:2]) <= 0.1:
-        target = eye + heading + [0, 0, -0.32]
-    _aim(onboard, eye, scene.get('scan_look', target))
+        look = scene.get('look')
+        _aim(onboard, eye, np.array([*look, 0.5]) if look is not None else eye + heading + [0, 0, -0.32])
     return eye
 
 
