@@ -1,10 +1,11 @@
 """Fixed front-camera calibration and projection; no target tracking or gimbal."""
 import math
+import os
 import numpy as np
 
 CAMERA_PATH='/World/WalkingSpot/body/FrontCamera'
 BODY_PATH='/World/WalkingSpot/body'
-RESOLUTION=(1280,720)
+RESOLUTION=(int(os.environ.get('HOT_CAMERA_WIDTH','1280')),int(os.environ.get('HOT_CAMERA_HEIGHT','720')))
 MOUNT_XYZ=np.array([.60,0.,.12])
 MOUNT_QUAT=np.array([1.,0.,0.,0.])  # Camera world convention: +X forward, +Z up.
 HFOV_DEG=110.

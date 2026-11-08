@@ -87,8 +87,9 @@ class InspectionMemory:
                 elif vis['rust_pct'] >= rust['tolerable']:
                     attention.append(f"rust {vis['rust_pct']:.0f}%")
             elif vis:
-                if vis.get('rust_observed'):attention.append('YOLO visible rust; coverage not measured')
-                if vis.get('bulge_observed'):attention.append('YOLO visible bulge; needs corroboration')
+                if vis.get('rust_observed'):attention.append('Camera model located rust; coverage not measured')
+                if vis.get('bulge_observed'):attention.append('Camera model located bulge; needs corroboration')
+                if vis.get('unscored_proposal'):attention.append('LocateAnything zero-shot proposal; no calibrated probability')
             ident = c.get('id')
             if ident:
                 if ident['result'] == 'mismatch':
@@ -155,7 +156,8 @@ def observe_for_memory(a, t, perception, reading, est):
                 rust_observed='corrosion' in observation['faults'] or previous.get('rust_observed',False),
                 bulge_observed='bulge' in observation['faults'] or previous.get('bulge_observed',False),
                 views=previous.get('views',0)+1,coverage_measured=False,
-                range_m=round(observation['range_m'],2),detector='trained YOLO26s RGB API',model_run=vision['run_id'])
+                range_m=round(observation['range_m'],2),detector=vision.get('model','YOLO26s')+' RGB API',
+                unscored_proposal=vision.get('confidence_available') is False,model_run=vision['run_id'])
 
 
 def observe_detections(a, t, per_drum, est):
@@ -633,11 +635,11 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                 for fault in observation['faults']:
                     kind='visible_corrosion' if fault=='corrosion' else 'visible_bulge'
                     first=a.add_finding(t,f'{fault}_{drum_id}',kind=kind,drum=drum_id,
-                        detector='trained YOLO26s RGB API',model_run=vision['run_id'],
+                        detector=vision.get('model','YOLO26s')+' RGB API',model_run=vision['run_id'],
                         association=observation['association'],range_m=round(observation['range_m'],2),
                         confidence='high' if record['observations']>=2 else 'low',
                         observations=record['observations'])
-                    if first:a.event(t,f"YOLO {fault} at map {DRUMS[drum_id]['display_id']}; get a closer view")
+                    if first:a.event(t,f"{vision.get('model','YOLO26s')} {fault} at map {DRUMS[drum_id]['display_id']}; get a closer view")
             a.data['yolo_stats']={k:vision[k] for k in ('status','calls','failures','wall_seconds','age_s')}
         a.hiss_frames = a.hiss_frames + 1 if a.hiss['hiss_score'] > 0.5 else 0
         # Gas and microphone are omnidirectional: they give evidence near the robot, not which drum.
@@ -697,7 +699,9 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
         elif a.status == 'PATROL' and (a.pending_decision or (a.findings and t - a.last_decision_t >= 3.0)):
             decide(a, t, frames['first'], est, reading)
         mark = lap('cosmos_decide', mark)
-        compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t).save(frames_dir / f'{index:05d}.jpg', quality=90)
+        output=compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t)
+        if a.scene.get('output_size'):output=output.resize(tuple(a.scene['output_size']),Image.Resampling.BILINEAR)
+        output.save(frames_dir / f'{index:05d}.jpg', quality=86 if a.scene.get('output_size') else 90)
         mark = lap('compose_write', mark)
         log.append({'t': round(t, 3), 'truth': p.tolist(), 'estimate': est.tolist(), 'status': a.status, 'patrol_stops_completed': a.patrol_index,
                     'action': a.action['id'], 'h2': a.gas.get('hydrogen_ppm', 0.0), 'hiss': a.hiss['hiss_score']})
@@ -722,6 +726,7 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
     state.setdefault('memory_log', []).append({'run': name, 'drums': a.memory.drums})  # For comparing rounds later.
     last = Image.open(frames_dir / f'{index:05d}.jpg')
     card = mission.report_card(last, report) if mission else report_card(last, report)
+    if a.scene.get('output_size'):card=card.resize(tuple(a.scene['output_size']),Image.Resampling.BILINEAR)
     for k in range(int(report_seconds * FPS)):
         card.save(frames_dir / f'{index + 1 + k:05d}.jpg', quality=90)
     (OUT / name / 'log.jsonl').write_text(''.join(json.dumps(r, default=float) + '\n' for r in log))
@@ -775,13 +780,13 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
                   fill='#ff9f9f' if '!' in text else 'white')
     draw.rectangle((0, H - 28, W, H), fill='#111822')
     if vision:
-        draw.text((16,974),f"YOLO26s {vision['status']} | {len(vision['associations'])} mapped drums | {len(vision['detections'])} boxes",font=FONT[16],fill='#35d7ff')
+        draw.text((16,974),f"{vision.get('model','YOLO26s')} {vision['status']} | {len(vision['associations'])} mapped | {len(vision['detections'])} boxes",font=FONT[16],fill='#35d7ff')
         draw.text((16,1000),f"API {vision['wall_seconds']*1000:.0f} ms | age {vision['age_s']:.2f}s | calls {vision['calls']} | errors {vision['failures']}",font=FONT[16],fill='white')
-    draw.text((16, H - 26), 'RGB: trained YOLO26s + depth/map association. Navigation: LiDAR/IMU/encoders. '
+    draw.text((16, H - 26), 'RGB: '+(vision.get('model','YOLO26s') if vision else 'camera')+' + depth/map association. Navigation: LiDAR/IMU/encoders. '
               'LWIR/H2/mic/swab are simulated sensors. Cosmos chooses safety-checked actions; fallback is labelled.',
               font=FONT[14], fill='#6f8396')
     if vision:
-        draw.text((16,1026),f"Front frame {frames['frame_info']['frame_id']} | YOLO frame {vision.get('source_frame_id','unavailable')}",font=FONT[14],fill='#9fb2c4')
+        draw.text((16,1026),f"Front {frames['frame_info']['frame_id']} | model frame {vision.get('source_frame_id','unavailable')}",font=FONT[14],fill='#9fb2c4')
     if getattr(a,'mission',None):a.mission.draw_map(canvas,a,t)
     return canvas
 

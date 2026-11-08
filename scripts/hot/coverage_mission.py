@@ -60,12 +60,14 @@ class FullStoreMission:
             matched=True
             x0,y0,x1,y1=o['box']
             added=self.ledger.visual(self.active,est,range_m=o['range_m'],area=(x1-x0)*(y1-y0),
-                                     confidence=o['confidence'],time_s=t)
+                                     confidence=o['confidence'],time_s=t,
+                                     unscored_proposal=vision.get('model')=='LocateAnything-3B',
+                                     min_area=1500*rgb.shape[0]*rgb.shape[1]/(1280*720))
             if added:
-                self.ledger.drums[self.active]['views'][-1]['source']='YOLO26s RGB + depth'
+                self.ledger.drums[self.active]['views'][-1]['source']=vision.get('model','YOLO26s')+' RGB + depth'
                 Image.fromarray(rgb).save(OUT/f"view_{self.drums[self.active]['display_id']}_{len(self.ledger.drums[self.active]['views'])}.jpg",quality=90)
         fallback_key=(self.active,self.ledger.drums[self.active]['attempts'])
-        if not matched and fallback_key!=self._visual_fallback_key:
+        if not matched and fallback_key!=self._visual_fallback_key and vision.get('model')!='LocateAnything-3B':
             self._visual_fallback_key=fallback_key
             # The stainless assets are outside the detector training domain.
             # Ask the live VLM to inspect camera pixels; never substitute authored faults.
@@ -340,7 +342,7 @@ class FullStoreMission:
                   (self.drums[self.active]['display_id'] if self.active else '-'),font=FONT[16],fill='#36dded')
         if self.active:
             vis=a.memory.drums[self.active]['checks'].get('visual',{})
-            source='Cosmos RGB fallback' if vis.get('detector','').startswith('Cosmos') else 'YOLO26s RGB'
+            source=vis.get('detector','Visual check pending')
             draw.text((500,944),'Visual check: '+source,font=FONT[14],fill='#9fb2c4')
             pressure=a.memory.drums[self.active].get('pressure_screen',{})
             if pressure.get('suspected_pressurisation'):
@@ -362,5 +364,5 @@ class FullStoreMission:
         e=r['environment']
         d.text((50,900),f"Peak H2 {e['max_h2_ppm']} ppm | gamma {e['max_gamma_uSv_h']} uSv/h | alerts: {', '.join(r['alerts']) or 'none'}",font=FONT[22],fill='white')
         d.text((50,945),'Pressure screen: visible bulge AND surface >= ambient + 5 C -> suspected pressurisation; internal gas not confirmed.',font=FONT[18],fill='#ffc55e')
-        d.text((50,985),'Live YOLO26s + Cosmos; simulated sensor channels. Missing evidence is reported rather than replaced with authored faults.',font=FONT[18],fill='#9fb2c4')
+        d.text((50,985),'Live perception + Cosmos; simulated sensors. Missing evidence remains unresolved; no authored visual findings.',font=FONT[18],fill='#9fb2c4')
         return card

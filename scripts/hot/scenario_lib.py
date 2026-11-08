@@ -203,14 +203,14 @@ def spark(draw, box, values, limit, color, label):
 
 def compose(m, frames, perception, reading, nav_err, p, yaw, roll, pitch, t):
     canvas = Image.new('RGB', (W, H), '#0d131b')
-    canvas.paste(Image.fromarray(frames['first']), (0, 0))
+    canvas.paste(Image.fromarray(frames['first']).resize((1280,720),Image.Resampling.BILINEAR), (0, 0))
     draw = ImageDraw.Draw(canvas)
     draw.rectangle((0,0,1280,33),fill='#0d131b')
     info=frames['frame_info']
     draw.text((12,6),'FIXED FRONT CAMERA | '+info['frame_id']+' | body-mounted RGB',font=FONT[18],fill='white')
     draw.text((1080,6),f't = {t:5.1f}s',font=FONT[18],fill='#9fb2c4')
     draw.text((14,695),m.title,font=FONT[18],fill='white',stroke_width=1,stroke_fill='black')
-    if 'presentation' in frames:canvas.paste(Image.fromarray(frames['presentation']),(1280,0))
+    if 'presentation' in frames:canvas.paste(Image.fromarray(frames['presentation']).resize((640,360),Image.Resampling.BILINEAR),(1280,0))
     draw.rectangle((1280,0,1920,30),fill='#0d131b')
     draw.text((1292,6),'3RD PERSON | recording only; excluded from model inputs',font=FONT[16],fill='white')
     inset,lo,hi=thermal_inset(perception,size=(192,108))

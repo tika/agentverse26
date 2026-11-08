@@ -3,7 +3,7 @@ from isaacsim.sensors.camera import Camera as PresentationCamera
 from pxr import Gf
 PRESENTATION_PATH='/World/Presentation/CornerCamera'
 if 'presentation_camera' not in state:
-    camera=PresentationCamera(PRESENTATION_PATH,resolution=(640,360))
+    camera=PresentationCamera(PRESENTATION_PATH,resolution=(384,216))
     camera.prim.GetAttribute('focalLength').Set(16.)
     camera.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(.05,60.))
     camera.initialize()

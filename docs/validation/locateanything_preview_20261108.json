@@ -1,0 +1,92 @@
+{
+  "branch": "experiment/locateanything-modal",
+  "base_main": "9f80885",
+  "run_id": "035753-agent_locateanything_demo-c10f",
+  "model": "nvidia/LocateAnything-3B",
+  "revision": "c32291ca5e996f5a7a485845b4f57a233936bba0",
+  "model_gpu": "NVIDIA H100 80GB HBM3",
+  "api_url": "https://paramsachdeva07--agentverse-locateanything-locateanything-web.us-east.modal.run",
+  "video": "out/recordings/agentverse26_locateanything_preview.mp4",
+  "video_seconds": 70.25,
+  "resolution": [
+    1280,
+    720
+  ],
+  "fps": 12.0,
+  "video_sha256": "fd23e740410819c045b4f737682b3339da8f5b9ea86bb68194dc6709caa49f2b",
+  "front_camera_resolution": {
+    "width": 640,
+    "height": 360
+  },
+  "completed": 4,
+  "deferred": 0,
+  "scope": [
+    "B01",
+    "C02",
+    "C03",
+    "C04"
+  ],
+  "api_requests": 68,
+  "api_failures": 0,
+  "median_model_ms": 1199.43,
+  "planner_decisions": 8,
+  "planner_sources": [
+    "Cosmos Reason 2"
+  ],
+  "planner_failures": 0,
+  "perception_sources": [
+    "LocateAnything-3B"
+  ],
+  "model_camera_sources": [
+    "/World/WalkingSpot/body/FrontCamera"
+  ],
+  "confidence_available": false,
+  "visual_fallback": false,
+  "condition_spot_check": [
+    {
+      "drum": "B01",
+      "authored_condition": [
+        "bulge"
+      ],
+      "observed_condition": [
+        "bulge",
+        "corrosion"
+      ],
+      "exact_match": false
+    },
+    {
+      "drum": "C02",
+      "authored_condition": [
+        "bulge",
+        "corrosion"
+      ],
+      "observed_condition": [
+        "bulge",
+        "corrosion"
+      ],
+      "exact_match": true
+    },
+    {
+      "drum": "C03",
+      "authored_condition": [],
+      "observed_condition": [
+        "bulge",
+        "corrosion"
+      ],
+      "exact_match": false
+    },
+    {
+      "drum": "C04",
+      "authored_condition": [
+        "corrosion"
+      ],
+      "observed_condition": [
+        "bulge",
+        "corrosion"
+      ],
+      "exact_match": false
+    }
+  ],
+  "caution": "Small authored-scene spot check, not a held-out accuracy benchmark. Bulge grounding over-detects; proposals are unscored.",
+  "modal_volume_path": "agentverse-mission-runs:/runs/035753-agent_locateanything_demo-c10f/"
+}

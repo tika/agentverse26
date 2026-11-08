@@ -96,8 +96,9 @@ class CoverageLedger:
         geometry = [{k:d[k] for k in ('id','display_id','x','y','radius','row')} for d in drums]
         self.map_sha256 = hashlib.sha256(json.dumps(geometry,sort_keys=True).encode()).hexdigest()
 
-    def visual(self, drum_id, position, *, range_m, area, confidence, time_s):
-        if not (.2 < range_m <= 3.8 and area >= 1500 and confidence >= .25):
+    def visual(self, drum_id, position, *, range_m, area, confidence, time_s,unscored_proposal=False,min_area=1500):
+        score_ok=(confidence is not None and confidence>=.25) or (confidence is None and unscored_proposal)
+        if not (.2 < range_m <= 3.8 and area >= min_area and score_ok):
             return False
         entry = self.drums[drum_id]
         drum=self.geometry[drum_id]
@@ -106,7 +107,8 @@ class CoverageLedger:
                abs((bearing-v['bearing_rad']+math.pi)%(2*math.pi)-math.pi)<math.radians(12) for v in entry['views']):
             return False
         entry['views'].append(dict(position_m=list(map(float,position[:2])),range_m=round(range_m,2),
-                                   bearing_rad=bearing,area_px=round(area),confidence=round(confidence,3),time_s=round(time_s,2)))
+                                   bearing_rad=bearing,area_px=round(area),confidence=round(confidence,3) if confidence is not None else None,
+                                   confidence_kind='not_provided' if confidence is None else 'detector_score',time_s=round(time_s,2)))
         return True
 
     def sync(self, memory):

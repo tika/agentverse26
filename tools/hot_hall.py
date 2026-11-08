@@ -22,7 +22,7 @@ import uuid
 import modal
 
 ROOT = Path(__file__).resolve().parents[1]
-STATE = ROOT / '.runtime/hot.json'
+STATE = ROOT / '.runtime' / ('hot.json' if not os.environ.get('HOT_NAMESPACE') else os.environ['HOT_NAMESPACE']+'.json')
 OUT = ROOT / 'out/hot'
 # Same image recipe as tools/run_hall.py, which renders hall textures correctly.
 image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
@@ -31,14 +31,19 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
          .pip_install('imageio[ffmpeg]')
          .env({'ACCEPT_EULA': 'Y', 'PRIVACY_CONSENT': 'N', 'NVIDIA_DRIVER_CAPABILITIES': 'all',
                'HOT_GPU_COUNT':os.environ.get('HOT_GPU_COUNT','1'),
+               'HOT_NAMESPACE':os.environ.get('HOT_NAMESPACE','agentverse-hot'),
+               'HOT_CAMERA_WIDTH':os.environ.get('HOT_CAMERA_WIDTH','1280'),
+               'HOT_CAMERA_HEIGHT':os.environ.get('HOT_CAMERA_HEIGHT','720'),
+               'LOCATE_API_URL':os.environ.get('LOCATE_API_URL',''),
                'HOT_SPAWN_X':os.environ.get('HOT_SPAWN_X','10'), 'HOT_SPAWN_Y':os.environ.get('HOT_SPAWN_Y','6')})
          .add_local_dir(ROOT / 'sim', '/workspace/sim', copy=True,
                         ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc', '*.usda']))
 HOT_GPU_COUNT=int(os.environ.get('HOT_GPU_COUNT','1'))
 if HOT_GPU_COUNT not in (1,2,4):raise ValueError('HOT_GPU_COUNT must be 1, 2 or 4')
-app = modal.App('agentverse-hot-hall')
-requests = modal.Queue.from_name('agentverse-hot-requests', create_if_missing=True)
-results = modal.Dict.from_name('agentverse-hot-results', create_if_missing=True)
+HOT_NAMESPACE=os.environ.get('HOT_NAMESPACE','agentverse-hot')
+app = modal.App(HOT_NAMESPACE+'-hall')
+requests = modal.Queue.from_name(HOT_NAMESPACE+'-requests', create_if_missing=True)
+results = modal.Dict.from_name(HOT_NAMESPACE+'-results', create_if_missing=True)
 services = modal.Dict.from_name('agentverse-hot-services', create_if_missing=True)
 mission_runs = modal.Volume.from_name('agentverse-mission-runs', create_if_missing=True)
 
