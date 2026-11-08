@@ -28,7 +28,6 @@ The mission goal is to collect the required evidence for every assigned drum and
 | Rust or a bulging barrel in the front camera | Associate the finding with a drum; inspect again if evidence is uncertain |
 | An unreadable plate or a possible inventory mismatch | Reposition the robot and request another plate read |
 | Bulging together with elevated surface temperature | Flag suspected pressurisation for review; retain the supporting readings |
-| Rising radiation or corroborating heat, gas and hiss findings | Apply the configured motion limits or select an alert and retreat |
 | Missing inspection evidence | Keep the drum pending, retry within a budget, or explicitly defer it |
 
 The recording overlay shows the robot's camera, detections, sensor values, visited trail, inspection progress and actual model decisions. Each run also produces a structured report linking findings to the evidence collected.
