@@ -88,6 +88,10 @@ def radiation(v):
 
 
 def where(d):
+    v3 = re.match(r'([A-Z])-([LR])-(\d+)-T(\d)$', d['drum_id'])   # warehouse-v3 location code
+    if v3:
+        side = 'left' if v3.group(2) == 'L' else 'right'
+        return f'{side.capitalize()} rack, bay {int(v3.group(3))}, shelf {v3.group(4)}'
     m = re.match(r'([A-Z])(\d+)', d['drum_id'])
     return f'Row {m.group(1)}, drum {int(m.group(2))}' if m else f'Row {d.get("row", "?")}'
 
@@ -268,11 +272,18 @@ def fig_map(path, inventory, drums, colours, zs, trail, spike, rows):
         if d['label'] not in ids:
             ax.add_patch(Circle((d['x'], d['y']), 0.3, facecolor='white', edgecolor='#C4C4BE', lw=0.7))
     mid = sum(r[0] for r in rows) / len(rows)
+    # Stacked drums (warehouse-v3 shelves) share a floor position: one dot per bay, worst colour, bay label.
+    bays = defaultdict(list)
     for d in drums:
-        ax.add_patch(Circle((d['x'], d['y']), 0.3, facecolor=COL[colours[d['drum_id']][0]], edgecolor=INK, lw=0.6))
-        above = d['y'] > mid
-        ax.text(d['x'], d['y'] + (0.42 if above else -0.42), d['drum_id'], ha='center',
-                va='bottom' if above else 'top', fontsize=7.5)
+        bays[(round(d['x'], 2), round(d['y'], 2))].append(d)
+    rank = {'RED': 0, 'AMBER': 1, 'GREEN': 2}
+    for (x, y), group in bays.items():
+        worst = min((colours[d['drum_id']][0] for d in group), key=rank.get)
+        ax.add_patch(Circle((x, y), 0.3, facecolor=COL[worst], edgecolor=INK, lw=0.6))
+        above = y > mid
+        label = group[0]['drum_id'] if len(group) == 1 else re.sub(r'-T\d$', '', group[0]['drum_id'])
+        ax.text(x, y + (0.42 if above else -0.42), label, ha='center', va='bottom' if above else 'top',
+                fontsize=7.5 if len(group) == 1 else 6.5, rotation=0 if len(group) == 1 else 90)
     xs = [d['x'] for d in inventory]
     for y, r in rows:
         ax.text(min(xs) - 0.9, y, f'Row {r}', ha='right', va='center', fontsize=8, color='#555550')
@@ -318,7 +329,8 @@ def fig_traces(path, tele, budget, spike, has):
         axs[i].plot(t, [x.get('temperature_c') for x in tele], color=INK, lw=0.9)
         axs[i].set_ylabel(r'Air temp. (\textdegree C)' if plt.rcParams['text.usetex'] else 'Air temp. (°C)'); i += 1
     if has['h2']:
-        axs[i].plot(t, [x.get('hydrogen_ppm') for x in tele], color=INK, lw=0.9)
+        axs[i].plot(t, [x.get('hydrogen_ppm') if x.get('hydrogen_ppm') is not None else math.nan for x in tele],
+                    color=INK, lw=0.9, marker='.', ms=2)
         axs[i].set_ylabel('Hydrogen (ppm)')
     for a in axs:
         if spike:
@@ -358,6 +370,7 @@ def main():
     if a.previous and Path(a.previous).exists():
         prev = {d['drum_id']: d['status'] for d in json.loads(Path(a.previous).read_text())['drums']}
     has = {'temp': any('temperature_c' in t for t in tele), 'h2': any('hydrogen_ppm' in t for t in tele)}
+    h2_below = not has['h2'] and any(t.get('hydrogen_status') == 'below_detection' for t in tele)
 
     colours = {d['drum_id']: drum_colour(d) for d in drums}
     zs = zones(tele, drums, colours, rows)
@@ -373,8 +386,9 @@ def main():
         src = run / s['file']
         if src.exists() and s['drum'] in colours and (s['kind'] == 'confirmed' or s['drum'] not in photo):
             dst = out / 'photos' / (src.stem + '.jpg')
+            chase = Image.open(src).size == (1920, 1080)
             crop_photo(src, dst)
-            photo[s['drum']] = (f'photos/{dst.name}', s['t'])
+            photo[s['drum']] = (f'photos/{dst.name}', s['t'], chase)
 
     order = {'RED': 0, 'AMBER': 1, 'GREEN': 2}
     reg = sorted(drums, key=lambda d: (order[colours[d['drum_id']][0]], d['drum_id']))
@@ -389,7 +403,7 @@ def main():
     started = mem.get('started_utc', '')
     date = started.split(' ')[0] if started else 'not recorded'
     measured_none = [k for k, v in (('drum surface temperature', any(d.get('heat_rise_c') is not None for d in drums)),
-                                     ('hydrogen gas', has['h2']),
+                                     ('hydrogen gas', has['h2'] or h2_below),
                                      ('surface wipe (swab) results', any(d.get('swab') for d in drums))) if not v]
 
     sc = None
@@ -467,25 +481,26 @@ def main():
     w(r'The robot measured radiation as it walked. Each aisle is split into 2-metre sections, and each section is given '
       r'a simulation rating. Site staff must assess access separately.')
     w(r'\begin{figure}[H]\centering\includegraphics[width=\textwidth]{map.pdf}'
-      r'\caption{Plan of the store. Coloured bands are the aisle sections; circles are drums.}\end{figure}')
+      r'\caption{Plan of the store. Coloured bands are the aisle sections; circles are drums (stacked drums share one circle, coloured by the most urgent).}\end{figure}')
     w(r'\begin{longtable}{@{}p{0.32\textwidth} l l p{0.38\textwidth}@{}}\toprule')
     w(r'Where & Section & Rating & Why\\\midrule\endhead')
     for z in sorted(zs, key=lambda z: (['KEEP OUT', 'RESTRICTED', 'LOW GAMMA', 'NOT CHECKED'].index(z['zone']), z['aisle'], z['lo'])):
         w(rf'{tex(z["name"])} & {z["part"]} & \zone{{{z["zone"]}}} & {tex(z["reason"])}\\')
     w(r'\bottomrule\end{longtable}')
     w(r'{\small\color{muted} Sections are measured along the aisle from the end nearest drum 1. '
-      + ('Hydrogen gas was not measured in this inspection.' if not has['h2'] else '') + '}')
+      + ('Hydrogen stayed below the sensor\'s 2 ppm detection limit throughout.' if h2_below else
+         'Hydrogen gas was not measured in this inspection.' if not has['h2'] else '') + '}')
 
     # ---------- register
     w(r'\clearpage\section{Every drum at a glance}')
     w(r'All drums in this inspection, most urgent first.')
-    w(r'\begin{longtable}{@{}l l l l l l l@{}}\toprule')
+    w(r'{\small\setlength{\tabcolsep}{4pt}\begin{longtable}{@{}l l l l l l l@{}}\toprule')
     w(r'Drum & Waste & Where & Result & What was seen & How sure & Radiation\\\midrule\endhead')
     for d in reg:
         c = colours[d['drum_id']][0]
         w(rf'\textbf{{{d["drum_id"]}}} & {WASTE.get(d.get("category"), tex(d.get("category")))} & {where(d)} & '
           rf'\result{{{c}}} & {finding(d)} & {certainty(d["confidence"])} & {tex(radiation(d.get("dose_rate_at_drum_uSv_h")))}\\')
-    w(r'\bottomrule\end{longtable}')
+    w(r'\bottomrule\end{longtable}}')
     notes = ['"How sure" is how confident the camera software was about the damage it saw.']
     notes.append('This is the first inspection of these drums, so there is nothing to compare with yet.' if not prev else
                  'Changes since the last inspection are listed in each finding.')
@@ -506,8 +521,9 @@ def main():
         w(rf'{{\color{{muted}} {WASTE.get(d.get("category"), "")} waste \textbar\ {where(d)}}}\par\vspace{{6pt}}')
         ph = photo.get(d['drum_id'])
         if ph:
-            w(rf'\includegraphics[width=\linewidth]{{{ph[0]}}}\par')
-            w(rf'{{\small\color{{muted}} Photo taken {clock(ph[1])} into the inspection. The ring on the floor marks drum {d["drum_id"]}.}}\par\vspace{{6pt}}')
+            w(rf'{{\centering\includegraphics[width={"" if ph[2] else "0.55"}\linewidth]{{{ph[0]}}}\par}}')
+            mark = 'The ring on the floor' if ph[2] else 'The bold outline'
+            w(rf'{{\small\color{{muted}} Photo taken {clock(ph[1])} into the inspection. {mark} marks drum {d["drum_id"]}.}}\par\vspace{{6pt}}')
         else:
             w(r'{\small\color{muted} No photo was saved for this drum.}\par\vspace{6pt}')
         w(r'\begin{tabularx}{\linewidth}{@{}>{\leavevmode\color{muted}}p{0.22\linewidth} X@{}}')
