@@ -3,7 +3,7 @@
 // viewBox and proportions are untouched.
 //   .st0 #161615 (black body)    -> #f2c545 brand yellow
 //   .st2 #f2c545 (yellow accent) -> #111315 header charcoal
-//   .st1 #fefefe (eye)           -> unchanged
+//   .st1 #fefefe (eye)           -> #111315 header charcoal
 // The wordmark (canis-type.svg) is live text in a font that is not shipped, so the
 // console keeps the original wordmark PNG and inverts it to white in CSS instead.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -11,7 +11,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-export const SWAPS = [['#161615', '#f2c545'], ['#f2c545', '#111315']];
+export const SWAPS = [['#161615', '#f2c545'], ['#f2c545', '#111315'], ['#fefefe', '#111315']];
 
 export function darkVariant(svg) {
   const marker = (i) => `@@SWAP${i}@@`;

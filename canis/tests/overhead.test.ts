@@ -46,7 +46,8 @@ describe('dark brand variant', () => {
     expect(strip(out)).toBe(strip(src));
     expect(out).toContain('fill: #f2c545;');
     expect(out).toContain('fill: #111315;');
-    expect(out).toContain('fill: #fefefe;');
+    expect(out).not.toContain('#fefefe');
+    expect(out.match(/fill: #111315;/g)).toHaveLength(2);
   });
   it('vendored source matches the workspace original when available', () => {
     const original = '/Users/levi/Desktop/agentverse/assets/canis logo.svg';
