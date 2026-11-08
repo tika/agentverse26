@@ -50,6 +50,46 @@ def feet_in_body(reading):
     return feet
 
 
+class DenseSensorWorld(SensorWorld):
+    """Batch the same finite-cylinder shielding calculation for the 360-drum inventory."""
+
+    def __init__(self, drums, config):
+        super().__init__(drums, config)
+        self.xy = np.array([(d['x'], d['y']) for d in drums])
+        self.bottom = np.array([d['base_z'] for d in drums])
+        self.height = np.array([d['height'] for d in drums])
+        self.top = self.bottom + self.height
+        self.radius_squared = np.square([d['radius'] for d in drums])
+        self.centres = np.column_stack((self.xy, self.bottom + self.height / 2))
+        self.other_drum = ~np.eye(len(drums), dtype=bool)
+
+    def _sources(self, position):
+        start = np.asarray(position)
+        direction = self.centres - start
+        offset = start[:2] - self.xy
+        a = np.square(direction[:, :2]).sum(axis=1)[:, None]
+        b = 2 * (direction[:, 0, None] * offset[:, 0] + direction[:, 1, None] * offset[:, 1])
+        c = np.square(offset).sum(axis=1) - self.radius_squared
+        discriminant = b * b - 4 * a * c
+        root = np.sqrt(np.maximum(0, discriminant))
+        divisor = 2 * np.where(a < 1e-12, 1, a)
+        enter = np.maximum(1e-6, (-b - root) / divisor)
+        exit = np.minimum(1 - 1e-6, (-b + root) / divisor)
+
+        dz = direction[:, 2, None]
+        horizontal = np.abs(dz) < 1e-12
+        safe_dz = np.where(horizontal, 1, dz)
+        bottom = (self.bottom - start[2]) / safe_dz
+        top = (self.top - start[2]) / safe_dz
+        vertical = np.maximum(enter, np.minimum(bottom, top)) <= np.minimum(exit, np.maximum(bottom, top))
+        height_hit = np.where(horizontal, (self.bottom <= start[2]) & (start[2] <= self.top), vertical)
+        blockers = (self.other_drum & (a >= 1e-12) & (discriminant >= 0) & (enter <= exit) & height_hit).sum(axis=1)
+        cfg = self.config['radiation']
+        distance_squared = np.maximum(np.square(direction).sum(axis=1), cfg['distance_floor_m'] ** 2)
+        strength = np.array([d['source_strength'] for d in self._drums])
+        yield from zip(self.centres, strength / distance_squared * cfg['shielding_per_drum'] ** blockers)
+
+
 def store_map():
     """Prior map: inner wall faces and drum footprints at LiDAR height."""
     pts = []
@@ -57,7 +97,10 @@ def store_map():
         pts += [(x, 0.0), (x, HALL_Y)]
     for y in np.arange(0, HALL_Y, 0.05):
         pts += [(0.0, y), (HALL_X, y)]
+    scan_z = 0.5 + LIDAR_MOUNT_Z
     for d in inventory:
+        if not d.get('base_z', 0) <= scan_z <= d.get('base_z', 0) + d['height']:
+            continue
         for a in np.arange(0, 2 * math.pi, 0.03 / d['radius']):
             pts.append((d['x'] + d['radius'] * math.cos(a), d['y'] + d['radius'] * math.sin(a)))
     return np.array(pts)
@@ -159,7 +202,12 @@ class RealNav:
                     estimate[2] = wrap(estimate[2] + self.gyro * dt)
         self.prev_feet, self._stance = feet, stance
 
-    def lidar_update(self, frame_dt):
+    def lidar_update(self, frame_dt, *, use_lidar=True):
+        self.speed = self._distance / frame_dt
+        self._distance = 0.0
+        if not use_lidar:
+            self.fused = self.odom.copy()
+            return
         frame = LIDAR.get_current_frame().get('IsaacCreateRTXLidarScanBuffer', {})
         points = np.asarray(frame.get('data', np.zeros((0, 3))), dtype=float).reshape(-1, 3)
         rng_ = np.linalg.norm(points[:, :2], axis=1)
@@ -167,8 +215,6 @@ class RealNav:
         keep = (z > -0.45) & (z < 0.25) & (rng_ > 0.6) & (rng_ < 14)
         scan = points[keep, :2]
         self.scan_points = int(len(points))
-        self.speed = self._distance / frame_dt
-        self._distance = 0.0
         if len(scan) > 1200:
             scan = scan[np.random.default_rng(0).choice(len(scan), 1200, replace=False)]
         if len(scan) < 50:
@@ -189,7 +235,7 @@ class RealNav:
                 math.degrees(abs(wrap(self.fused[2] - yaw))))
 
 
-def camera_rays_to_world(camera, pixels_uv, depths, body_truth, estimate):
+def camera_rays_to_world(camera, pixels_uv, depths, body_truth, estimate, include_height=False):
     """Back-project pixels with depth, then express via the camera mount on the *estimated* body pose."""
     k = camera.get_intrinsics_matrix()
     position, quat = camera.get_world_pose(camera_axes='world')
@@ -207,7 +253,8 @@ def camera_rays_to_world(camera, pixels_uv, depths, body_truth, estimate):
     c, s = math.cos(-byaw), math.sin(-byaw)
     in_body = rel @ np.array([[c, s], [-s, c]])
     c, s = math.cos(estimate[2]), math.sin(estimate[2])
-    return in_body @ np.array([[c, s], [-s, c]]) + estimate[:2]
+    xy = in_body @ np.array([[c, s], [-s, c]]) + estimate[:2]
+    return np.column_stack((xy, world_truth[:, 2])) if include_height else xy
 
 
 def thermal_findings(thermal, depth, ambient, body_truth, estimate, rise=6.0, min_px=40):
@@ -220,10 +267,13 @@ def thermal_findings(thermal, depth, ambient, body_truth, estimate, rise=6.0, mi
     ok = np.isfinite(d) & (d > 0.2) & (d < 20)
     if ok.sum() < min_px:
         return []
-    world = camera_rays_to_world(onboard, np.stack([us[ok], vs[ok]], 1).astype(float), d[ok], body_truth, estimate)
+    world = camera_rays_to_world(onboard, np.stack([us[ok], vs[ok]], 1).astype(float), d[ok], body_truth, estimate, include_height=True)
     centre = np.median(world, 0)
-    drum = min(inventory, key=lambda e: math.dist(centre, (e['x'], e['y'])))
-    offset = math.dist(centre, (drum['x'], drum['y']))
+    same_height = [e for e in inventory if e.get('base_z', 0) <= centre[2] <= e.get('base_z', 0) + e['height']]
+    if not same_height:
+        return []
+    drum = min(same_height, key=lambda e: abs(math.dist(centre[:2], (e['x'], e['y'])) - e['radius']))
+    offset = math.dist(centre[:2], (drum['x'], drum['y']))
     return [{'kind': 'thermal_hotspot', 'temp_c': float(np.percentile(thermal[hot], 90)), 'pixels': int(hot.sum()),
              'range_m': float(np.median(d[ok])),
              'position_m': centre.tolist(), 'drum_id': drum['id'] if offset < drum['radius'] + 0.6 else None,
@@ -283,14 +333,17 @@ print('[hot] real sensing loaded', flush=True)
 DECIDE_PROMPT = (
     'You are the decision layer of a Spot robot doing a routine inspection round of a nuclear waste drum store. '
     'The waste is solid. Failure modes are corrosion, breach releasing particulate (only a swab detects alpha), '
-    'heating from internal reactions, and gas generation. Criteria: dose above 7.5 uSv/h is amber and above 100 '
-    'uSv/h requires backing off; a swab above 0.4 Bq/cm2 alpha or 4 Bq/cm2 beta/gamma is failing containment; a drum '
+    'heating from internal reactions, and gas generation. A separate safety layer has ALREADY removed every unsafe '
+    'action: every action you are offered is safe to take, and you never need to hold for safety. Your job is to finish '
+    'the inspection: confirm each finding with a closer look or a measurement, raise an alert only when the evidence '
+    'is corroborated, and otherwise keep the round moving. Holding gathers no new evidence; choose it only while '
+    'waiting is the point (a sample in progress, or after an alert). Criteria: dose above 7.5 uSv/h is amber and above '
+    '100 uSv/h requires backing off; a swab above 0.4 Bq/cm2 alpha or 4 Bq/cm2 beta/gamma is failing containment; a drum '
     'surface 5 C or more above ambient is a thermal anomaly. Hydrogen and hiss have no alarm setpoint; weigh them as '
-    'evidence together with heat. You receive the onboard camera image, readings, findings and the actions the '
-    'safety layer allows. Choose exactly one offered action. Answer with only JSON: '
-    '{"action_id": <offered id>, "reason": <one short sentence citing the evidence>}.')
-PLATE_PROMPT = ('Read the waste drum plate. It shows a category (LLW or ILW) and an ID of one uppercase letter '
-                'followed by two digits. Read only visible characters. If no plate is readable return nulls. '
+    'evidence together with heat. Use only facts in the readings and findings. Choose exactly one offered action and '
+    'answer with only JSON: {"action_id": <offered id>, "reason": <one short sentence citing the evidence>}.')
+PLATE_PROMPT = ('Read the yellow location plate. Transcribe the code exactly as printed, including its final tier digit. '
+                'Read the largest code on the plate. If any part is unreadable return nulls. '
                 'Answer with only JSON: {"drum_id": ..., "category": ...}.')
 
 
@@ -310,12 +363,20 @@ def cosmos_chat(content, system=None, max_tokens=512, timeout_s=180):
     import os as _os
     import urllib.request as _url
     url, key = _os.environ.get('COSMOS_URL'), _os.environ.get('VLLM_API_KEY')
-    if not url or not key:
-        raise RuntimeError('COSMOS_URL / VLLM_API_KEY not set on this worker')
+    model=_os.environ.get('COSMOS_MODEL','cosmos')
+    config_file=_os.environ.get('COSMOS_CONFIG_FILE')
+    if config_file and Path(config_file).exists():
+        config=json.loads(Path(config_file).read_text())
+        url=config.get('COSMOS_URL',url);key=config.get('VLLM_API_KEY',key)
+        model=config.get('COSMOS_MODEL',model)
+    if not url:
+        raise RuntimeError('External Cosmos endpoint has not been configured')
     messages = ([{'role': 'system', 'content': system}] if system else []) + [{'role': 'user', 'content': content}]
-    body = json.dumps({'model': 'cosmos', 'messages': messages, 'max_tokens': max_tokens, 'temperature': 0.0}).encode()
+    body = json.dumps({'model': model, 'messages': messages, 'max_tokens': max_tokens, 'temperature': 0.0}).encode()
+    headers={'Content-Type':'application/json'}
+    if key:headers['Authorization']=f'Bearer {key}'
     request = _url.Request(url.rstrip('/') + '/v1/chat/completions', data=body, method='POST',
-                           headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {key}'})
+                           headers=headers)
     with _url.urlopen(request, timeout=timeout_s) as response:
         return json.loads(response.read())['choices'][0]['message']['content']
 
@@ -341,11 +402,12 @@ def cosmos_call(method, rgb, snapshot=None):
             answer = extract_json(text)
             drum_id, category = answer.get('drum_id'), answer.get('category')
             import re as _re
-            valid_id = isinstance(drum_id, str) and _re.fullmatch(r'[A-Z][0-9]{2}', drum_id) is not None
+            candidates = _re.findall(r'\b[ABC]-[LR]-[0-9]{2}-T[1-3]\b', drum_id.upper()) if isinstance(drum_id, str) else []
+            valid_id = len(candidates) == 1
             valid_cat = category in ('LLW', 'ILW')
             # A misread never becomes an ID: anything off-format is partial (some text) or unreadable.
-            result = {'drum_id': drum_id if valid_id else None, 'category': category if valid_cat else None,
-                      'readability': 'readable' if valid_id and valid_cat else ('partial' if drum_id or category else 'unreadable'),
+            result = {'drum_id': candidates[0] if valid_id else None, 'category': category if valid_cat else None,
+                      'readability': 'readable' if valid_id else ('partial' if drum_id or category else 'unreadable'),
                       'raw_read': [drum_id, category]}
         else:
             text = cosmos_chat([_image_part(rgb), {'type': 'text', 'text': json.dumps(snapshot)}], system=DECIDE_PROMPT)
@@ -359,3 +421,30 @@ def cosmos_call(method, rgb, snapshot=None):
         result = {'error': repr(error)[-300:], 'valid': False}
     result['latency_s'] = _time.perf_counter() - started
     return result
+
+    h, w = depth.shape
+    for det in detections:
+        x0, y0, x1, y1 = det['bbox_xyxy']
+        u, v = int(np.clip((x0 + x1) / 2, 0, w - 1)), int(np.clip((y0 + y1) / 2, 0, h - 1))
+        patch = depth[max(0, v - 3):v + 4, max(0, u - 3):u + 4]
+        patch = patch[np.isfinite(patch) & (patch > 0.2)]
+        if not patch.size:
+            continue
+        centre = camera_rays_to_world(onboard, np.array([[u, v]], float), np.array([float(np.median(patch))]),
+                                      body_truth, estimate)[0]
+        drum = min(inventory, key=lambda e: math.dist(centre, (e['x'], e['y'])))
+        if math.dist(centre, (drum['x'], drum['y'])) > drum['radius'] + 0.45:
+            continue
+        entry = per_drum.setdefault(drum['id'], {'drum_area': 0.0, 'corrosion_area': 0.0, 'corrosion': [], 'bulge': [],
+                                                 'drum_conf': 0.0})
+        area = max(0.0, (x1 - x0) * (y1 - y0))
+        if det['class_name'] == 'drum':
+            entry['drum_area'] = max(entry['drum_area'], area)
+            entry['drum_conf'] = max(entry['drum_conf'], det['confidence'])
+        elif det['class_name'] in ('corrosion', 'bulge'):
+            entry[det['class_name']].append({'confidence': det['confidence'], 'band': det.get('decision_band', 'suspect')})
+            if det['class_name'] == 'corrosion':
+                entry['corrosion_area'] += area
+    for entry in per_drum.values():  # Box-area proxy for visible rust; boxes overlap the drum, not pixels.
+        entry['rust_pct'] = min(100.0, 100.0 * entry['corrosion_area'] / entry['drum_area']) if entry['drum_area'] else None
+    return per_drum

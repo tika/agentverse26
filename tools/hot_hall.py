@@ -32,9 +32,9 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
          .env({'ACCEPT_EULA': 'Y', 'PRIVACY_CONSENT': 'N', 'NVIDIA_DRIVER_CAPABILITIES': 'all'})
          .add_local_dir(ROOT / 'sim', '/workspace/sim', copy=True,
                         ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc', '*.usda']))
-app = modal.App('agentverse-hot-hall')
-requests = modal.Queue.from_name('agentverse-hot-requests', create_if_missing=True)
-results = modal.Dict.from_name('agentverse-hot-results', create_if_missing=True)
+app = modal.App('agentverse-dense-hot-hall')
+requests = modal.Queue.from_name('agentverse-dense-hot-requests', create_if_missing=True)
+results = modal.Dict.from_name('agentverse-dense-hot-results', create_if_missing=True)
 
 
 def _encode(folder):
