@@ -13,7 +13,7 @@ After every run, the dog produces one report that says three things: **which dru
 2. **The model can't invent facts.** Cosmos Reason 2B writes free text in one place only: the "context" paragraph for each red drum (section 3). Its input is that drum's logged readings. Its output is shown in quotes, labelled "Cosmos explanation", and the builder checks it (step 5). Everything else (statuses, zones, tables, numbers) is computed by deterministic Python.
 3. **No area is "safe" by default.** Without a logged gamma reading, report `NOT CHECKED` unless other evidence warrants escalation. Report `LOW GAMMA` only when readings are below the demo threshold and no nearby unresolved finding needs review. These labels do not clear access.
 4. **Re-runnable.** The same run folder always gives the same PDF: sorted output, and the only timestamp is the run's own.
-5. **Work inside the repo's report folders.** New code goes in `tools/full_hall_report/` (extend `build_report.py`, don't fork it). Don't edit the detector, Cosmos, safety or sim code; import from them. Never commit secrets.
+5. **Work inside the repo's report folders.** New code goes in `tools/full_hall_report/` (extend `report/`: add a loader for a new log format, don't fork the builder). Don't edit the detector, Cosmos, safety or sim code; import from them. Never commit secrets.
 
 ## 1. Inputs (one run folder)
 
@@ -85,7 +85,7 @@ If a check fails, or Cosmos is unreachable, print "Cosmos explanation unavailabl
 
 ## 6. The PDF
 
-Write `docs/full_hall_report/CANIS_report_<RUN_ID>.pdf`, typeset with **LaTeX** (Latin Modern font): `tools/full_hall_report/pdf/build_pdf_report.py` fills `template.tex` and runs `pdflatex` twice. It needs a TeX install (MacTeX, or `texlive-latex-extra` + `texlive-fonts-recommended` in a Linux image). Keep `index.html` as the screen version, built from the same data. Logo: `tools/full_hall_report/pdf/assets/logo.png`. Gamma at a drum sets the AREA zone, not the drum colour (otherwise every drum in a hot store turns amber).
+Run `python tools/full_hall_report/report/build_report.py <run_dir>`. It writes `index.html` (screen), `CANIS_report_<RUN_ID>.pdf` (A4, via Playwright/Chromium), `summary.json` and `evidence/` from the same data. Rules live in `report/rules.py`, loaders for each log format in `report/loaders.py`, layout in `report/render.py` + `style.css`; see `tools/full_hall_report/report/README.md`. Type: IBM Plex Mono for every label, number, ID and table, IBM Plex Sans for sentences, the console's dog-head mark and wordmark (`report/assets/`). The older LaTeX builder in `pdf/` is kept for reference only. Gamma at a drum sets the AREA zone, not the drum colour (otherwise every drum in a hot store turns amber).
 
 A4, portrait, page numbers, run ID and "Simulated store (Isaac Sim)" in the footer of every page. Pages, in this order:
 
@@ -139,7 +139,7 @@ Design and audience: written for store managers and safety staff who are NOT eng
 Add a final step to the end-of-run script (e.g. `scripts/hot/full_hall/full_hall_round.py`, or wherever the run finishes) that calls:
 
 ```bash
-python tools/full_hall_report/build_report.py out/full_hall/<RUN_ID> [--previous <old memory.json>] --pdf
+python tools/full_hall_report/report/build_report.py out/full_hall/<RUN_ID>
 ```
 
 If the report fails, the run still counts. Log the error to `report/report_error.txt` and exit non-zero from the report step only.

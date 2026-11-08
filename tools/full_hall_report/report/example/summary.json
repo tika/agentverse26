@@ -1,0 +1,86 @@
+{
+ "report": "CANIS-112205-adaptive_aisle-20f6",
+ "drums": {
+  "RED": 1,
+  "AMBER": 1,
+  "GREEN": 4
+ },
+ "zones": {
+  "RESTRICTED": 1,
+  "NOT CHECKED": 1,
+  "KEEP OUT": 0,
+  "LOW GAMMA": 0
+ },
+ "inspected": 5,
+ "expected": 6,
+ "peak_gamma_uSv_h": 1.7083333333333333,
+ "verdict": "1 drum needs action and 1 needs a second check. 4 showed no problem.",
+ "results": {
+  "A-L-01-T2": {
+   "colour": "RED",
+   "status": "Confirmed defect",
+   "why": [
+    "rust confirmed in 3 of 3 views"
+   ],
+   "action": "Ask an engineer to assess how far the rust has gone. Take a surface wipe if none was taken. Consider placing the drum in an overpack (a larger outer drum)."
+  },
+  "A-L-01-T3": {
+   "colour": "AMBER",
+   "status": "Couldn't inspect",
+   "why": [
+    "the drum label could not be read after a retry, so its identity is not confirmed"
+   ],
+   "action": "Read the drum label in person and confirm which drum this is. Then repeat the inspection."
+  },
+  "A-L-01-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 6 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-01-T1": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-01-T2": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  },
+  "A-R-01-T3": {
+   "colour": "GREEN",
+   "status": "OK",
+   "why": [
+    "no damage seen in 3 views"
+   ],
+   "action": "No action. Routine inspection."
+  }
+ },
+ "sections": [
+  {
+   "aisle": "A",
+   "part": "0–2 m",
+   "zone": "RESTRICTED",
+   "reason": "Drum needing action here: A-L-01-T2.",
+   "gmax": 1.7083333333333333,
+   "samples": 1854
+  },
+  {
+   "aisle": "A",
+   "part": "2–4 m",
+   "zone": "NOT CHECKED",
+   "reason": "The robot logged no readings here.",
+   "gmax": null,
+   "samples": 0
+  }
+ ]
+}

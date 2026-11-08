@@ -1,0 +1,9 @@
+{
+  "name": "canis-run-report",
+  "private": true,
+  "description": "PDF step for the C.A.N.I.S. run report (to_pdf.mjs). Run: npm install && npx playwright install chromium",
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.65.0"
+  }
+}
