@@ -95,11 +95,6 @@ def command_to(p, yaw, view):
     return np.array([0.0, 0.0, float(np.clip(1.6 * error, -1.0, 1.0))], np.float32), abs(error) < 0.05
 
 
-# Solid waste only: the layout's floor spill decals stay hidden (they also read as "corrosion").
-from pxr import UsdGeom
-for prim in stage.Traverse():
-    if prim.GetName().startswith('Spill_'):
-        UsdGeom.Imageable(prim).MakeInvisible()
 zero = np.zeros(3, dtype=np.float32)
 spot.restart_from_default_state(zero)
 world.step(render=False)
