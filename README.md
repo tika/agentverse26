@@ -15,9 +15,9 @@ Robotic dogs such as Boston Dynamics Spot already inspect nuclear facilities, in
 
 ## CANIS: from an observation to a decision
 
-CANIS is an **agentic inspection system for robot dogs**, demonstrated with Boston Dynamics Spot in a simulated 420-drum waste store in NVIDIA Isaac Sim. Spot walks the aisles, a detector checks every drum it sees, fixed rules decide which drums are confirmed, cleared or still unclear, and Cosmos Reason 2 chooses the next step when the evidence is not good enough. A fixed dose rule can stop the round and back the robot off regardless of any model.
+CANIS is an **agentic inspection system for robot dogs**, demonstrated with Boston Dynamics Spot in a simulated 420-drum waste store in NVIDIA Isaac Sim. Spot walks the assigned aisle, a detector supplies observations for the selected inspection targets, fixed rules decide which drums are confirmed, cleared or still unclear, and Cosmos Reason 2 chooses the next step when the evidence is not good enough. A fixed dose rule can stop the round and back the robot off regardless of any model.
 
-Each run ends in a report for store managers: which drums need action, where gamma was measured and what was not checked.
+Run logs can be converted into a report for store managers: which drums need action, where gamma was measured and what was not checked.
 
 ![CANIS detecting a bulging drum with elevated surface temperature in warehouse-v3](docs/previews/canis-banner.jpg)
 
@@ -25,8 +25,9 @@ Each run ends in a report for store managers: which drums need action, where gam
 
 | What CANIS observes | How it responds | Where it runs today |
 |---|---|---|
-| Rust or bulging on a drum | Confirms it only when the fault appears in at least two of three views; otherwise takes a closer look | Aisle patrol and rigid-camera walk |
-| A drum only partly in frame, or an unclear detector result | Cosmos chooses another view or hands the drum to an operator; a partial view never clears a drum | Rigid-camera walk and upper-tier recheck |
+| Rust or bulging on a drum | Combines repeated views under fixed voting rules; unclear and top-tier targets receive a closer look before a final verdict | Aisle patrol and rigid-camera walk |
+| An unclear detector result | Cosmos can request a closer look or mark the drum suspect for operator review | Rigid-camera walk |
+| A drum only partly in frame | A framing gate blocks clearance; Cosmos selects an offered recheck or operator deferral | Upper-tier recheck |
 | Missing evidence | Marks the drum or aisle section *not checked* in the report instead of guessing | All runs that produce the report |
 
 An earlier 28-drum hall prototype also read drum ID plates, took virtual swabs and chose retreat-and-alert through a Cosmos planner. Those features are described in [the earlier mission recording](docs/mission_recording_20261108.md) and are not part of the warehouse-v3 runs.
@@ -86,7 +87,7 @@ The dataset, best weights, training logs and test artifacts persist in Modal Vol
 
 ## Technical architecture
 
-Everything runs on Modal. One warm Isaac Sim worker holds the warehouse, Spot and the mission script in a single Python process. The detector and Cosmos are separate GPU services reached over authenticated HTTPS, and the report is built from the run's logs afterwards. **The mission script coordinates everything**: models never call each other, and no model output becomes a verdict without passing a fixed rule.
+Simulation and model inference run on Modal. The post-run report builder can run locally. One warm Isaac Sim worker holds the warehouse, Spot and the mission script in a single Python process. The detector and Cosmos are separate GPU services reached over authenticated HTTPS, and the report is built from the run's logs afterwards. **The mission script coordinates everything**: models never call each other, and no model output becomes a verdict without passing a fixed rule.
 
 ```mermaid
 flowchart TD
@@ -133,7 +134,7 @@ The warehouse runs share the scene, detector, rules and report, and differ in ho
 
 ### 1. World and observations
 
-The warehouse is a 24 × 28.3 m USD stage with 420 yellow LLW and blue-teal ILW drums on three-tier racks. Each session is generated from a seed (`HOT_WAREHOUSE_SEED`): rust, bulging, package contents, radiation sources and hydrogen vents change per seed and replay for a fixed seed. The fault manifest stays on the simulator side; the mission script never receives it.
+The warehouse is a 24 × 28.3 m USD stage with 420 yellow LLW and blue-teal ILW drums on three-tier racks. Each session is generated from a seed (`HOT_WAREHOUSE_SEED`): rust, bulging, package contents, radiation sources and hydrogen vents change per seed and replay for a fixed seed. Private source parameters stay in the simulator-side sensor backend, which runs in the same process as the mission. Authored fault labels are not sent to Cosmos as inspection findings.
 
 [`sim/warehouse-v3/warehouse_sensors.py`](sim/warehouse-v3/warehouse_sensors.py) derives readings from that private inventory: gamma dose rate from Poisson counts through each drum's shielding, accumulated dose, air temperature and humidity, a hydrogen plume at the gas inlet, and LWIR surface temperature from the camera's depth image and the map. Isaac Sim does not model these channels natively, so they are simulated instruments, not measurements.
 
@@ -143,9 +144,9 @@ Spot uses Isaac's pretrained walking policy. In the warehouse runs the robot's p
 
 ### 2. Detect and judge
 
-When the camera has settled on a drum, the mission script sends a 640 × 640 crop to YOLO26s at most every 0.4 s of simulation time. The detector returns one box per barrel with a whole-barrel condition (`normal`, `rust`, `bulge`, `rust_and_bulge`) and a confidence. It does not measure rust area, temperature or pressure.
+When the camera has settled on a drum, the mission script sends a 640 × 640 crop to YOLO26s no more than once every 0.4 s of simulation time. The detector returns one box per barrel with a whole-barrel condition (`normal`, `rust`, `bulge`, `rust_and_bulge`) and a confidence. It does not measure rust area, temperature or pressure.
 
-Fixed rules turn views into a verdict. From the side, a fault scoring at least 0.50 in two of three views confirms a defect, and two normal views with no fault clear the drum. Anything else, and every top-tier drum, gets a closer look from a second position. An empty detector response never clears a drum. In the rigid-camera recheck, a framing gate also requires the drum's projected box to sit fully inside the detector's input before any verdict.
+Fixed rules turn views into a verdict. On the initial three-view pass, a non-top-tier target with fault confidence at least 0.50 in two views is confirmed; two normal views with no fault clear it. Unclear targets and all top-tier targets first receive a closer look. The second pass combines the original three views with five additional views and applies stricter final voting rules. An empty detector response never clears a drum. In the rigid-camera recheck, a framing gate also requires the drum's projected box to sit fully inside the detector's input before any verdict.
 
 ### 3. Cosmos and its limits
 
@@ -163,7 +164,9 @@ The mission script plans stops along the aisle centre line and turns each decisi
 | Component | Update pattern |
 |---|---|
 | Physics and walking policy | Physics substeps and the policy's control rate |
-| Camera, sensors and overlay | Every recorded frame, 24 frames per simulated second |
+| Camera and overlay | Every recorded frame, 24 frames per simulated second |
+| Aisle-patrol gamma, dose, air and H2 | Every 12 recorded frames, approximately 2 Hz in simulation time |
+| Aisle-patrol depth and LWIR | Every two recorded frames, approximately 12 Hz in simulation time |
 | YOLO26s | At most every 0.4 s of simulation time, once the camera has settled on a drum |
 | Cosmos Reason 2 8B | Per drum review (rigid-camera walk) or per ambiguous upper-tier view (recheck) |
 | Dose rule | Every gamma sample in the aisle patrol |
@@ -177,7 +180,7 @@ Each run writes per-drum memory, decisions, detector requests, telemetry and evi
 
 ## Post-CANIS report
 
-After a run, the logs can be turned into a report for store managers and safety staff. It says which drums need action, where people can safely go and what evidence supports each call. The same process works for any run or detector that logs the same fields.
+After a run, the logs can be turned into a report for store managers and safety staff. It says which drums need action, classifies aisle sections from the available evidence, and records what supports each call. A low-gamma reading alone does not establish overall access safety. The same process works for any run or detector that logs the same fields.
 
 1. **Collect the run's logs:** drum memory, decisions, telemetry and evidence photos.
 2. **Rate each drum** with fixed rules: *Action needed*, *Check again* or *No problem found*.
@@ -202,7 +205,7 @@ Build it with [`tools/full_hall_report/report/build_report.py`](tools/full_hall_
 | **Detector** | The expanded 2,500-image YOLO26s scores 87.9% on held-out synthetic images: 98.8% on yellow LLW drums and 70.0% on blue-teal ILW drums. [Latest model](detector/v2/LATEST_MODEL.md) |
 | **Earlier 28-drum hall prototype** | A recorded eight-drum job with four live Cosmos planner decisions, plate reads, a virtual swab and retreat-and-alert, using the earlier detector. [Run and artifacts](docs/mission_recording_20261108.md) |
 
-CANIS is a simulation prototype. Every result above is from simulation: sensor channels are simulated, thresholds are demonstration policy, and detector accuracy is measured on synthetic images. The policy comparison in [the evaluation](eval/EVALUATION.md) is a separate Python simulation of the decision rules on the 28-drum layout, using the latest detector's rates. It is not a measured result from Isaac or physical-robot missions.
+CANIS is a simulation prototype. Every result above is from simulation: sensor channels are simulated, thresholds are demonstration policy, and detector accuracy is measured on synthetic images. The policy comparison in [the evaluation](eval/EVALUATION.md) is a separate Python simulation of the decision rules on the 36-drum aisle layout, using detector-derived rates and configured scenario assumptions. It is not a measured result from Isaac or physical-robot missions.
 
 ## Run it and explore the implementation
 
