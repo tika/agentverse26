@@ -15,7 +15,7 @@ from api_client import predict
 def render_boxes(image, detections):
     overlay = image.convert("RGB")
     draw = ImageDraw.Draw(overlay)
-    colors = {"drum": "#7cc4ff", "corrosion": "#ff9f5e", "bulge": "#ff6767"}
+    colors = {"drum": "#7cc4ff", "corrosion": "#ff9f5e", "bulge": "#c89aff"}
     for detection in detections:
         label = detection["class_name"]
         x0, y0, x1, y1 = detection["bbox_xyxy"]
