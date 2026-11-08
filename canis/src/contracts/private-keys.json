@@ -1,0 +1,18 @@
+{
+  "_comment": "Keys that identify private simulator or evaluator truth. Any inbound payload containing one of these keys at any depth is rejected at the ingest boundary. Mirrored in docs/canis/DATA_DICTIONARY.md (layer 3). Sources: sim/warehouse-v3/warehouse_physics.py (_drum_record, gas_state), sim/warehouse-v3/drum_faults.py (generate_session manifest), and baseline placeholder fields in sim/warehouse-v3/map.json.",
+  "keys": [
+    "physical_inventory", "sensor_config", "evaluator_manifest", "seed", "scene_seed", "appearance_seed",
+    "waste_form", "net_mass_kg", "fill_fraction", "age_years", "activity_bq", "scenario",
+    "Cs137", "Co60", "alpha_equivalent", "beta_equivalent",
+    "exterior", "attack_index", "visual_plan", "corrosion_severity", "bulging_severity",
+    "radiation", "unshielded_strength_usv_h_m2", "effective_attenuation_m_inv", "isolated_aisle_face_1m_usv_h",
+    "decay_heat_w", "chemical_heat_w", "shell_c", "internal_c", "vent_c", "hotspot_delta_c", "emissivity",
+    "headspace_m3", "vent_state", "vent_xyz_m", "h2_ml_stp_day", "methane_ml_stp_day", "h2_exchange_per_day",
+    "pressure_relaxation_per_day", "elapsed_before_launch_days", "initial_air_mol", "pulse_h2_mol_s",
+    "pulse_duration_s", "pulse_reservoir_mol", "h2_headspace_ppm", "gauge_pressure_kpa", "h2_emission_mol_s",
+    "containment", "breached", "patches",
+    "appearance", "corrosion", "bulging", "sites", "body_uv_attack_fraction",
+    "peak_radial_displacement_mm", "peak_height_fraction", "azimuth_rad",
+    "faults", "defects", "internal_corrosion", "source_strength", "shape", "state", "obstructed"
+  ]
+}
