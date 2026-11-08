@@ -13,7 +13,6 @@ DOSE_AMBER, DOSE_BACKOFF = CONFIG['thresholds']['controlled_zone'], CONFIG['thre
 SPEED_NEAR_DRUMS = CONFIG['robot']['max_speed_near_drums_mps']
 H2_DETECTED_PPM = 10.0                  # Reporting floor above sensor noise; the docs set no H2 alarm level.
 FOLLOWUP_TIMEOUT_S = 8.0
-DETECT_EVERY_FRAMES = 6                 # 2 Hz at 12 fps; the detector API is not called every frame.
 
 if 'ptz' not in state:
     ptz = Camera('/World/SpotCamPTZ', resolution=(640, 480))
@@ -630,7 +629,7 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
             peak = a.data.setdefault('peak_dose', {})
             peak[nearest['id']] = max(peak.get(nearest['id'], 0.0), reading['dose_rate_uSv_h'])
         a.data.setdefault('env', []).append((reading['temperature_c'], reading['relative_humidity_pct']))
-        for drum_id, px in ({} if a.detector else perception['corrosion_px']).items():   # Stand-in when no detector.
+        for drum_id, px in ({} if perception.get('yolo') else perception['corrosion_px']).items():   # Stand-in without YOLO.
             if px > 150 and a.add_finding(t, f'corrosion_{drum_id}', kind='visible_corrosion', drum=drum_id,
                                           detector='simulator segmentation placeholder (no trained detector yet)'):
                 a.event(t, f"Corrosion on {DRUMS[drum_id]['display_id']}!")
@@ -675,12 +674,6 @@ def run_agent(a, name, duration=17.0, setup=None, use_cosmos=None, report_second
                 a.swab_text = f"a {result['alpha_bq_cm2']:.2f}  b/g {result['beta_gamma_bq_cm2']:.1f} Bq/cm2"
                 a.event(t, f"Swab {DRUMS[drum_id]['display_id']}: alpha {result['alpha_bq_cm2']:.2f} Bq/cm2" + ('!' if positive else ''))
                 a.swab_contact = None
-        if a.detector and index % DETECT_EVERY_FRAMES == 0:
-            result = detect_frame(frames['first'])
-            if result.get('error'):
-                a.event(t, f"Detector error: {result['error'][:60]}")
-            a.detections = result.get('detections', [])
-            observe_detections(a, t, associate_detections(a.detections, onboard.get_depth(), (p, yaw), est), est)
         observe_for_memory(a, t, perception, reading, est)
         a.memory.update_status(a)
         mark = lap('sensing_findings', mark)
@@ -753,8 +746,6 @@ def compose_agent(a, frames, perception, reading, p, yaw, roll, pitch, t):
         frames['first']=np.asarray(view)
     canvas = compose(a, frames, perception, reading, a.nav.errors(p, yaw), p, yaw, roll, pitch, t)
     draw_memory_overlay(canvas, a, p)
-    if a.detector:
-        draw_detections(canvas, a.detections)
     draw = ImageDraw.Draw(canvas)
     y0 = 728
     draw.rectangle((0, y0, 480, y0 + 200), fill='#111822')
