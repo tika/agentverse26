@@ -19,10 +19,18 @@ W_LLW_XMAX = float(globals().get('W_LLW_XMAX', 5.0))
 W_ILW_XMAX = float(globals().get('W_ILW_XMAX', 16.6))
 W_MAX_S = float(globals().get('W_MAX_S', 400.0))
 W_MOUNT_PITCH = float(globals().get('W_MOUNT_PITCH', 0.0))   # rad, fixed upward mount angle (0 = level, like the team camera)
-LEAN_MAX = 0.10
+LEAN_MAX = 0.06          # rad; a small lean only, the camera tilt does the rest
 LEAN_SIGN = [1.0]        # flipped once if a lean moves the camera the wrong way (checked on the first lean)
 STILL_S = 1.0           # stand still this long (policy, zero command) before leaning
-TURN_MAX = 0.32          # rad/s; the body (and so the camera) turns at a walking-dog pace
+LOOK_GIVE_UP_S = 20.0   # a look can never last longer than this
+TURN_LIMIT_S = 14.0     # a half turn takes about 10 s at TURN_MAX
+W_COSMOS = bool(globals().get('W_COSMOS', False))   # Cosmos Reason 2 reviews each drum; it can only ask for more evidence
+COSMOS_CLOSER_MAX = int(globals().get('W_COSMOS_CLOSER_MAX', 2))   # extra closer looks Cosmos may add at one stop
+COSMOS_TIMEOUT_S = 90
+CAM_TAU_TILT, CAM_TAU_XY = 0.45, 0.12   # s; camera aim eases a little slower than v3's 0.30 s head, and ignores the gait's bounce
+CAM_REST_ELEV = -0.119  # rad; between drums the camera looks slightly down the aisle, as in v3
+CAM_TOP_EXTRA = float(globals().get('W_CAM_TOP_EXTRA', 0.08))   # rad; extra upward aim on top-tier drums, so the whole bin is in view
+TURN_MAX = 0.7           # rad/s, as in the approved v3 walk
 FPS = int(globals().get('W_FPS', 24))     # previews render 12 fps; the encoder blends up to 24
 FLAG, WEAK, CONFIRM, VIEWS, CLOSE_VIEWS = 0.50, 0.25, 0.72, 3, 5
 TOP_TILT = 0.60          # rad; steeper upward views are outside the detector's training range
@@ -82,7 +90,11 @@ def _plan():
 PLAN = _plan()[:W_MAX_COLS]
 if globals().get('W_STOPS'):
     PLAN = [PLAN[k] for k in W_STOPS]
-if globals().get('W_DEMO_TAIL'):              # demo: after the last stop, walk on to the next column and finish
+if globals().get('W_ONE_COLUMN'):             # quick preview: first column on each side, every tier in order
+    for _s in PLAN:
+        _seen = set()
+        _s['sides'] = [x for x in _s['sides'] if not (x['side'] in _seen or _seen.add(x['side']))]
+if globals().get('W_DEMO_TAIL'):             # demo: after the last stop, walk on to the next column and finish
     _nxt = _plan()[(W_STOPS or [0])[-1] + 1]
     PLAN.append({**_nxt, 'sides': []})
 
@@ -220,15 +232,31 @@ def posture_targets(names, positions, pitch_delta=0.):
     return _np2.array([result[n] for n in names], dtype=_np2.float32)
 
 
+def policy_pose_terms(robot):
+    """The policy's neutral pose: offsets on its joint_pos_rel observation and joint_position action (re-read every tick)."""
+    binding = robot._controller._binding.binding
+    terms = [t for t in binding.observation_terms if t.semantic == 'joint_pos_rel'] + [t for t in binding.action_terms if t.semantic == 'joint_position']
+    if len(terms) != 2 or any(len(t.offsets) != len(t.joint_names) or len(t.offsets) == 0 for t in terms):
+        raise ValueError('walking policy has no neutral pose offsets')
+    return terms
+
+
 class Lean:
-    """Stand still and lean the body on its legs (joint position targets, physics). Never sets a pose directly."""
+    """Lean the body while the walking policy keeps balancing: only the policy's own neutral joint pose is eased."""
     RAMP = 2.0                                # s to lean back / stand up again, eased
 
     def __init__(self, robot, pitch_delta):
         art = robot.articulation
         self.robot, self.u, self.releasing, self.finished, self.pitch = robot, 0.0, False, False, pitch_delta
-        self.start = art.get_dof_positions().numpy().reshape(-1).copy()
-        self.target = posture_targets(list(art.dof_names), self.start, pitch_delta)
+        self.terms = policy_pose_terms(robot)
+        # kept in the worker's shared namespace, so a run that dies mid-lean cannot leave a shifted stance as the new base
+        self.base = globals().setdefault('_POLICY_BASE_OFFSETS', [tuple(map(float, t.offsets)) for t in self.terms])
+        names = list(art.dof_names)
+        stand = dict(zip(self.terms[0].joint_names, self.base[0]))
+        self.start = _np2.array([stand[n] for n in names], dtype=_np2.float32)
+        self.target = posture_targets(names, self.start, pitch_delta)
+        self.delta = dict(zip(names, map(float, self.target - self.start)))
+        self._apply(0.0)
         lo, hi = art.get_dof_limits()
         if _np2.any(self.target < lo.numpy().reshape(-1)) or _np2.any(self.target > hi.numpy().reshape(-1)):
             raise ValueError('Observation joint target exceeds limits')
@@ -242,10 +270,14 @@ class Lean:
             return
         self.u = max(0.0, self.u - dt / self.RAMP) if self.releasing else min(1.0, self.u + dt / self.RAMP)
         s = self.u * self.u * (3 - 2 * self.u)
-        self.robot.articulation.set_dof_position_targets((self.start + (self.target - self.start) * s).reshape(1, -1))
+        self._apply(s)
         if self.releasing and self.u <= 0.0:
             self.finished = True
-            self.robot.initialize()          # reset policy feedback at the current physical state; no teleport
+            self._apply(0.0)                 # exactly the original stance again
+
+    def _apply(self, s):
+        for term, base in zip(self.terms, self.base):
+            object.__setattr__(term, 'offsets', tuple(b + s * self.delta[n] for b, n in zip(base, term.joint_names)))
 
 
 def body_R():
@@ -265,8 +297,27 @@ MOUNT_R = _rpy(0, -W_MOUNT_PITCH, 0)         # negative rotation about body y = 
 
 
 def rigid_camera(p):
-    R = body_R() @ MOUNT_R
-    eye = _np2.asarray(p, float) + body_R() @ _np2.array([MOUNT_F, 0.0, MOUNT_Z])
+    """Front camera: follows the body's heading and position, slightly delayed, and tilts up or down to the current drum."""
+    Rb = body_R()
+    raw = _np2.asarray(p, float) + Rb @ _np2.array([MOUNT_F, 0.0, MOUNT_Z])
+    yaw_b = _math.atan2(Rb[1, 0], Rb[0, 0])
+    c = mission.get('cam')
+    if c is None:
+        c = mission['cam'] = {'eye': raw.copy(), 'yaw': yaw_b, 'elev': CAM_REST_ELEV}
+    a_xy, a_aim = 1 - _math.exp(-FRAME_DT / CAM_TAU_XY), 1 - _math.exp(-FRAME_DT / CAM_TAU_TILT)
+    c['eye'][:2] += a_xy * (raw[:2] - c['eye'][:2])
+    c['eye'][2] += a_aim * (raw[2] - c['eye'][2])
+    c['yaw'] += a_aim * _math.remainder(yaw_b - c['yaw'], 2 * _math.pi)
+    want = CAM_REST_ELEV
+    if mission.get('look'):
+        to_drum = _np2.array(centre(BY_ID[mission['look']['drum']])) - c['eye']
+        want = _math.atan2(to_drum[2], _math.hypot(to_drum[0], to_drum[1]))
+        if BY_ID[mission['look']['drum']]['location']['tier'] == 3:
+            want += CAM_TOP_EXTRA
+    c['elev'] += a_aim * (want - c['elev'])
+    mission['cam_err'] = abs(want - c['elev']) + abs(_math.remainder(yaw_b - c['yaw'], 2 * _math.pi))
+    R = _rpy(0.0, -c['elev'], c['yaw'])          # negative rotation about y = nose up
+    eye = c['eye'].copy()
     eye_cam.set_world_pose(position=eye, orientation=_quat(R), camera_axes='world')
     return eye, R
 
@@ -274,10 +325,17 @@ def rigid_camera(p):
 def needed_lean(eye, d):
     c = _np2.array(centre(d)) - eye
     want = _math.atan2(c[2], _math.hypot(c[0], c[1]))      # elevation the camera must point at
-    up = float(_np2.clip(want - W_MOUNT_PITCH, -LEAN_MAX, LEAN_MAX))
+    up = float(_np2.clip(want - W_MOUNT_PITCH, 0.0, LEAN_MAX))     # only ever lean back, never nose down
     if abs(up) < 0.03:
         up = 0.0
     return -up * LEAN_SIGN[0], up                           # (posture pitch delta, intended camera change)
+
+
+def no_lean():
+    L = Lean.__new__(Lean)
+    L.__dict__.update(u=1.0, releasing=False, finished=False, pitch=0.0, robot=None, intended=0.0, e0=mission['pitch'], checked=True)
+    L.step = lambda dt: L.__dict__.update(finished=L.releasing)
+    return L
 
 
 def lean_checked(t):
@@ -316,9 +374,24 @@ def yolo(rgb):
     request = _url.Request(_os.environ['DETECTOR_API_URL'].rstrip('/') + '/predict?confidence=0.25', data=body,
                            headers={'Modal-Key': _os.environ['DETECTOR_API_KEY'], 'Modal-Secret': _os.environ['DETECTOR_API_SECRET'],
                                     'Content-Type': 'multipart/form-data; boundary=' + boundary})
-    with _url.urlopen(request, timeout=180) as response:
-        result = _json.loads(response.read())
-    return crop, result                     # boxes in the uploaded 640x640 image's pixels
+    last = None
+    for attempt in range(4):                # the simulation waits, so retries never show in the video
+        try:
+            with _url.urlopen(request, timeout=180) as response:
+                result = _json.loads(response.read())
+            rec['yolo_streak'] = 0
+            return crop, result             # boxes in the uploaded 640x640 image's pixels
+        except Exception as error:
+            last = error
+            errors = rec.setdefault('yolo_errors', [])
+            if len(errors) < 40:
+                errors.append(repr(error)[-120:])
+            if attempt < 3:
+                _wtime.sleep(3 * (attempt + 1))
+    rec['yolo_streak'] = rec.get('yolo_streak', 0) + 1
+    if rec['yolo_streak'] >= 6:             # the detector is down: stop instead of filming a walk with no detections
+        rec['abort'] = f'detector failed {rec["yolo_streak"]} times in a row: {repr(last)[-80:]}'
+    raise last
 
 
 COND = {'normal': ('normal',), 'rust': ('corrosion',), 'bulge': ('bulge',), 'rust_and_bulge': ('corrosion', 'bulge')}
@@ -389,8 +462,8 @@ mission = {'eye_view': (_np2.array([0.0, 0, 1]), _np2.array([1.0, 0, 1])), 'stop
            'last_yolo': -1e9, 'shown': None, 'pitch': 0.0}
 
 
-def log(t, code, text, kind, still=False):
-    rec['decisions'].append({'t': round(t, 2), 'drum': code, 'kind': kind, 'text': text, 'source': 'CANIS rules'})
+def log(t, code, text, kind, still=False, source='CANIS rules'):
+    rec['decisions'].append({'t': round(t, 2), 'drum': code, 'kind': kind, 'text': text, 'source': source})
     rec['banners'].append((t, text, kind))
     if still:
         rec['still_due'] = (t + .4, kind, code)
@@ -434,16 +507,126 @@ def summ(views):
     return f'fault {fv}/{n}, normal {nv}/{n}'
 
 
+COSMOS_SYSTEM = (
+    'You review one drum during a routine nuclear waste store inspection. The robot has stopped in the aisle and a detector '
+    'has already examined this drum; the image shows that drum. Your only job is to choose the next step from the offered '
+    'actions. Be conservative and consistent. Choose a closer look only for a specific reason you can see: rust, '
+    'discolouration, a dent, a bulging lid or side, or a view too poor to judge. If the drum looks intact and the detector '
+    'agrees, accept it. Do not invent damage. The route is fixed, so never suggest going anywhere else. Use only the image '
+    'and the readings. Answer with only JSON: {"action_id": <one offered id>, "reason": <one short sentence, under 14 words, '
+    'citing what you see>}.')
+COSMOS_ACTIONS = {'accept_ok': 'agree with the detector and continue the route',
+                  'closer_look': 'take one more look from the pre-planned closer position in the aisle',
+                  'mark_suspect': 'stop here and flag this drum as Suspect for a human to review'}
+COSMOS_LABELS = {'accept_ok': 'accept', 'closer_look': 'closer look', 'mark_suspect': 'flag suspect'}
+
+
+def cosmos_settings():
+    import json as _j, os as _o, pathlib as _pl
+    url, key, model = _o.environ.get('COSMOS_URL'), _o.environ.get('VLLM_API_KEY'), _o.environ.get('COSMOS_MODEL', 'cosmos')
+    path = _o.environ.get('COSMOS_CONFIG_FILE')
+    if path and _pl.Path(path).exists():
+        cfg = _j.loads(_pl.Path(path).read_text())
+        url, key, model = cfg.get('COSMOS_URL', url), cfg.get('VLLM_API_KEY', key), cfg.get('COSMOS_MODEL', model)
+    return url, key, model
+
+
+def cosmos_offers(status, extra_used):
+    """The only choices Cosmos ever gets. It cannot clear a drum the rules left unclear, and it never sees a confirmed defect."""
+    if status is None:
+        return ['closer_look', 'mark_suspect']
+    if status == 'OK' and extra_used < COSMOS_CLOSER_MAX:
+        return ['accept_ok', 'closer_look']
+    return []
+
+
+def cosmos_parse(text, offered):
+    import json as _j, re as _re
+    for match in reversed(list(_re.finditer(r'\{[^{}]*\}', text, _re.S))):      # the model may think aloud first
+        try:
+            answer = _j.loads(match.group(0))
+        except ValueError:
+            continue
+        action = answer.get('action_id')
+        if action in offered:
+            reason = ' '.join(str(answer.get('reason', '')).split())
+            reason = reason if len(reason) <= 70 else reason[:70].rsplit(' ', 1)[0].rstrip(',;:') + '...'   # whole words only on screen
+            return action, _re.sub(r'\bSpot\b', 'robot', reason)
+        raise ValueError(f'not offered: {str(action)[:40]!r}')
+    raise ValueError('no JSON in answer')
+
+
+def cosmos_image(look, rgb):
+    import base64 as _b64, io as _io
+    tb = project_box(BY_ID[look['drum']], *mission['eye_view'])
+    x0, y0, x1, y1 = to_wide(tb) if tb else (CROP_X0, CROP_Y0, CROP_X0 + CROP_S, CROP_Y0 + CROP_S)
+    m = 0.2 * max(x1 - x0, y1 - y0)
+    box = (int(max(0, x0 - m)), int(max(0, y0 - m)), int(min(1280, x1 + m)), int(min(720, y1 + m)))
+    if box[2] - box[0] < 40 or box[3] - box[1] < 40:         # target is off screen: send the detector's whole view
+        box = (int(CROP_X0), max(0, int(CROP_Y0)), int(CROP_X0 + CROP_S), min(720, int(CROP_Y0 + CROP_S)))
+    image = Image.fromarray(rgb).crop(box)
+    image.thumbnail((640, 640))
+    buffer = _io.BytesIO()
+    image.save(buffer, format='JPEG', quality=92)
+    return 'data:image/jpeg;base64,' + _b64.b64encode(buffer.getvalue()).decode()
+
+
+def cosmos_ask(snapshot, image_url):
+    import json as _j, urllib.request as _ur
+    url, key, model = cosmos_settings()
+    if not url:
+        raise RuntimeError('Cosmos endpoint not configured')
+    content = [{'type': 'image_url', 'image_url': {'url': image_url}}, {'type': 'text', 'text': _j.dumps(snapshot)}]
+    body = _j.dumps({'model': model, 'max_tokens': 400, 'temperature': 0.0,
+                     'messages': [{'role': 'system', 'content': COSMOS_SYSTEM}, {'role': 'user', 'content': content}]}).encode()
+    headers = {'Content-Type': 'application/json', **({'Authorization': f'Bearer {key}'} if key else {})}
+    request = _ur.Request(url.rstrip('/') + '/v1/chat/completions', data=body, method='POST', headers=headers)
+    with _ur.urlopen(request, timeout=COSMOS_TIMEOUT_S) as response:
+        return _j.loads(response.read())['choices'][0]['message']['content']
+
+
+def cosmos_review(t, look, code, tier, status, views):
+    """Returns the action Cosmos chose, or None when it was not asked or failed (the rules then stand unchanged)."""
+    extra = mission.setdefault('cosmos_extra', {})
+    used = extra.get(mission['stop_i'], 0)
+    offered = cosmos_offers(status, used)
+    if not offered:
+        return None
+    entry = {'t': round(t, 2), 'drum': code, 'rule_result': status or 'unclear', 'offered': offered}
+    started = _wtime.perf_counter()
+    try:
+        snapshot = {'drum': code, 'tier': tier, 'detector_summary': summ(views), 'rule_result': status or 'unclear',
+                    'offered_actions': [{'id': a, 'meaning': COSMOS_ACTIONS[a]} for a in offered]}
+        action, reason = cosmos_parse(cosmos_ask(snapshot, cosmos_image(look, grab(eye_cam))), offered)
+    except Exception as error:
+        entry.update(valid=False, error=repr(error)[-160:], latency_s=round(_wtime.perf_counter() - started, 2))
+        rec.setdefault('cosmos', []).append(entry)
+        rec['banners'].append((t, 'Cosmos unavailable: rules decide', 'info'))
+        return None
+    entry.update(valid=True, action=action, reason=reason, latency_s=round(_wtime.perf_counter() - started, 2))
+    rec.setdefault('cosmos', []).append(entry)
+    if status == 'OK' and action == 'closer_look':
+        extra[mission['stop_i']] = used + 1
+    log(t, code, f'Cosmos: {COSMOS_LABELS[action]} - {reason}', 'cleared' if action == 'accept_ok' else 'suspect', False, 'Cosmos Reason 2')
+    return action
+
+
 def decide(t, look):
     i = look['drum']
     code, tier = CODE[i], BY_ID[i]['location']['tier']
     if look['pass'] == 'side':
         views = look['views']
         status, finding, best = judge(views, True, tier)
+        action = cosmos_review(t, look, code, tier, status, views) if W_COSMOS else None
+        if action == 'closer_look':
+            status = None                        # more evidence only: the rules still give the verdict afterwards
+        elif action == 'mark_suspect':
+            status, finding = 'Suspect', finding if finding != 'none' else 'unclear'
         if status is None:
             rec['first'][i] = views
             mission['second'].append(i)
-            log(t, code, f'{code} {"top tier" if tier == 3 else "unclear"} ({summ(views)}) -> closer look', 'suspect')
+            if action is None:
+                log(t, code, f'{code} {"top tier" if tier == 3 else "unclear"} ({summ(views)}) -> closer look', 'suspect')
             return
     else:
         views = rec['first'].get(i, []) + look['views']
@@ -467,27 +650,27 @@ def command_to(p, yaw, goal_xy, goal_yaw, tol=0.10):
         heading = _math.atan2(dy, dx)
         error = _math.remainder(heading - yaw, 2 * _math.pi)
         if abs(error) > 0.5:
-            return _np2.array([0.0, 0.0, float(_np2.clip(1.2 * error, -TURN_MAX, TURN_MAX))], _np2.float32), False
+            return _np2.array([0.0, 0.0, float(_np2.clip(1.4 * error, -TURN_MAX, TURN_MAX))], _np2.float32), False
         c, s = _math.cos(yaw), _math.sin(yaw)
         vx, vy = c * dx + s * dy, -s * dx + c * dy
-        speed = min(0.32, 0.6 * _math.hypot(dx, dy))
+        speed = min(0.45, 0.7 * _math.hypot(dx, dy))
         norm = max(1e-6, _math.hypot(vx, vy))
-        return _np2.array([speed * vx / norm, speed * vy / norm, float(_np2.clip(1.2 * error, -TURN_MAX, TURN_MAX))], _np2.float32), False
+        return _np2.array([speed * vx / norm, speed * vy / norm, float(_np2.clip(1.4 * error, -TURN_MAX, TURN_MAX))], _np2.float32), False
     error = _math.remainder(goal_yaw - yaw, 2 * _math.pi)
-    return _np2.array([0.0, 0.0, float(_np2.clip(1.2 * error, -TURN_MAX, TURN_MAX))], _np2.float32), abs(error) < 0.05
+    return _np2.array([0.0, 0.0, float(_np2.clip(1.4 * error, -TURN_MAX, TURN_MAX))], _np2.float32), abs(error) < 0.05
 
 
 def walk_cmd(p, yaw, goal_xy, tol=0.15):
     """Between stops: face straight down the aisle (+x) and side-step onto the line; never turn towards the goal."""
     err = _math.remainder(0.0 - yaw, 2 * _math.pi)
-    wz = float(_np2.clip(1.2 * err, -TURN_MAX, TURN_MAX))
+    wz = float(_np2.clip(1.4 * err, -TURN_MAX, TURN_MAX))
     dx, dy = goal_xy[0] - p[0], goal_xy[1] - p[1]
     dist = _math.hypot(dx, dy)
     if abs(err) > 0.6 or dist <= tol:              # still turned to a side from the last look: square up first
         return _np2.array([0.0, 0.0, wz], _np2.float32), dist <= tol
     c, s_ = _math.cos(yaw), _math.sin(yaw)
     vx, vy = c * dx + s_ * dy, -s_ * dx + c * dy
-    speed = min(0.32, 0.6 * dist)
+    speed = min(0.45, 0.7 * dist)
     vx, vy = speed * vx / dist, speed * vy / dist
     vy = float(_np2.clip(vy, -0.2, 0.2))           # gentle side-step
     return _np2.array([vx, vy, wz], _np2.float32), False
@@ -562,6 +745,10 @@ def compose(t, p, chase_rgb, crop, boxes, tbox):
     look = mission['look']
     focus = tbox or (project_box(BY_ID[look['drum']], *mission['eye_view']) if look else None)
     focus = to_wide(focus) if focus else None
+    if focus:                                   # no lock-on effect until the drum is actually on screen, or the camera has arrived
+        seen = max(0.0, min(1280, focus[2]) - max(0, focus[0])) * max(0.0, min(720, focus[3]) - max(0, focus[1]))
+        if seen / max(1.0, (focus[2] - focus[0]) * (focus[3] - focus[1])) < 0.85 and mission.get('cam_err', 1.0) >= 0.04:
+            focus = None
     if focus:                                   # one drum at a time: everything else is dimmed
         fx0, fy0, fx1, fy1 = [int(round(v)) for v in focus]
         fx0, fy0 = max(0, fx0 - 10), max(0, fy0 - 10)
@@ -620,7 +807,7 @@ def compose(t, p, chase_rgb, crop, boxes, tbox):
     by_, bl_ = mission.get('body', (0.0, 0.0))
     ln = mission.get('lean')
     dr.rectangle((1290, 780, 1910, 1040), fill=(14, 18, 24), outline=(70, 74, 80), width=2)
-    dr.text((1306, 790), 'BODY -> CAMERA (rigid mount)', font=FB[18], fill=YEL)
+    dr.text((1306, 790), 'BODY -> CAMERA', font=FB[18], fill=YEL)
     rows_ = [('body yaw', f'{_math.degrees(by_):+6.1f} deg'), ('body pitch (lean)', f'{_math.degrees(-bl_):+6.1f} deg'),
              ('camera elevation', f"{_math.degrees(mission['pitch']):+6.1f} deg"),
              ('legs', 'leaning back' if ln is not None and not getattr(ln, 'releasing', False) and getattr(ln, 'u', 0) > 0 else
@@ -646,12 +833,14 @@ def compose(t, p, chase_rgb, crop, boxes, tbox):
     live = [b for b in rec['banners'] if t - b[0] < 2.5 and b[2] in ('confirmed', 'suspect', 'blocked')]
     if live:
         _, text, kind = live[-1]
+        if len(text) > 85:                  # keep the banner inside the 1280 px camera view; the log shows the full line
+            text = text[:text.rfind(' ', 0, 82)] + '...'
         w = int(24 + 0.6 * 24 * len(text))
         dr.rectangle((640 - w // 2, 80, 640 + w // 2, 128), fill=BLK, outline=YEL, width=3)
         dr.text((640 - w // 2 + 12, 89), text, font=FB[24], fill=(255, 70, 70) if kind == 'confirmed' else (255, 160, 40))
     dr.rectangle((0, 1048, 1920, 1080), fill='#111822')
-    dr.text((16, 1054), 'Detector: retrained YOLO26s whole-barrel conditions, live on the 77 deg centre of a 110 deg rigid body camera. Target drum from map + simulator pose. '
-            'Camera fixed to body: aims by turning and leaning on legs. Warehouse and its seeded faults used as built. Rules decide; no Cosmos.', font=F[14], fill='#9fb2c4')
+    dr.text((16, 1054), 'YOLO26s detector on the 77 deg centre of the 110 deg front camera. '
+            + ('Two faults planted in the first column. ' if __import__('os').environ.get('HOT_FORCE_FAULTS') else '') + ('Cosmos Reason 2 chooses the next step and can only ask for more evidence; rules set verdicts.' if W_COSMOS else 'Rules decide; no Cosmos.'), font=F[14], fill='#9fb2c4')
     return canvas
 
 
@@ -669,11 +858,11 @@ rec['banners'].append((0.0, f'Route: aisle A, {len(PLAN)} stops (LLW then ILW), 
 FRAME_DT = stride * dt
 PERF = {'render': 0.0, 'compose_save': 0.0, 'yolo': 0.0, 'physics': 0.0}
 _WALL0 = _wtime.perf_counter()
-ACC_V, ACC_W = 0.4, 0.5                     # m/s^2 and rad/s^2 command slew limits (smooth gait changes)
+ACC_V, ACC_W = 0.8, 1.6                   # m/s^2 and rad/s^2 command slew limits (smooth gait changes)
 TAU_HEAD, TAU_CHASE = 0.30, 0.8             # s; eased camera head and chase view
 cmd_s = _np2.zeros(3, dtype=_np2.float32)
 head_s, chase_s = None, None
-while t < W_MAX_S:
+while t < W_MAX_S and not rec.get('abort'):
     t = index * stride * dt
     p, yaw = pose()
     p = _np2.asarray(p, float)
@@ -737,14 +926,16 @@ while t < W_MAX_S:
             if mission.get('lean') is None and t - mission['still_since'] >= STILL_S:
                 try:
                     _pd, _up = needed_lean(mission['eye_view'][0], BY_ID[look['drum']])
-                    mission['lean'] = Lean(spot, _pd)
-                    mission['lean'].intended, mission['lean'].e0, mission['lean'].checked = _up, mission['pitch'], False
+                    if _up == 0.0:
+                        mission['lean'] = no_lean()     # bottom drum: already in view, no need to lean
+                    else:
+                        mission['lean'] = Lean(spot, _pd)
+                        mission['lean'].intended, mission['lean'].e0, mission['lean'].checked = _up, mission['pitch'], True
+                        mission['hold_yaw'] = look['yaw']   # steer the heading through the lean; a shifted stance otherwise spins slowly
                 except Exception as error:
                     rec['banners'].append((t, f'lean failed: {str(error)[:40]}', 'info'))
-                    mission['lean'] = Lean.__new__(Lean); mission['lean'].__dict__.update(u=1.0, releasing=False, finished=False, pitch=0.0, robot=None)
-                    mission['lean'].step = lambda dt, L=mission['lean']: L.__dict__.update(finished=L.releasing)
-                    mission['lean'].intended, mission['lean'].e0, mission['lean'].checked = 0.0, mission['pitch'], True
-            if t - mission['settled'] > SETTLE_S and t - mission['last_yolo'] >= YOLO_EVERY_S and mission.get('lean') is not None and mission['lean'].at_view and lean_checked(t):
+                    mission['lean'] = no_lean()
+            if t - mission['settled'] > SETTLE_S and t - mission['last_yolo'] >= YOLO_EVERY_S and mission.get('lean') is not None and mission['lean'].at_view and lean_checked(t) and mission.get('cam_err', 1.0) < 0.04:
                 mission['last_yolo'] = t
                 rgb = grab(eye_cam)
                 d = BY_ID[look['drum']]
@@ -791,8 +982,8 @@ while t < W_MAX_S:
                 final = look['drum'] in rec['status']
                 mission['hold'] = {'until': t + (2.0 if final else 1.0), 'final': final}
                 mission['phase'] = 'hold'
-        elif look['t0'] is None and mission['settled'] is None:
-            if t - look['t_start'] > 8.0:              # could not turn into the view
+        else:
+            if (look['t0'] is None and mission['settled'] is None and t - look['t_start'] > TURN_LIMIT_S) or t - look['t_start'] > LOOK_GIVE_UP_S:   # could not turn into the view
                 decide(t, look)
                 mission['look'] = None
                 mission['phase'] = 'unlean' if mission.get('lean') is not None else 'next_look'
@@ -802,9 +993,19 @@ while t < W_MAX_S:
         # stay on the drum and show the verdict, then release it and move on
         command, _ = command_to(p, yaw, mission['goal'], mission['look']['yaw'], tol=0.30)
         if t >= mission['hold']['until']:
+            _done_yaw = mission['look']['yaw']
             mission['look'], boxes, tbox, mission['hold'] = None, [], None, None
-            if mission.get('lean') is not None:
-                mission['lean'].releasing = True
+            _nxt = mission['looks'][0] if mission['looks'] else None
+            _same_side = _nxt is not None and _nxt.get('pass') == 'side' and abs(_math.remainder(_nxt['yaw'] - _done_yaw, 2 * _math.pi)) < 0.02
+            _lean = mission.get('lean')
+            if _lean is not None and _same_side and getattr(_lean, 'robot', None) is not None:
+                mission['phase'] = 'next_look'         # next tier up on this side: stay leaned, no extra up and down
+            elif _lean is not None and _same_side:
+                mission['lean'] = None                 # bottom drum had no lean: go straight on to the next tier
+                mission.pop('still_since', None)
+                mission['phase'] = 'next_look'
+            elif _lean is not None:
+                _lean.releasing = True
                 mission['phase'] = 'unlean'
             else:
                 mission['phase'] = 'next_look'
@@ -816,6 +1017,7 @@ while t < W_MAX_S:
     if mission['phase'] == 'stand':
         command = zero
         if t >= mission['stand_until']:
+            mission.pop('hold_yaw', None)
             mission.pop('still_since', None)
             mission['phase'] = 'next_look'
     if mission['phase'] == 'done':
@@ -849,25 +1051,26 @@ while t < W_MAX_S:
         rec.pop('still_due')
     rec['telemetry'].append({'t': round(t, 2), 'pose': [round(float(p[0]), 3), round(float(p[1]), 3), round(float(yaw), 3)],
                              'phase': mission['phase'], 'tilt_deg': round(_math.degrees(mission['pitch']), 1),
+                             'body_z': round(float(p[2]), 3), 'body_pitch': round(float(mission['body'][1]), 3),
                              'look': CODE[mission['look']['drum']] if mission['look'] else None})
     if index % (FPS * 10) == 0:
         print(f"[hot] 1 t {t:.0f}s stop {mission['stop_i']}/{len(PLAN)} decided {len(rec['status'])} yolo {rec['yolo_calls']}", flush=True)
+    if mission.get('hold_yaw') is not None:      # leaned or standing back up: no walking, only keep the heading
+        _he = _math.remainder(mission['hold_yaw'] - yaw, 2 * _math.pi)
+        command = _np2.array([0.0, 0.0, float(_np2.clip(1.2 * _he, -TURN_MAX, TURN_MAX)) if abs(_he) > 0.015 else 0.0], _np2.float32)
     target_cmd = _np2.asarray(command, _np2.float32)
     lim = _np2.array([ACC_V, ACC_V, ACC_W], _np2.float32) * FRAME_DT
     cmd_s = (cmd_s + _np2.clip(target_cmd - cmd_s, -lim, lim)).astype(_np2.float32)
     _T3 = _wtime.perf_counter()
     lean = mission.get('lean')
-    if lean is not None and getattr(lean, 'robot', None) is not None:
-        cmd_s = _np2.zeros(3, dtype=_np2.float32)
-        for _ in range(stride):
+    leaning = lean is not None and getattr(lean, 'robot', None) is not None
+    if lean is not None and not leaning:
+        lean.step(FRAME_DT)
+    for _ in range(stride):
+        if leaning:
             lean.step(dt)
-            world.step(render=False)
-    else:
-        if lean is not None:
-            lean.step(FRAME_DT)
-        for _ in range(stride):
-            spot.step(dt, cmd_s)
-            world.step(render=False)
+        spot.step(dt, cmd_s)                 # the policy never stops, so it keeps the robot balanced through the lean
+        world.step(render=False)
     PERF['physics'] += _wtime.perf_counter() - _T3
     index += 1
 set_tilt(0.0)
@@ -887,7 +1090,9 @@ for d in SECTION:
                    'fault_views': sum(1 for v in views if faults_of(v)), 'view_detail': views})
 (run_dir / 'memory.json').write_text(_json.dumps({'drums': memory, 'duration_s': t, 'started_utc': _START,
     'yolo_calls': rec['yolo_calls'], 'yolo_failures': rec['yolo_fail'], 'stills': rec['stills'], 'lean_calibration': rec.get('lean_cal', []),
-    'detector': 'YOLO26s whole-barrel conditions compare_20261108T043410Z', 'rule_old': 'side look 3 views: >=2 fault views and best >= 0.72 -> defect, 0 -> OK; else second look 3 views: >=2 defect, 0 OK, 1 suspect'},
+    'cosmos_reviews': rec.get('cosmos', []), 'yolo_errors': rec.get('yolo_errors', []), 'abort': rec.get('abort'),
+    'detector': 'YOLO26s whole-barrel conditions ' + ', '.join(sorted({str(d['model_run']) for d in rec['detections']})),
+    'detector_sha256': sorted({str(d['model_sha']) for d in rec['detections']}), 'rule_old': 'side look 3 views: >=2 fault views and best >= 0.72 -> defect, 0 -> OK; else second look 3 views: >=2 defect, 0 OK, 1 suspect'},
     indent=2, default=float))
 (run_dir / 'decisions.jsonl').write_text(''.join(_json.dumps(x) + '\n' for x in rec['decisions']))
 (run_dir / 'detections.jsonl').write_text(''.join(_json.dumps(x) + '\n' for x in rec['detections']))

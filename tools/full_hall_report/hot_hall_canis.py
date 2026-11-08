@@ -24,7 +24,8 @@ import modal
 
 _HERE = Path(__file__).resolve()
 ROOT = _HERE.parents[2] if len(_HERE.parents) > 2 else _HERE.parents[-1]  # container copies this file to /root
-STATE = ROOT / '.runtime/canis_wh_hot.json'
+SUFFIX = os.environ.get('HOT_SUFFIX', '')  # a second worker with its own queue, for rendering two clips at once
+STATE = ROOT / f'.runtime/canis_wh_hot{SUFFIX}.json'
 OUT = ROOT / 'out/canis_wh'
 # Same image recipe as tools/run_hall.py, which renders hall textures correctly.
 image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
@@ -34,15 +35,16 @@ image = (modal.Image.from_registry('nvcr.io/nvidia/isaac-sim:6.2.0',
          .env({'ACCEPT_EULA': 'Y', 'PRIVACY_CONSENT': 'N', 'NVIDIA_DRIVER_CAPABILITIES': 'all',
                'HOT_GPU_COUNT':os.environ.get('HOT_GPU_COUNT','1'),
                'HOT_WAREHOUSE': '1', 'HOT_WAREHOUSE_SEED': os.environ.get('HOT_WAREHOUSE_SEED', '42'),
+               'HOT_FORCE_FAULTS': os.environ.get('HOT_FORCE_FAULTS', ''), 'HOT_SUFFIX': SUFFIX,
                'HOT_SPAWN_X':os.environ.get('HOT_SPAWN_X','10'), 'HOT_SPAWN_Y':os.environ.get('HOT_SPAWN_Y','6')})
          .add_local_dir(ROOT / 'sim', '/workspace/sim', copy=True,
                         ignore=['out/**', '__pycache__/**', '**/__pycache__/**', '**/*.pyc', '*.usda']))
 HOT_GPU_COUNT=int(os.environ.get('HOT_GPU_COUNT','1'))
 if HOT_GPU_COUNT not in (1,2,4):raise ValueError('HOT_GPU_COUNT must be 1, 2 or 4')
-app = modal.App('canis-wh-hot')
-requests = modal.Queue.from_name('canis-wh-requests', create_if_missing=True)
-results = modal.Dict.from_name('canis-wh-results', create_if_missing=True)
-services = modal.Dict.from_name('canis-wh-services', create_if_missing=True)
+app = modal.App(f'canis-wh-hot{SUFFIX}')
+requests = modal.Queue.from_name(f'canis-wh-requests{SUFFIX}', create_if_missing=True)
+results = modal.Dict.from_name(f'canis-wh-results{SUFFIX}', create_if_missing=True)
+services = modal.Dict.from_name(f'canis-wh-services{SUFFIX}', create_if_missing=True)
 mission_runs = modal.Volume.from_name('canis-wh-runs', create_if_missing=True)
 
 
