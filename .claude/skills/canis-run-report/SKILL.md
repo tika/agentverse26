@@ -120,7 +120,7 @@ A4, portrait, page numbers, run ID and "Simulated store (Isaac Sim)" in the foot
    - against time: gamma with the 7.5 / 100 lines, robot dose with the budget line, air temperature + RH, H2 (or "not measured"), each drum's heat rise
    - events (spike, block, back-off) marked on each trace
 
-Design: a formal technical report. Latin Modern (the LaTeX font), black ink, the logo's yellow (#F2C744) for rules only, red, amber and green only for status chips. A document control table under the letterhead; page X of Y and "Simulated store (NVIDIA Isaac Sim) · Not for operational use" in every footer. The reference output is `CANIS_report_preview8_014613.pdf`.
+Design and audience: written for store managers and safety staff who are NOT engineers. Plain words only: drum names and "Row B, drum 3" / "Aisle between rows B and C, 2–4 m" instead of coordinates; "Action needed / Check again / No problem found" instead of status codes; "How sure: High (88%)" instead of confidence scores; no YOLO, model names or run IDs outside the final "Technical details" appendix. Source Sans (sans-serif) throughout, black and grey, red / amber / green only for labels, no decorative colour bars. Photos are cropped to the camera view and shown full width. The reference output is `example/CANIS_report_preview8_014613.pdf`.
 
 ## 7. Fixed recommended actions (used when there's no Cosmos text, and always printed as well)
 
