@@ -44,8 +44,17 @@ def drum_boxes(p, yaw):
     for d in SECTION:
         if vp.drum_pixels(d, view, float(p[2]), SECTION) > 0:
             uv, _ = vp.project(vp.drum_outline(d), p, yaw, 0.0)
-            out[d['id']] = (*uv.min(0), *uv.max(0))
+            lo = np.clip(uv.min(0), 0, [vp.CAMERA['width'], vp.CAMERA['height']])
+            hi = np.clip(uv.max(0), 0, [vp.CAMERA['width'], vp.CAMERA['height']])
+            out[d['id']] = (*lo, *hi)
     return out
+
+
+def iou(a, b):
+    w = max(0, min(a[2], b[2]) - max(a[0], b[0]))
+    h = max(0, min(a[3], b[3]) - max(a[1], b[1]))
+    union = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - w * h
+    return w * h / max(union, 1e-6)
 
 
 def overlap(a, b):
@@ -83,6 +92,7 @@ statuses = {CODE[i]: 'grey' for i in CODE}
 history = {'gamma': [], 'surface_c': [], 'h2_ppm': [], 'hiss': []}
 events, trail, log = [], [], []
 view_index, settled_at, last_yolo, boxes = 0, None, -1e9, []
+hits, faults = {}, {}  # Per drum: YOLO drum-box matches; fault boxes (class, confidence).
 calls, failures, wall = 0, 0, _time.perf_counter()
 events.append((0.0, f'Route: {len(VIEWS)} views cover {len(SECTION) - len(UNSEEN)}/{len(SECTION)} drums'))
 if UNSEEN:
@@ -115,21 +125,31 @@ for index in range(int(MAX_S * FPS)):
                     result = {'detections': []}
                     events.append((t, f'YOLO error: {str(error)[:60]}!'))
                 expected = drum_boxes(p, yaw)
-                boxes = []
+                boxes, matched = [], {}
                 for det in result.get('detections', []):
                     box = det['bbox_xyxy']
-                    owner = max(expected, key=lambda i: overlap(box, expected[i]), default=None)
-                    owner = owner if owner and overlap(box, expected[owner]) > 0.3 else None
+                    if det['class_name'] == 'drum':
+                        owner = max(expected, key=lambda i: iou(box, expected[i]), default=None)
+                        owner = owner if owner and iou(box, expected[owner]) >= 0.4 else None
+                        if owner:
+                            matched[owner] = max(matched.get(owner, 0), det['confidence'])
+                    else:  # Fault boxes belong to the drum whose box contains their centre.
+                        cx, cy = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
+                        inside = [i for i, b in expected.items() if b[0] <= cx <= b[2] and b[1] <= cy <= b[3]]
+                        owner = min(inside, key=lambda i: (expected[i][2] - expected[i][0]), default=None)
+                        if owner:
+                            faults.setdefault(owner, []).append((det['class_name'], det['confidence']))
+                            if statuses[CODE[owner]] != 'amber':
+                                statuses[CODE[owner]] = 'amber'
+                                events.append((t, f"YOLO {det['class_name']} {det['confidence']:.2f} on {CODE[owner]}"))
                     boxes.append(dict(box=box, label=det['class_name'], conf=det['confidence'],
-                                      drum_code=CODE.get(owner, '')))
-                    if owner and det['class_name'] in ('corrosion', 'bulge') and statuses[CODE[owner]] != 'amber':
-                        statuses[CODE[owner]] = 'amber'
-                        events.append((t, f"YOLO {det['class_name']} {det['confidence']:.2f} on {CODE[owner]}"))
-                for i in view['drum_ids']:
-                    if i in expected and statuses[CODE[i]] == 'grey':
+                                      drum_code=CODE.get(owner, '') if owner else ''))
+                for i in matched:
+                    hits[i] = hits.get(i, 0) + 1
+                    if hits[i] >= 2 and i not in faults and statuses[CODE[i]] == 'grey':
                         statuses[CODE[i]] = 'green'
                 log.append(dict(t=round(t, 2), view=view['name'], pose=[*p[:2].round(3).tolist(), round(yaw, 3)],
-                                expected=sorted(CODE[i] for i in expected), detections=result.get('detections', [])))
+                                expected=sorted(CODE[i] for i in expected), matched=sorted(CODE[i] for i in matched), detections=result.get('detections', [])))
             if t - settled_at >= DWELL_S:
                 view_index, settled_at, boxes = view_index + 1, None, []
         else:
@@ -143,7 +163,7 @@ for index in range(int(MAX_S * FPS)):
                      decision=dict(t=t, action_id='deterministic route', source='rules (smoke)',
                                    reason='Fixed route through precomputed views; no planner in this test.',
                                    evidence=[f'YOLO calls {calls}, errors {failures}',
-                                             f'{sum(s != "grey" for s in statuses.values())}/{len(statuses)} drums viewed']))
+                                             f'{sum(s == "green" for s in statuses.values())}/{len(statuses)} confirmed clear by YOLO']))
     compose_demo(rgb, state_hud).save(frames_dir / f'{index:05d}.jpg', quality=88)
     if view is None and index % FPS == 0 and t > 1.0 and all(c == 0 for c in command):
         break
@@ -153,7 +173,8 @@ for index in range(int(MAX_S * FPS)):
 
 (OUT / 'dense_walk' / 'yolo_log.json').write_text(json.dumps(log, indent=1))
 summary = dict(views=len(VIEWS), views_done=view_index, sim_s=round(t, 1), wall_s=round(_time.perf_counter() - wall, 1),
-               yolo_calls=calls, yolo_failures=failures, viewed=sum(s != 'grey' for s in statuses.values()),
+               yolo_calls=calls, yolo_failures=failures, clear=sum(s == 'green' for s in statuses.values()),
+               detected_once=sorted(CODE[i] for i, n in hits.items() if n == 1), never_detected=sorted(CODE[i] for i in CODE if i not in hits and i not in UNSEEN),
                suspected=sorted(k for k, s in statuses.items() if s == 'amber'), not_inspectable=sorted(CODE[i] for i in UNSEEN))
 (OUT / 'dense_walk' / 'summary.json').write_text(json.dumps(summary, indent=1))
 print('[dense_walk]', summary, flush=True)

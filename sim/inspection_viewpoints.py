@@ -76,9 +76,21 @@ def drum_outline(drum, samples=24):
                       np.column_stack([ring, np.full(samples, base + drum['height'])])])
 
 
+MAX_RANGE_M = 2.6               # Nearest range that still fits tier 2; farther drums are too small to judge.
+
+
+def face_patch(drum):
+    """The inspected surface: the aisle-facing side, 15-85 % of the drum height, +-0.7 radius wide."""
+    normal = np.array([0.0, 1.0 if AISLE_Y > drum['y'] else -1.0])
+    side = np.array([normal[1], -normal[0]]) * 0.7 * drum['radius']
+    face = np.array([drum['x'], drum['y']]) + normal * drum['radius']
+    return np.array([[*(face + k * side), drum['base_z'] + f * drum['height']] for k in (-1, 0, 1) for f in (0.15, 0.5, 0.85)])
+
+
 def drum_in_frame(drum, view, body_z=BODY_Z, margin=FRAME_MARGIN_PX):
-    uv, depth = project(drum_outline(drum), (*view['stop_xy'], body_z), view['yaw'], view.get('pitch', 0.0))
-    return bool(np.all(depth > 0.1) and np.all(uv >= margin)
+    """The inspected face patch is in frame (a close drum may be cropped top and bottom)."""
+    uv, depth = project(face_patch(drum), (*view['stop_xy'], body_z), view['yaw'], view.get('pitch', 0.0))
+    return bool(np.all(depth > 0.1) and np.all(depth < MAX_RANGE_M) and np.all(uv >= margin)
                 and np.all(uv[:, 0] <= CAMERA['width'] - margin) and np.all(uv[:, 1] <= CAMERA['height'] - margin))
 
 
@@ -122,8 +134,8 @@ def drum_pixels(drum, view, body_z=BODY_Z, others=None):
         return 0.0
     if others is not None and not face_visible(drum, view, others, body_z):
         return 0.0
-    uv, _ = project(drum_outline(drum), (*view['stop_xy'], body_z), view['yaw'], view.get('pitch', 0.0))
-    return float(uv[:, 1].max() - uv[:, 1].min())
+    uv, _ = project(face_patch(drum), (*view['stop_xy'], body_z), view['yaw'], view.get('pitch', 0.0))
+    return float(uv[:, 1].max() - uv[:, 1].min()) / 0.7  # Face patch spans 70 % of the drum height.
 
 
 def _footprint(stop_xy, yaw):
@@ -165,8 +177,8 @@ def _candidates():
 
 
 def inspection_views(inventory, body_z=BODY_Z):
-    """Deterministic route, x ascending: the fewest views that show every aisle-facing
-    drum whole and at least MIN_DRUM_PX tall (greedy set cover, ties -> larger drums)."""
+    """Deterministic route, x ascending: views that show every inspectable drum face as large
+    as possible within MAX_RANGE_M (greedy cover weighted by apparent size)."""
     drums = section_drums(inventory)
     options = []
     for stop, yaw in _candidates():
@@ -178,7 +190,8 @@ def inspection_views(inventory, body_z=BODY_Z):
             options.append((view, seen))
     todo, chosen = {d['id'] for d in drums}, []
     while todo and options:
-        view, seen = max(options, key=lambda o: (len(todo & o[1].keys()), sum(o[1][i] for i in todo & o[1].keys())))
+        # Prefer the views that show the remaining drums biggest (nearest), not merely the most drums.
+        view, seen = max(options, key=lambda o: sum(o[1][i] for i in todo & o[1].keys()))
         gain = todo & seen.keys()
         if not gain:
             break  # The rest are not inspectable from the aisle with this camera; see uninspectable().
