@@ -2,6 +2,8 @@
 
 [Launch the 420-drum warehouse with fresh corrosion and bulging](sim/warehouse-v3/DEFECTS.md).
 
+[C.A.N.I.S. operator console framework](canis/README.md) — read-only UI for the 420-drum warehouse (`cd canis && npm install && npm run dev`). Field dictionary: [docs/canis/DATA_DICTIONARY.md](docs/canis/DATA_DICTIONARY.md).
+
 
 ## Deployed YOLO26s API
 

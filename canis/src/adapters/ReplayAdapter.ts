@@ -10,7 +10,8 @@ export class ReplayAdapter implements Adapter {
   private index = 0;
   private timer?: ReturnType<typeof setInterval>;
 
-  constructor(private tickMs = 1000) {}
+  /** @param pauseAtS optional replay time at which playback pauses itself (review links, screenshots). */
+  constructor(private tickMs = 1000, private pauseAtS?: number) {}
 
   start(ctx: AdapterContext) {
     this.ctx = ctx;
@@ -32,6 +33,11 @@ export class ReplayAdapter implements Adapter {
     for (const raw of step.messages) ctx.bus.ingest(raw, 'replay');
     ctx.store.evaluateStaleness();
     this.index += 1;
+    if (this.pauseAtS !== undefined && step.t >= this.pauseAtS) {
+      this.pauseAtS = undefined;
+      this.pause();
+      return;
+    }
     ctx.store.setReplay({ playing: this.timer !== undefined && this.index < this.steps.length, step: this.index, total: this.steps.length });
     if (this.index >= this.steps.length) {
       this.clearTimer();
@@ -61,8 +67,9 @@ export class ReplayAdapter implements Adapter {
     this.clearTimer();
     ctx.store.reset('replay');
     ctx.bus.resetSequences();
-    ctx.store.log('info', 'replay', 'replay', 'DEMO REPLAY reset to t=0', true);
+    ctx.store.log('info', 'replay', 'replay', 'DEMO REPLAY reset to t=0 (paused; press Resume)', true);
     this.start(ctx);
+    this.pause();
   }
 
   stop() {

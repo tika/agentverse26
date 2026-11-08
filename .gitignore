@@ -13,3 +13,5 @@ canis/dist/
 canis/public/data/
 canis/test-results/
 canis/playwright-report/
+canis/tsconfig.tsbuildinfo
+canis/*.tsbuildinfo

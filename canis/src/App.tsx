@@ -60,7 +60,11 @@ function Console({ map }: { map: PublicMap }) {
     const ctx = { store, bus, map };
     let next: Adapter;
     if (mode === 'replay') {
-      const r = new ReplayAdapter();
+      // ?tick=<ms> speeds up the replay for tests and screenshots; default 1 replay-second per second.
+      const tick = Number(new URLSearchParams(window.location.search).get('tick'));
+      // ?at=<s> pauses the replay at that replay time.
+      const atParam = new URLSearchParams(window.location.search).get('at');
+      const r = new ReplayAdapter(Number.isFinite(tick) && tick >= 20 ? tick : 1000, atParam !== null && Number.isFinite(Number(atParam)) ? Number(atParam) : undefined);
       next = r;
       setReplay({ pause: () => r.pause(), resume: () => r.resume(), reset: () => r.reset() });
     } else {

@@ -16,7 +16,7 @@
     "test": "vitest run",
     "check:privacy": "node scripts/check-privacy.mjs",
     "e2e": "playwright test",
-    "screenshots": "playwright test e2e/screenshots.spec.ts",
+    "screenshots": "CANIS_SCREENSHOTS=1 playwright test screenshots",
     "check": "npm run typecheck && npm test && npm run build && npm run check:privacy && npm run e2e"
   },
   "dependencies": {
