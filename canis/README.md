@@ -2,11 +2,13 @@
 
 **Containment Analysis & Nuclear Intelligence System.** This is a read-only operator interface framework for the Agentverse 420-drum warehouse (`sim/warehouse-v3`). It opens locally with no Isaac, robot, detector, model weights, credentials or backend. By default it shows **`FRAMEWORK · OFFLINE`**.
 
+**Integrating with an existing system?** Give your agent the [implementation prompt](../docs/canis/IMPLEMENTATION_PROMPT.md). It includes the clone command, feed contract, and acceptance checks.
+
 ## Start
 
 ```sh
 cd canis
-npm install
+npm ci
 npm run dev          # http://localhost:5178
 ```
 
@@ -18,7 +20,7 @@ npm run dev          # http://localhost:5178
 |---|---|---|
 | Offline framework (default) | `/` | Real map and inventory (420 drums, 336 LLW / 84 ILW, 56 racks), logos, and the Isaac RTX roof-off still marked `STATIC REFERENCE`. Every feed is `NOT CONFIGURED`, live values are `UNAVAILABLE`, all drums are `UNSEEN`, and there is no clock |
 | Demo replay | `/?mode=replay` or the header selector | Persistent `DEMO REPLAY · FICTIONAL FIXTURE DATA` banner and `FIXTURE` badges. A deterministic 60 s sequence on real map IDs with invented readings. Pause, resume and reset are in the header. `&tick=<ms>` changes speed and `&at=<s>` pauses at a replay time |
-| Live adapter | `/?mode=live&feeds=isaac=ws://…,robot=ws://…` | Read-only WebSocket feeds; see `docs/canis/INTEGRATION_CHECKLIST.md` |
+| Live adapter | `/?mode=live&feeds=isaac=ws://…,robot=ws://…` | Read-only WebSocket feeds; see the [feed checklist](../docs/canis/INTEGRATION_CHECKLIST.md) |
 
 The replay demonstrates:
 
@@ -73,7 +75,7 @@ src/tabs/        Simulation, Inspection, Sensors, Alerts, Logs
 
 - **Truth stays private.** Only allowlisted `map.json` fields are published. Baseline placeholders such as `state: "clean"` and `faults` are dropped. Inbound payloads containing private keys are rejected and logged by key path only. See `docs/canis/DATA_DICTIONARY.md`.
 - **Packages are keyed by printed location code** (`A-L-01-T1`), the same key the mission ledger uses. `D###` is shown alongside.
-- **Coverage comes only from ledger records.** Confidence belongs to a detection, a gamma reading belongs to a detector pose, and package attribution may stay inconclusive. The `assessment` slot is reserved.
+- **Coverage comes only from ledger records.** Confidence belongs to a detection, a gamma reading belongs to a detector pose, and package attribution may stay inconclusive. The separate `assessment` message drives condition on the camera and map.
 - **Read-only.** There are no command message types, acknowledgement is local, and proposed actions are labelled `NOT SENT`.
 
 Brand assets in `public/assets/brand/` are byte-identical copies of `assets/canis logo.png` and `assets/canis_type.png`. The black artwork sits on a warm-yellow plate so it reads on the dark header.
