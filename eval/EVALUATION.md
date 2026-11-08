@@ -1,8 +1,8 @@
 # CANIS evaluation
 
-*As of 8 Nov 2026. Detector: YOLO26s (run `yolo26s_20261107T225757Z_d625ef`), cut-off 0.25. 2,000 paired simulated walks, seed 20261108.*
+*As of 8 Nov 2026. Detector: YOLO26s (run `compare_colors_20261108T053740Z_continued`), cut-off 0.25. 2,000 paired simulated walks, seed 20261108.*
 
-**Same robot, same detector, different decisions.** CANIS finds the same faulty drums as a fixed-route robot (93.8% vs 94.1%). It settles **22.0 percentage points more of them itself** (95% range 21.4 to 22.7) and leaves **72% fewer drums for a person to check** (95% range 70% to 74%). McNemar's test confirms the difference isn't luck.
+**Same robot, same detector, different decisions.** CANIS finds the same faulty drums as a fixed-route robot (87.9% vs 88.1%). It settles **2.7 percentage points more of them itself** (95% range 2.5 to 3.0) and leaves **88% fewer drums for a person to check** (95% range 83% to 92%). McNemar's test confirms the difference isn't luck.
 
 ## What we compared
 
@@ -20,7 +20,7 @@ The fixed-route robot copies how today's inspection robots work, from public des
 
 ## Where the numbers come from
 
-- **Measured:** the detector's results on 150 photos it had never seen. At confidence 0.25 it flagged 251 of 259 rusty drum views (96.9%) and wrongly flagged 2 of 303 clean ones (0.7%). It caught 243 of 274 bulges (88.7%). 121 of the 259 rusty views scored between 0.25 and 0.5, which counts as "unsure". The hall layout (28 drums) comes from `sim/drums.json`.
+- **Measured:** the detector's results on 265 photos it had never seen. At confidence 0.25 it classified 233 of 265 drums correctly (87.9%), and that rate is used for both rust and bulges. The first looks in the final showcase run give the rest: 1 of the 19 rusty views it flagged scored between 0.25 and 0.5, which counts as "unsure". Of 75 clean drum views, it flagged 2 as unsure rust (2.7%) and 1 as a bulge (1.3%). The hall layout (28 drums) comes from `sim/drums.json`.
 - **Simulated:** a fast Python simulation (`eval/canis_eval.py`) walks both robots through 2,000 random versions of the hall. At each drum, a random draw using the measured rates decides what the detector "saw": sure, unsure or nothing. Both robots get the same draws, so the comparison is fair.
 - **Assumed (our settings):** each drum has a 30% chance of being faulty (35% of those are bulges), a radiation spike happens in half the walks, an aisle is blocked in 30% of walks, and dose is in simulated units, not mSv.
 
@@ -32,12 +32,12 @@ Each number is an average over 2,000 walks. To see how much it could move by cha
 
 | Per walk, average | Fixed-route | CANIS | Difference (95% range) | Real difference? |
 |---|---|---|---|---|
-| Faulty drums found | 94.1% | 93.8% | −0.3 points (−0.5 to −0.2) | About the same: same detector |
-| Faulty drums settled by the robot | 64.2% | **86.2%** | **+22.0 points (21.4 to 22.7)** | Yes, CANIS better |
-| Drums left for a person to check | 2.61 | **0.72** | **−72% (70% to 74% fewer)** | Yes, CANIS better |
-| Walks over the dose budget | 10.2% | **1.2%** | −9.0 points (−10.4 to −7.8) | Yes, CANIS better |
-| Robot dose (simulated units) | 2.60 | 2.58 | −0.02 (−0.11 to +0.08) | No: the range includes zero |
-| Mission time (minutes) | 5.9 | 7.9 | +2.0 (1.9 to 2.1) | Yes, CANIS slower (the trade-off) |
+| Faulty drums found | 88.1% | 87.9% | −0.2 points (−0.4 to −0.1) | About the same: same detector |
+| Faulty drums settled by the robot | 85.1% | **87.8%** | **+2.7 points (2.5 to 3.0)** | Yes, CANIS better |
+| Drums left for a person to check | 0.78 | **0.10** | **−88% (83% to 92% fewer)** | Yes, CANIS better |
+| Walks over the dose budget | 10.2% | **0.6%** | −9.6 points (−11.0 to −8.3) | Yes, CANIS better |
+| Robot dose (simulated units) | 2.60 | **2.19** | −0.41 (−0.50 to −0.32) | Yes, CANIS better |
+| Mission time (minutes) | 5.9 | 7.0 | +1.1 (1.0 to 1.2) | Yes, CANIS slower (the trade-off) |
 
 ![Drums left for a person](results/human_entries.png)
 
@@ -47,12 +47,12 @@ McNemar's test compares two robots drum by drum. Across all walks there were 16,
 
 | | CANIS settled it | CANIS didn't |
 |---|---|---|
-| **Fixed-route settled it** | 10,647 | 32 |
-| **Fixed-route didn't** | **3,692** | 2,260 |
+| **Fixed-route settled it** | 14,114 | 34 |
+| **Fixed-route didn't** | **487** | 1,996 |
 
-The disagree boxes are **3,692 vs 32**. A split that lopsided would almost never happen by chance (p < 0.001). CANIS settles drums the fixed-route robot can't.
+The disagree boxes are **487 vs 34**. A split that lopsided would almost never happen by chance (p < 0.001). CANIS settles drums the fixed-route robot can't.
 
-The same test on drums *found* shows a small gap the other way. The fixed-route robot found 55 drums CANIS didn't, and CANIS found none it missed (about 0.03 per walk). CANIS stopped short of 50 of them to keep within its dose budget, reporting them as "Couldn't inspect". It called the other 5 OK after two clear extra looks.
+The same test on drums *found* shows a small gap the other way. The fixed-route robot found 37 drums CANIS didn't, and CANIS found none it missed (about 0.02 per walk). CANIS stopped short of 34 of them to keep within its dose budget, reporting them as "Couldn't inspect". It called the other 3 OK after two clear extra looks.
 
 ## Limits
 

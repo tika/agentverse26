@@ -12,11 +12,10 @@ Only the decision logic differs.
       (backs off from spikes and returns), re-routes around a blocked aisle, and says
       "Couldn't inspect" instead of guessing.
 
-Detector model, per look, measured on the 150 held-out test images (run yolo26s_20261107T225757Z_d625ef,
-docs/validation/ in the team repo, branch detector-training):
-  Rust (barrel level):  conf >= 0.50: 130/259 rusty | 0.25-0.50: 121/259 | < 0.25: 8/259
-                        clean drums: >= 0.25: 2/303, >= 0.50: 0/303
-  Bulge (box level, frozen threshold 0.59): 243/274 bulges caught, 10 false boxes on 293 non-bulge drums.
+Detector model, per look (run compare_colors_20261108T053740Z_continued, cut-off 0.25):
+  Faults: 233/265 held-out test images classified correctly, used for both rust and bulge.
+  Flagged rust views, sure vs unsure, from the final showcase run: 18 at conf >= 0.50, 1 at 0.25-0.50.
+  Clean drums, from the showcase's 75 first-look views: rust 0.25-0.50: 2/75, >= 0.50: 0/75; bulge >= 0.25: 1/75.
   No unsure band is measured for bulges, so a bulge look is caught / not caught.
 The headline cut-off is 0.25: a look at >= 0.25 means "found". The 0.50 level splits a confident
 flag from an unsure one.
@@ -41,9 +40,11 @@ SPIKE = 3.0
 
 # ---------- detector: measured rates ----------
 REAL = dict(
-    rust_hi=130 / 259, rust_mid=121 / 259,        # rusty drum: P(conf>=0.5), P(0.25<=conf<0.5)
-    clean_hi=0 / 303, clean_mid=2 / 303,          # clean drum, rust false alarm
-    bulge_hit=243 / 274, bulge_false=10 / 293,    # bulge caught / false bulge per look
+    # compare_colors_20261108T053740Z_continued: 233/265 held-out photos correct at conf 0.25.
+    # Sure/unsure split and clean-drum rates: first looks in the final showcase run.
+    rust_hi=(233 / 265) * (18 / 19), rust_mid=(233 / 265) * (1 / 19),   # rusty drum: P(conf>=0.5), P(0.25<=conf<0.5)
+    clean_hi=0 / 75, clean_mid=2 / 75,            # clean drum, rust false alarm
+    bulge_hit=233 / 265, bulge_false=1 / 75,      # bulge caught / false bulge per look
 )
 
 

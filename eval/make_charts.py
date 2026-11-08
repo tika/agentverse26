@@ -28,7 +28,7 @@ fig, axs = plt.subplots(1, 2, figsize=(9, 3.6))
 bars(axs[0], "Defects found", "Faulty drums found (%)"); axs[0].set_ylim(0, 105); axs[0].set_title("Found (flagged at conf ≥ 0.25)")
 bars(axs[1], "Defects settled by the robot (no human)", "Faulty drums settled by robot (%)"); axs[1].set_ylim(0, 105)
 axs[1].set_title("Settled by the robot, no human visit")
-fig.suptitle("Same detector, so the same drums are found; CANIS settles far more of them itself", fontsize=10)
+fig.suptitle("Same detector, so the same drums are found; CANIS settles more of them itself", fontsize=10)
 fig.tight_layout(); fig.savefig(os.path.join(R, "defects.png"), dpi=150); plt.close(fig)
 
 fig, ax = plt.subplots(figsize=(5, 3.6))
