@@ -62,6 +62,9 @@ print(observation['barrels'])
 The default is **`band=fixed`, confidence 0.25**, matching the barrel audit below.
 Each response contains model/run/checkpoint IDs, image dimensions, timestamp,
 applied thresholds, timing, raw `detections` and grouped `barrels`.
+`input_sha256` is the SHA256 of the exact uploaded image bytes, allowing a
+camera client to verify which encoded frame the service processed. The robot
+client records that hash with its source camera path and frame ID.
 
 - Raw classes: **0 drum, 1 corrosion, 2 bulge**. Each detection has confidence and
   pixel `bbox_xyxy`. Corrosion boxes represent patches; drum/bulge boxes cover a drum.

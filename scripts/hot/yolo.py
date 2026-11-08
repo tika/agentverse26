@@ -4,6 +4,8 @@ import io as _yio
 import os as _yos
 import urllib.request as _yurl
 import time as _ytime
+import hashlib as _yhash
+from front_camera import CAMERA_PATH
 
 
 class YoloVision:
@@ -20,14 +22,28 @@ class YoloVision:
             self.last_t=t
             start=_ytime.perf_counter()
             try:
+                info=state['front_frame']['info']
+                rgb_sha=_yhash.sha256(rgb.tobytes()).hexdigest()
+                if info['camera_path']!=CAMERA_PATH or rgb_sha!=info['rgb_sha256']:
+                    raise ValueError('YOLO input is not the current rigid front camera')
                 buffer=_yio.BytesIO();Image.fromarray(rgb).save(buffer,format='JPEG',quality=92)
+                jpeg=buffer.getvalue();jpeg_sha=_yhash.sha256(jpeg).hexdigest()
                 boundary='agentverse-frame'
-                body=(f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="frame.jpg"\r\nContent-Type: image/jpeg\r\n\r\n').encode()+buffer.getvalue()+f'\r\n--{boundary}--\r\n'.encode()
+                stamp=json.dumps(dict(camera_path=CAMERA_PATH,frame_id=info['frame_id'],time_s=t,rgb_sha256=rgb_sha))
+                body=(f'--{boundary}\r\nContent-Disposition: form-data; name="frame_timestamp"\r\n\r\n'+stamp+'\r\n'+
+                      f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{info["frame_id"]}.jpg"\r\nContent-Type: image/jpeg\r\n\r\n').encode()+jpeg+f'\r\n--{boundary}--\r\n'.encode()
                 req=_yurl.Request(_yos.environ['DETECTOR_API_URL'].rstrip('/')+'/predict?band=fixed&confidence=0.25',data=body,
                     headers={'Modal-Key':_yos.environ['DETECTOR_API_KEY'],'Modal-Secret':_yos.environ['DETECTOR_API_SECRET'],
                              'Content-Type':'multipart/form-data; boundary='+boundary})
                 with _yurl.urlopen(req,timeout=180 if self.calls==0 else 30) as response:
                     result=json.loads(response.read())
+                if result.get('input_sha256')!=jpeg_sha:raise ValueError('Detector did not acknowledge the exact front-camera JPEG')
+                if result['image']!={'width':rgb.shape[1],'height':rgb.shape[0]}:raise ValueError('Detector input dimensions mismatch')
+                result.update(source_camera_path=CAMERA_PATH,source_frame_id=info['frame_id'],
+                              source_rgb_sha256=rgb_sha,input_jpeg_sha256=jpeg_sha)
+                if state.get('save_detector_inputs'):
+                    folder=OUT/'detector_inputs';folder.mkdir(exist_ok=True)
+                    (folder/(info['frame_id']+'.jpg')).write_bytes(jpeg)
                 self.calls+=1
                 associations=[]
                 if depth is not None:
@@ -73,6 +89,7 @@ class YoloVision:
                 self.failures+=1
                 self.result=dict(status='failed',error=str(error)[:160],associations=[],detections=[],
                                  timestamp_s=t,wall_seconds=_ytime.perf_counter()-start)
+                self.result.update(source_camera_path=CAMERA_PATH,source_frame_id=state['front_frame']['info']['frame_id'])
             with (OUT/'yolo_requests.jsonl').open('a') as output:output.write(json.dumps(self.result)+'\n')
             if self.calls==1:
                 Image.fromarray(rgb).save(OUT/'yolo_first_input.jpg')

@@ -1,0 +1,535 @@
+{
+  "scope": "Static reviewed-appearance preview; no full robot mission run",
+  "source_hashes": {
+    "barrel_appearance.py": "f8ac0cc3cec8cb444d622c22755f28aa8a6a9fa5bd99a9235b8a963c4ed6d245",
+    "corrosion_preview.py": "f4762873746eefd408fd3b89b55b265e6d3ebf447b52ef7f2cfb5c39d46f2297",
+    "drums.py": "40217fbe2f8d3a7a357fac2e58df29a2604e87f084a0584325d4d2bd729ae4ba",
+    "layouts/layout_training.json": "169b02ef490520116ab6f3b56107e7d40c1f8dc7f39d4bfe24c0701e7f21ccf3",
+    "capture_barrel_hall.py": "f428142d083d833a445c4361cd28f5f01bc5aeef0b26a91c988034af9c6e1927"
+  },
+  "seed": 42,
+  "drums": 28,
+  "categories": {
+    "LLW": 16,
+    "ILW": 12
+  },
+  "layout_preserved": true,
+  "ids_and_plates_preserved": true,
+  "reviewed_design": "7035539 / reviewed_llw_v2",
+  "variants": {
+    "A01": {
+      "id": "D01",
+      "category": "LLW",
+      "paint": "faded_yellow",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "A02": {
+      "id": "D02",
+      "category": "LLW",
+      "paint": "faded_yellow",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "A03": {
+      "id": "D03",
+      "category": "LLW",
+      "paint": "faded_yellow",
+      "faults": [
+        "corrosion"
+      ],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "A04": {
+      "id": "D04",
+      "category": "LLW",
+      "paint": "mid_grey",
+      "faults": [
+        "corrosion"
+      ],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "B01": {
+      "id": "D05",
+      "category": "LLW",
+      "paint": "faded_yellow",
+      "faults": [
+        "bulge"
+      ],
+      "shape": {
+        "max_radius": 0.31511137317857835,
+        "lid_rise": 0.07,
+        "dents": [],
+        "radial_swelling_fraction": 0.08
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "B02": {
+      "id": "D06",
+      "category": "LLW",
+      "paint": "faded_yellow",
+      "faults": [
+        "residue"
+      ],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "B03": {
+      "id": "D07",
+      "category": "LLW",
+      "paint": "faded_yellow",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "B04": {
+      "id": "D08",
+      "category": "LLW",
+      "paint": "mid_grey",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "C01": {
+      "id": "D09",
+      "category": "LLW",
+      "paint": "mid_grey",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "C02": {
+      "id": "D10",
+      "category": "LLW",
+      "paint": "mid_grey",
+      "faults": [
+        "bulge",
+        "corrosion",
+        "leak"
+      ],
+      "shape": {
+        "max_radius": 0.31511137317857835,
+        "lid_rise": 0.07,
+        "dents": [],
+        "radial_swelling_fraction": 0.08
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "C03": {
+      "id": "D11",
+      "category": "LLW",
+      "paint": "mid_grey",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "C04": {
+      "id": "D12",
+      "category": "LLW",
+      "paint": "dark_blue",
+      "faults": [
+        "corrosion"
+      ],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "D01": {
+      "id": "D13",
+      "category": "LLW",
+      "paint": "faded_yellow",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "D02": {
+      "id": "D14",
+      "category": "LLW",
+      "paint": "mid_grey",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "D03": {
+      "id": "D15",
+      "category": "LLW",
+      "paint": "dark_blue",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "D04": {
+      "id": "D16",
+      "category": "LLW",
+      "paint": "mid_grey",
+      "faults": [],
+      "shape": {
+        "max_radius": 0.299,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "reviewed_llw_v2"
+    },
+    "A05": {
+      "id": "D17",
+      "category": "ILW",
+      "paint": null,
+      "faults": [
+        "corrosion"
+      ],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "A06": {
+      "id": "D18",
+      "category": "ILW",
+      "paint": null,
+      "faults": [
+        "corrosion"
+      ],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "A07": {
+      "id": "D19",
+      "category": "ILW",
+      "paint": null,
+      "faults": [],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "B05": {
+      "id": "D20",
+      "category": "ILW",
+      "paint": null,
+      "faults": [
+        "leak"
+      ],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "B06": {
+      "id": "D21",
+      "category": "ILW",
+      "paint": null,
+      "faults": [],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "B07": {
+      "id": "D22",
+      "category": "ILW",
+      "paint": null,
+      "faults": [],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "C05": {
+      "id": "D23",
+      "category": "ILW",
+      "paint": null,
+      "faults": [],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "C06": {
+      "id": "D24",
+      "category": "ILW",
+      "paint": null,
+      "faults": [],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "C07": {
+      "id": "D25",
+      "category": "ILW",
+      "paint": null,
+      "faults": [
+        "corrosion",
+        "residue"
+      ],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "D05": {
+      "id": "D26",
+      "category": "ILW",
+      "paint": null,
+      "faults": [],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "D06": {
+      "id": "D27",
+      "category": "ILW",
+      "paint": null,
+      "faults": [],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    },
+    "D07": {
+      "id": "D28",
+      "category": "ILW",
+      "paint": null,
+      "faults": [],
+      "shape": {
+        "max_radius": 0.4,
+        "lid_rise": 0.0,
+        "dents": [],
+        "radial_swelling_fraction": 0.0
+      },
+      "appearance_version": "stainless_ilw_v1"
+    }
+  },
+  "views": {
+    "hall_overview": {
+      "eye": [
+        1.3,
+        1.4,
+        4.8
+      ],
+      "look_at": [
+        10.0,
+        6.0,
+        0.8
+      ],
+      "focal_length_mm": 20,
+      "image": "hall_overview/rgb_0000.png"
+    },
+    "centre_aisle": {
+      "eye": [
+        1.3,
+        6.0,
+        1.65
+      ],
+      "look_at": [
+        9.0,
+        6.0,
+        0.65
+      ],
+      "focal_length_mm": 21,
+      "image": "centre_aisle/rgb_0000.png"
+    },
+    "A03_normal_rusted": {
+      "eye": [
+        6.25,
+        1.25,
+        1.3
+      ],
+      "look_at": [
+        6.0,
+        3.45,
+        0.45
+      ],
+      "focal_length_mm": 44,
+      "image": "A03_normal_rusted/rgb_0000.png"
+    },
+    "B01_bulged_clean": {
+      "eye": [
+        3.35,
+        6.75,
+        1.3
+      ],
+      "look_at": [
+        3.0,
+        4.55,
+        0.46
+      ],
+      "focal_length_mm": 44,
+      "image": "B01_bulged_clean/rgb_0000.png"
+    },
+    "C02_bulged_rusted": {
+      "eye": [
+        4.85,
+        5.2,
+        1.3
+      ],
+      "look_at": [
+        4.5,
+        7.45,
+        0.46
+      ],
+      "focal_length_mm": 44,
+      "image": "C02_bulged_rusted/rgb_0000.png"
+    },
+    "C02_lid_detail": {
+      "eye": [
+        4.75,
+        6.2,
+        1.35
+      ],
+      "look_at": [
+        4.5,
+        7.45,
+        0.76
+      ],
+      "focal_length_mm": 56,
+      "image": "C02_lid_detail/rgb_0000.png"
+    }
+  },
+  "hidden_release_fixtures": [
+    "/World/Defects/D06/Spill_2",
+    "/World/Defects/D06/Spill_3",
+    "/World/Defects/D10/Spill_0",
+    "/World/Defects/D10/Spill_1",
+    "/World/Defects/D10/Spill_4",
+    "/World/Defects/D20/Spill_0",
+    "/World/Defects/D20/Spill_1",
+    "/World/Defects/D25/Spill_2",
+    "/World/Defects/D25/Spill_3"
+  ],
+  "metrics": {
+    "seed": 42,
+    "build_seconds": 5.86,
+    "drum_count": 28,
+    "hall_interior": [
+      20,
+      12,
+      6
+    ],
+    "extra_detail_meshes": 32,
+    "failed_fixture": "Row2_L04",
+    "camera_exposure": {
+      "iso": 400,
+      "f_number": 2.8,
+      "shutter_reciprocal_seconds": 60
+    },
+    "layout": "layout_training.json",
+    "episode_seed": 42,
+    "faulty_drums": 10
+  },
+  "exposure": {
+    "iso": 400,
+    "f_number": 2.8,
+    "shutter_reciprocal_s": 60
+  },
+  "limitations": [
+    "LLW bulge is authored geometry, not measured gas pressure",
+    "Stainless ILW design remains category-specific",
+    "No new dataset generation or model training"
+  ]
+}

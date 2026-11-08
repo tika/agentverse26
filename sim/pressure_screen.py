@@ -9,6 +9,20 @@ import statistics
 from sensors import load_config
 
 
+def screen_visual_pressure(*,bulge_observed,surface_c,ambient_c,threshold_c=5.0):
+    """RGB class plus measured thermal evidence; no inferred diameter or internal gas claim."""
+    if surface_c is None or not all(math.isfinite(v) for v in (surface_c,ambient_c)):
+        return {'status':'shape_anomaly' if bulge_observed else 'insufficient_data',
+                'suspected_pressurisation':False,'gas_confirmed':False,'thermal_confirmed':False}
+    delta = surface_c-ambient_c
+    heat = delta >= threshold_c
+    status = ('suspected_pressurisation' if bulge_observed and heat else 'shape_anomaly' if bulge_observed
+              else 'thermal_anomaly' if heat else 'no_two_cue_anomaly')
+    return dict(status=status,suspected_pressurisation=bool(bulge_observed and heat),gas_confirmed=False,
+                thermal_confirmed=heat,surface_c=surface_c,ambient_c=ambient_c,delta_c=round(delta,2),
+                threshold_above_ambient_c=threshold_c)
+
+
 def screen_pressure_risk(*,bulge_pct,surface_temperatures_c,ambient_c,lid_rise_mm=0,config=None):
     cfg=(config or load_config())['pressure_screen']
     values=[bulge_pct,ambient_c,lid_rise_mm,*surface_temperatures_c]

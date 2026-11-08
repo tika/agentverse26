@@ -1,0 +1,64 @@
+{
+  "camera_prims": [
+    "/OmniverseKit_Persp",
+    "/World/WalkingSpot/body/FrontCamera",
+    "/World/Presentation/CornerCamera",
+    "/OmniverseKit_Front",
+    "/OmniverseKit_Top",
+    "/OmniverseKit_Right"
+  ],
+  "camera_parent": "/World/WalkingSpot/body",
+  "independent_pan_tilt": false,
+  "model_visual_sources": [
+    "/World/WalkingSpot/body/FrontCamera"
+  ],
+  "presentation_only_sources": [
+    "/World/Presentation/CornerCamera"
+  ],
+  "mount_xyz_m": [
+    0.6,
+    0.0,
+    0.12
+  ],
+  "horizontal_fov_deg": 110.0,
+  "calibration_status": "simulation forward rectified RGB-D approximation; not measured Spot intrinsics",
+  "frames": 166,
+  "max_mount_position_error_m": 3.305038155037277e-07,
+  "max_mount_rotation_error": 2.7668470918241315e-07,
+  "capabilities": {
+    "turn_left": true,
+    "turn_right": true,
+    "reposition": true,
+    "look_up": false,
+    "look_down": false,
+    "crouch": false
+  },
+  "controller_failures": [
+    {
+      "phase": "look_up",
+      "error": "Stationary observation currently supports the native implicit joint drives only"
+    },
+    {
+      "phase": "look_down",
+      "error": "Stationary observation currently supports the native implicit joint drives only"
+    },
+    {
+      "phase": "crouch",
+      "error": "Stationary observation currently supports the native implicit joint drives only"
+    }
+  ],
+  "body_height_range_m": [
+    0.4632376730442047,
+    0.5047162771224976
+  ],
+  "body_pitch_range_rad": [
+    -0.023157192635475315,
+    0.03496573287823786
+  ],
+  "body_yaw_range_rad": [
+    9.579096585083008e-05,
+    0.6987431336905853
+  ],
+  "yolo_requests": 28,
+  "yolo_failures": 0
+}

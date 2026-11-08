@@ -10,6 +10,7 @@ from pathlib import Path
 import random
 
 from inspection_payloads import dew_point_c, gas_at_pose
+from drum_properties import gas_fixtures,acoustic_fixtures
 
 CONFIG = Path(__file__).with_name('inspection_config.json')
 
@@ -28,6 +29,9 @@ def author_gamma_source(prim, entry):
     prim.CreateAttribute("inspection:gammaSourceHeightM", Sdf.ValueTypeNames.Double).Set(
         float(entry["height"]) / 2
     )
+    if entry.get('simulation_properties'):
+        prim.CreateAttribute('inspection:simulationProfileJson',Sdf.ValueTypeNames.String).Set(
+            json.dumps(entry['simulation_properties'],sort_keys=True))
 
 
 def intersects_drum(start, end, drum):
@@ -56,14 +60,21 @@ class SensorWorld:
         self.config = copy.deepcopy(config or load_config())
         self._drums = copy.deepcopy(drums)
         self._zones = copy.deepcopy(self.config['environment']['zones'])
-        self._contamination = {d['id']: {'alpha': 0.0, 'beta_gamma': 0.0} for d in drums}
+        self._contamination={d['id']:{'alpha':d.get('simulation_properties',{}).get('surface_sample',{}).get('alpha_bq_cm2',0.),
+                                     'beta_gamma':d.get('simulation_properties',{}).get('surface_sample',{}).get('beta_gamma_bq_cm2',0.)} for d in drums}
+        self._profile_vents=gas_fixtures(drums)
+        self._profile_acoustics=acoustic_fixtures(drums)
         seed = self.config['seed']
         self._dose_rng, self._env_rng, self._swab_rng = (random.Random(seed+i) for i in range(3))
         self._last_time = None
         self._dose_mSv = 0.0
         self._previous_rate = None
         self._pending_swab = None
-        self._surface_chemistry = {}
+        self._surface_chemistry={d['id']:{k:v for k,v in d.get('simulation_properties',{}).get('surface_sample',{}).items()
+                                        if k in ('ph','conductivity_us_cm','chloride_mg_m2')} for d in drums}
+
+    def acoustic_sources(self):
+        return copy.deepcopy(self._profile_acoustics)
 
     def _sources(self, position):
         cfg = self.config['radiation']
@@ -94,11 +105,12 @@ class SensorWorld:
         values = self._zones[zone]
         temperature = self._env_rng.gauss(values['temperature_c'], env['temperature_noise_std_c'])
         humidity = min(100.0, max(0.0, self._env_rng.gauss(values['relative_humidity_pct'], env['humidity_noise_std_pct'])))
+        vents=self._profile_vents+self.config.get('gas_vents',[])
         return {'time_s': time_s, 'dose_rate_uSv_h': rate, 'dose_timestamp_s': time_s,
                 'mission_dose_mSv': self._dose_mSv, 'zone': zone,
                 'temperature_c': temperature, 'relative_humidity_pct': humidity,
                 'dew_point_c': dew_point_c(temperature, humidity),
-                **(gas_at_pose(position, self.config['gas_vents']) if 'gas_vents' in self.config else {})}
+                **(gas_at_pose(position,vents) if vents or 'gas_vents' in self.config else {})}
 
     def gamma_bins(self, position, yaw_rad=0.0):
         """Stretch sensor: relative bearing/intensity in 16 blurred azimuth bins."""

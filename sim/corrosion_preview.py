@@ -10,14 +10,14 @@ from textures import ASSETS,noise,maps
 from profiles import drum_profile,radius_at
 
 
-def weathered_maps(seed=74):
+def weathered_maps(seed=74, *, paint_rgb=(170,153,66), prefix=None):
     ASSETS.mkdir(parents=True,exist_ok=True)
-    prefix=f'preview_weathered_yellow_s{seed}_v2'
+    prefix=prefix or f'preview_weathered_yellow_s{seed}_v2'
     rng=np.random.default_rng(seed)
     n=1024; yy,xx=np.mgrid[:n,:n]
     z=1-yy/(n-1)
     broad=noise(rng,n); fine=rng.random((n,n))
-    paint=np.array((170,153,66))[None,None,:]+(broad[:,:,None]-.5)*22
+    paint=np.array(paint_rgb)[None,None,:]+(broad[:,:,None]-.5)*22
     # Grey handling wear and vertical grime; no orange is baked into the paint.
     columns=rng.normal(0,1,(1,n))
     dirt=np.clip((broad-.35)*.18,0,.12)+np.exp(-z/.09)*.15
@@ -81,7 +81,7 @@ def swollen_profile(fraction=.08):
     return dense
 
 
-def build_oxide(stage,entry,textures,alpha,profile):
+def build_oxide(stage,entry,textures,alpha,profile,*,material_name='PreviewThinOxide'):
     from geometry import mesh
     from materials import material
     from pxr import UsdShade,Sdf
@@ -102,7 +102,7 @@ def build_oxide(stage,entry,textures,alpha,profile):
                 points.append((r*math.cos(a),r*math.sin(a),z))
                 uv.append((u,z/.88))
             faces.append((k,k+1,k+2,k+3))
-    paint=material(stage,'PreviewThinOxide',(1,1,1),.9,textures=textures)
+    paint=material(stage,material_name,(1,1,1),.9,textures=textures)
     # Cutout on microchips, not a solid, opaque brown feature silhouette.
     shader=UsdShade.Shader(stage.GetPrimAtPath(str(paint.GetPath())+'/Surface'))
     shader.CreateInput('opacityThreshold',Sdf.ValueTypeNames.Float).Set(.17)

@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 from isaacsim.sensors.rtx import LidarRtx
 from isaacsim.sensors.experimental.physics import IMU, IMUSensor, JointStateSensor
+from front_camera import CAMERA_PATH, backproject_xy
 
 LIDAR_MOUNT_Z = 0.18
 HALL_X, HALL_Y = 20.0, 12.0
@@ -123,6 +124,7 @@ class RealNav:
         self.gyro = 0.0
         self.accel = np.zeros(3)
         self.roll = self.pitch = 0.0
+        self.height=.5
         self.speed = 0.0
         self.icp_inliers, self.icp_rms, self.scan_points = 0.0, float('nan'), 0
         self.icp_accepted = False
@@ -142,6 +144,7 @@ class RealNav:
         level = _ry(self.pitch) @ _rx(self.roll)
         heights = {leg: (level @ p)[2] for leg, p in feet.items()}
         lowest = min(heights.values())
+        self.height=float(np.clip(-lowest,.2,.8))
         stance = {leg for leg, h in heights.items() if h < lowest + 0.02}
         for leg in stance - self._stance:
             self.touchdowns.append((t, leg))
@@ -190,24 +193,13 @@ class RealNav:
 
 
 def camera_rays_to_world(camera, pixels_uv, depths, body_truth, estimate):
-    """Back-project pixels with depth, then express via the camera mount on the *estimated* body pose."""
+    """Known rigid calibration plus estimated yaw and measured IMU tilt; no flying camera pose."""
+    if str(camera.prim.GetPath())!=CAMERA_PATH:raise ValueError('Only the rigid front camera is permitted')
     k = camera.get_intrinsics_matrix()
-    position, quat = camera.get_world_pose(camera_axes='world')
-    w, x, y, z = quat
-    rot = np.array([[1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
-                    [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
-                    [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
-    u, v = pixels_uv[:, 0], pixels_uv[:, 1]
-    # World axes camera: +x forward, +y left, +z up.
-    local = np.stack([depths, -(u - k[0, 2]) * depths / k[0, 0], -(v - k[1, 2]) * depths / k[1, 1]], 1)
-    world_truth = local @ rot.T + position
-    # Mount transform: camera relative to the true body, re-applied to the estimated body pose.
-    bp, byaw = body_truth
-    rel = world_truth[:, :2] - bp[:2]
-    c, s = math.cos(-byaw), math.sin(-byaw)
-    in_body = rel @ np.array([[c, s], [-s, c]])
-    c, s = math.cos(estimate[2]), math.sin(estimate[2])
-    return in_body @ np.array([[c, s], [-s, c]]) + estimate[:2]
+    w,x,y,z=IMU_SENSOR.get_data()['orientation']
+    roll=math.atan2(2*(w*x+y*z),1-2*(x*x+y*y))
+    pitch=math.asin(float(np.clip(2*(w*y-z*x),-1,1)))
+    return backproject_xy(pixels_uv,depths,k,estimate,roll,pitch)
 
 
 def thermal_findings(thermal, depth, ambient, body_truth, estimate, rise=6.0, min_px=40):
@@ -291,6 +283,10 @@ DECIDE_PROMPT = (
     '100 uSv/h requires backing off; a swab above 0.4 Bq/cm2 alpha or 4 Bq/cm2 beta/gamma is failing containment; a drum '
     'surface 5 C or more above ambient is a thermal anomaly. Hydrogen and hiss have no alarm setpoint; weigh them as '
     'evidence together with heat. Use only facts in the readings and findings. Choose exactly one offered action and '
+    'The sole RGB camera is rigidly attached to the front of the body. It cannot independently pan or tilt. '
+    'Actively gather better evidence by physically turning, repositioning, moving closer/farther, or using '
+    'a body-pitch/height observation action IF that action is offered and verified. Never invent an actuator. '
+    'Use a new physical view to resolve missing, occluded or uncertain measurements. '
     'answer with only JSON: {"action_id": <offered id>, "reason": <one short sentence citing the evidence>}.')
 PLATE_PROMPT = ('Read the waste drum plate. It shows a category (LLW or ILW) and an ID of one uppercase letter '
                 'followed by two digits. Read only visible characters. If no plate is readable return nulls. '
@@ -308,7 +304,7 @@ def extract_json(text):
     raise ValueError(f'No JSON in model output: {text[-200:]}')
 
 
-def cosmos_chat(content, system=None, max_tokens=512, timeout_s=180):
+def cosmos_chat(content, system=None, max_tokens=512, timeout_s=180, schema=None):
     """POST to the vLLM OpenAI-compatible endpoint. The simulation waits for the answer."""
     import os as _os
     import urllib.request as _url
@@ -322,7 +318,9 @@ def cosmos_chat(content, system=None, max_tokens=512, timeout_s=180):
     if not url:
         raise RuntimeError('External Cosmos endpoint has not been configured')
     messages = ([{'role': 'system', 'content': system}] if system else []) + [{'role': 'user', 'content': content}]
-    body = json.dumps({'model': model, 'messages': messages, 'max_tokens': max_tokens, 'temperature': 0.0}).encode()
+    payload={'model':model,'messages':messages,'max_tokens':max_tokens,'temperature':0.0}
+    if schema:payload['response_format']={'type':'json_schema','json_schema':{'name':'inspection_response','schema':schema,'strict':True}}
+    body=json.dumps(payload).encode()
     headers={'Content-Type':'application/json'}
     if key:headers['Authorization']=f'Bearer {key}'
     request = _url.Request(url.rstrip('/') + '/v1/chat/completions', data=body, method='POST',
@@ -342,13 +340,30 @@ def _image_part(rgb, max_side=640):
     return {'type': 'image_url', 'image_url': {'url': 'data:image/jpeg;base64,' + _b64.b64encode(buffer.getvalue()).decode()}}
 
 
-def cosmos_call(method, rgb, snapshot=None):
+def front_image_part(rgb,kind,crop_box=None):
+    import hashlib,base64
+    packet=state['front_frame'];source=packet['rgb']
+    if crop_box is not None:
+        x0,y0,x1,y1=map(int,crop_box);source=source[y0:y1,x0:x1]
+    if rgb.shape!=source.shape or not np.array_equal(rgb,source):
+        raise ValueError('Model input is not the current front-camera frame or its declared digital crop')
+    part=_image_part(rgb)
+    encoded=base64.b64decode(part['image_url']['url'].split(',',1)[1])
+    record=dict(kind=kind,**packet['info'],crop_box=crop_box,input_shape=list(rgb.shape),
+                input_rgb_sha256=hashlib.sha256(rgb.tobytes()).hexdigest(),jpeg_sha256=hashlib.sha256(encoded).hexdigest())
+    with (OUT/'model_inputs.jsonl').open('a') as output:output.write(json.dumps(record,default=float)+'\n')
+    return part
+
+
+def cosmos_call(method, rgb, snapshot=None, structured=False,crop_box=None):
     """read_plate -> {drum_id, category}; decide -> {action_id, reason, valid}. Errors are returned, not raised."""
     import time as _time
     started = _time.perf_counter()
     try:
         if method == 'read_plate':
-            text = cosmos_chat([_image_part(rgb), {'type': 'text', 'text': PLATE_PROMPT}], max_tokens=256)
+            schema={'type':'object','properties':{'drum_id':{'type':['string','null'],'pattern':'^[A-Z][0-9]{2}$'},
+                    'category':{'enum':['LLW','ILW',None]}},'required':['drum_id','category'],'additionalProperties':False} if structured else None
+            text = cosmos_chat([front_image_part(rgb,'cosmos_plate',crop_box), {'type': 'text', 'text': PLATE_PROMPT}], max_tokens=256,schema=schema)
             answer = extract_json(text)
             drum_id, category = answer.get('drum_id'), answer.get('category')
             import re as _re
@@ -359,7 +374,9 @@ def cosmos_call(method, rgb, snapshot=None):
                       'readability': 'readable' if valid_id and valid_cat else ('partial' if drum_id or category else 'unreadable'),
                       'raw_read': [drum_id, category]}
         else:
-            text = cosmos_chat([_image_part(rgb), {'type': 'text', 'text': json.dumps(snapshot)}], system=DECIDE_PROMPT)
+            schema={'type':'object','properties':{'action_id':{'type':'string','enum':[a['id'] for a in snapshot['actions']]},
+                    'reason':{'type':'string'}},'required':['action_id','reason'],'additionalProperties':False} if structured else None
+            text = cosmos_chat([front_image_part(rgb,'cosmos_plan'), {'type': 'text', 'text': json.dumps(snapshot)}], system=DECIDE_PROMPT,schema=schema)
             answer = extract_json(text)
             offered = {a['id'] for a in snapshot['actions']}
             valid = answer.get('action_id') in offered
@@ -371,6 +388,44 @@ def cosmos_call(method, rgb, snapshot=None):
     result['latency_s'] = _time.perf_counter() - started
     return result
 
+
+def detector_available():
+    import os as _os
+    return all(_os.environ.get(k) for k in ('DETECTOR_API_URL', 'DETECTOR_API_KEY', 'DETECTOR_API_SECRET'))
+
+
+def detect_frame(rgb, band='suspect', timeout_s=180):
+    """YOLO26s drum/corrosion/bulge detector (detector-training branch API). Returns the API JSON or {'error'}."""
+    import io as _io
+    import os as _os
+    import time as _time
+    import urllib.request as _url
+    import uuid as _uuid
+    from PIL import Image as _Image
+    buffer = _io.BytesIO()
+    _Image.fromarray(rgb).save(buffer, format='JPEG', quality=92)
+    boundary = _uuid.uuid4().hex
+    body = (f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="frame.jpg"\r\n'
+            f'Content-Type: image/jpeg\r\n\r\n').encode() + buffer.getvalue() + f'\r\n--{boundary}--\r\n'.encode()
+    request = _url.Request(_os.environ['DETECTOR_API_URL'].rstrip('/') + '/predict?band=' + band, data=body, method='POST',
+                           headers={'Modal-Key': _os.environ['DETECTOR_API_KEY'],
+                                    'Modal-Secret': _os.environ['DETECTOR_API_SECRET'],
+                                    'Content-Type': 'multipart/form-data; boundary=' + boundary})
+    started = _time.perf_counter()
+    try:
+        with _url.urlopen(request, timeout=timeout_s) as response:
+            result = json.loads(response.read())
+    except Exception as error:
+        return {'error': repr(error)[-300:], 'detections': []}
+    result['wall_s'] = _time.perf_counter() - started
+    return result
+
+
+def associate_detections(detections, depth, body_truth, estimate):
+    """Place each box on the map via depth at its centre and the estimated pose; match faults to drums spatially."""
+    per_drum = {}
+    if depth is None:
+        return per_drum
     h, w = depth.shape
     for det in detections:
         x0, y0, x1, y1 = det['bbox_xyxy']

@@ -1,0 +1,40 @@
+{
+  "run_id": "021757-agent_seven_drums-596c",
+  "gpu_count": 4,
+  "gpu": "RTX PRO 6000 Blackwell Server Edition",
+  "video": "out/recordings/agentverse26_seven_drums_front_4gpu.mp4",
+  "frames": 1238,
+  "fps": 12.0,
+  "duration_s": 103.167,
+  "width": 1920,
+  "height": 1080,
+  "video_bytes": 75111345,
+  "sha256": "53e48303adfa818224e7d303037eb434bbd5c3424cd442779a3cf195d5e6ebb7",
+  "scope": [
+    "B02",
+    "C02",
+    "B01",
+    "C01",
+    "B03",
+    "C03",
+    "B04"
+  ],
+  "completed": 7,
+  "deferred": 0,
+  "planner_failures": 0,
+  "cosmos_decisions": 14,
+  "decision_sources": [
+    "Cosmos Reason 2"
+  ],
+  "yolo_requests": 201,
+  "yolo_failures": 0,
+  "model_camera_sources": [
+    "/World/WalkingSpot/body/FrontCamera"
+  ],
+  "yolo_camera_sources": [
+    "/World/WalkingSpot/body/FrontCamera"
+  ],
+  "max_camera_mount_error_m": 3.5902198647948296e-07,
+  "notes": "Seven-drum observation coverage, not a classification accuracy benchmark. Other 21 drums were outside scope.",
+  "modal_volume_path": "agentverse-mission-runs:/runs/021757-agent_seven_drums-596c/"
+}

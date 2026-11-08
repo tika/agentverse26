@@ -11,23 +11,27 @@ import os
 from pathlib import Path
 import time
 import traceback
+import hashlib
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 SIM = Path(__file__).resolve().parent
 HOT = Path('/tmp/hot')
 SPAWN = (float(os.environ.get('HOT_SPAWN_X','10')),float(os.environ.get('HOT_SPAWN_Y','6')))
-VIEW = (640, 360)
+from front_camera import CAMERA_PATH, BODY_PATH, RESOLUTION, MOUNT_XYZ, MOUNT_QUAT, HORIZONTAL_APERTURE, FOCAL_LENGTH, expected_world_pose, rotation
+VIEW = RESOLUTION
 
 
 if __name__ == '__main__':
     from isaacsim import SimulationApp
     app = SimulationApp({'headless': True, 'renderer': 'RayTracedLighting', 'display_options': 0,
+                         'disable_viewport_updates': True, 'multi_gpu': True,
+                         'limit_cpu_threads': 16,
                          'extra_args': ['--enable', 'isaacsim.robot.policy.examples',
                                         '--enable', 'isaacsim.sensors.camera']})
     started = time.perf_counter()
     import omni.usd
-    from pxr import Gf, UsdPhysics
+    from pxr import Gf, UsdPhysics, UsdGeom
     from isaacsim.core.api import World
     from isaacsim.core.simulation_manager import SimulationManager
     from isaacsim.robot.policy.examples import RobotPolicyRunner, get_spot_spec
@@ -47,36 +51,53 @@ if __name__ == '__main__':
     spot.spawn()
     dt = spot.physics_dt
     world = World(physics_dt=dt, rendering_dt=dt)
-    chase = Camera('/World/HotChase', resolution=VIEW)
-    onboard = Camera('/World/HotOnboard', resolution=VIEW)
-    for camera in (chase, onboard):
-        camera.prim.GetAttribute('focalLength').Set(15.0)
+    onboard = Camera(CAMERA_PATH,resolution=VIEW,translation=MOUNT_XYZ)
+    onboard.set_local_pose(translation=MOUNT_XYZ,orientation=MOUNT_QUAT,camera_axes='world')
+    UsdGeom.Xformable(onboard.prim).SetResetXformStack(False)
+    onboard.prim.GetAttribute('horizontalAperture').Set(HORIZONTAL_APERTURE)
+    onboard.prim.GetAttribute('verticalAperture').Set(HORIZONTAL_APERTURE*VIEW[1]/VIEW[0])
+    onboard.prim.GetAttribute('focalLength').Set(FOCAL_LENGTH)
+    onboard.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(.05,40.))
     world.reset()
-    for camera in (chase, onboard):
-        camera.initialize()
+    onboard.initialize()
+    onboard.add_distance_to_image_plane_to_frame()
     zero = np.zeros(3, dtype=np.float32)
     world.step(render=False)
     spot.restart_from_default_state(zero)
     inventory = json.loads((SIM / 'drums.json').read_text())
     sensor = SensorWorld(inventory, load_config())
     font = ImageFont.load_default(size=16)
-
-    def aim(camera, eye, target):
-        matrix = Gf.Matrix4d().SetLookAt(Gf.Vec3d(*map(float, eye)), Gf.Vec3d(*map(float, target)), Gf.Vec3d(0, 0, 1))
-        quat = matrix.GetInverse().ExtractRotationQuat()
-        camera.set_world_pose(position=np.array(eye, dtype=float),
-                              orientation=np.array([quat.GetReal(), *quat.GetImaginary()]), camera_axes='usd')
+    state={'onboard_depth':True,'camera_mode':'rigid_front_only'}
 
     def pose():
         p, q = spot.articulation.get_world_poses()
         p, (w, x, y, z) = p.numpy().reshape(3), q.numpy().reshape(4)
         return p, math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
 
-    def place_cameras(position, yaw):
-        heading = np.array([math.cos(yaw), math.sin(yaw), 0.0])
-        aim(chase, position - 2.4 * heading + [0, 0, 1.5], position + 1.2 * heading + [0, 0, 0.2])
-        eye = position + 0.47 * heading + [0, 0, 0.22]
-        aim(onboard, eye, eye + heading + [0, 0, -0.12])
+    def capture_front(index,t):
+        translation,orientation=onboard.get_local_pose(camera_axes='world')
+        if np.linalg.norm(translation-MOUNT_XYZ)>1e-6 or abs(float(np.dot(orientation,MOUNT_QUAT)))<1-1e-6:
+            raise RuntimeError('Rigid front-camera calibration changed during execution')
+        bp,bq=spot.articulation.get_world_poses()
+        expected_p,expected_r=expected_world_pose(bp.numpy().reshape(3),bq.numpy().reshape(4))
+        cp,cq=onboard.get_world_pose(camera_axes='world')
+        mount_error=float(np.linalg.norm(cp-expected_p));rotation_error=float(np.linalg.norm(rotation(cq)-expected_r))
+        if mount_error>.002 or rotation_error>.002:
+            raise RuntimeError(f'Front camera detached from physical body: {mount_error:.6f} m, {rotation_error:.6f} rotation error')
+        native=onboard.get_current_frame()
+        rgba=native.get('rgba')
+        if rgba is None or not np.asarray(rgba).size:rgba=onboard.get_rgba()
+        rgb=np.asarray(rgba)[:,:,:3].astype(np.uint8,copy=True)
+        depth=onboard.get_depth()
+        if depth is None or rgb.shape[:2]!=depth.shape[:2]:raise RuntimeError('Front RGB/depth not aligned')
+        depth=np.array(depth,copy=True)
+        info=dict(camera_path=CAMERA_PATH,parent=BODY_PATH,frame_id=f'front-{index:06d}',simulation_time_s=float(t),
+                  native_frame=native.get('rendering_frame'),native_time=native.get('rendering_time'),
+                  mount_position_error_m=mount_error,mount_rotation_error=rotation_error,
+                  width=rgb.shape[1],height=rgb.shape[0],rgb_sha256=hashlib.sha256(rgb.tobytes()).hexdigest())
+        rgb.setflags(write=False);depth.setflags(write=False)
+        state['front_frame']=dict(rgb=rgb,depth=depth,info=info)
+        return state['front_frame']
 
     def pixels(camera):
         rgba = camera.get_rgba()
@@ -98,12 +119,9 @@ if __name__ == '__main__':
     def snapshot(t, position, hud):
         world.render()
         world.render()
-        left, right = pixels(chase), pixels(onboard)
-        if left is None or right is None:
-            raise RuntimeError('Camera dropped out')
-        canvas = Image.new('RGB', (2 * VIEW[0], VIEW[1] + 50), '#111822')
-        canvas.paste(Image.fromarray(left), (0, 0))
-        canvas.paste(Image.fromarray(right), (VIEW[0], 0))
+        packet=capture_front(round(t*12),t)
+        canvas = Image.new('RGB', (VIEW[0], VIEW[1] + 50), '#111822')
+        canvas.paste(Image.fromarray(packet['rgb']), (0, 0))
         reading = sensor.sample(position, t)
         (hud or default_hud)(ImageDraw.Draw(canvas), t, position, reading)
         return canvas, reading
@@ -120,7 +138,6 @@ if __name__ == '__main__':
         for index in range(int(max_s * fps)):
             t = index * stride * dt
             position, yaw = pose()
-            place_cameras(position, yaw)
             canvas, reading = snapshot(t, position, hud)
             canvas.save(frames / f'{index:05d}.jpg', quality=88)
             readings.append({'time_s': t, 'position_m': position.tolist(), **reading})
@@ -141,21 +158,17 @@ if __name__ == '__main__':
         print('[hot] walk', name, summary, flush=True)
         return summary
 
-    def still(eye, target, name='still', focal=24):
-        """Render one frame from an arbitrary viewpoint with the chase camera."""
-        chase.prim.GetAttribute('focalLength').Set(float(focal))
-        aim(chase, eye, target)
+    def front_still(name='front'):
         for _ in range(6):
             world.render()
-        Image.fromarray(pixels(chase)).save(OUT / f'{name}.png')
-        chase.prim.GetAttribute('focalLength').Set(15.0)
+        Image.fromarray(capture_front(0,0)['rgb']).save(OUT/f'{name}.png')
 
     for _ in range(40):
         world.render()
         fixed_exposure()
     namespace = {'app': app, 'stage': stage, 'world': world, 'spot': spot, 'sensor': sensor,
-                 'inventory': inventory, 'walk': walk, 'still': still, 'pose': pose, 'np': np,
-                 'chase': chase, 'onboard': onboard, 'state': {}}
+                 'inventory': inventory, 'walk': walk, 'front_still': front_still, 'pose': pose, 'np': np,
+                 'onboard': onboard, 'capture_front':capture_front, 'state': state}
     (HOT / 'req').mkdir(parents=True, exist_ok=True)
     (HOT / 'out').mkdir(parents=True, exist_ok=True)
     print(f'HOT_READY {time.perf_counter() - started:.1f}s', flush=True)

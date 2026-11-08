@@ -1,0 +1,796 @@
+{
+  "scope": "Static-image perception and proposed follow-ups; no mission executed",
+  "cosmos_endpoint": "https://tika--agentverse-cosmos-vllm-serve.us-east.modal.run",
+  "model": "cosmos",
+  "views": {
+    "A03_normal_rusted": {
+      "image": "sim/out/hall_barrel_v2/A03_normal_rusted/rgb_0000.png",
+      "yolo": {
+        "model": "YOLO26s",
+        "run_id": "yolo26s_20261107T225757Z_d625ef",
+        "best_sha256": "63dc5dfd9933aff58bc0cfc5a759de4b78ef9f25b6c7b74f3f818bceb72e6f04",
+        "received_at": "2026-11-07T23:55:22.244024+00:00",
+        "frame_timestamp": null,
+        "image": {
+          "width": 1024,
+          "height": 640
+        },
+        "detections": [
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.937902,
+            "bbox_xyxy": [
+              0.16,
+              0.0,
+              155.8,
+              344.79
+            ],
+            "decision_band": "confirm"
+          },
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.93475,
+            "bbox_xyxy": [
+              337.04,
+              0.0,
+              683.85,
+              614.05
+            ],
+            "decision_band": "confirm"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.682541,
+            "bbox_xyxy": [
+              563.79,
+              95.67,
+              681.08,
+              187.33
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.647618,
+            "bbox_xyxy": [
+              847.65,
+              0.0,
+              994.24,
+              142.62
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.640632,
+            "bbox_xyxy": [
+              958.37,
+              0.0,
+              992.37,
+              16.07
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.614704,
+            "bbox_xyxy": [
+              361.2,
+              410.47,
+              528.57,
+              540.11
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.594042,
+            "bbox_xyxy": [
+              306.86,
+              0.0,
+              347.78,
+              14.72
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.576907,
+            "bbox_xyxy": [
+              580.51,
+              374.05,
+              592.94,
+              379.23
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.524481,
+            "bbox_xyxy": [
+              350.73,
+              249.46,
+              430.33,
+              325.54
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.511865,
+            "bbox_xyxy": [
+              411.6,
+              244.44,
+              424.31,
+              249.64
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.489576,
+            "bbox_xyxy": [
+              363.3,
+              506.01,
+              529.19,
+              610.4
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.435845,
+            "bbox_xyxy": [
+              989.57,
+              0.0,
+              1023.93,
+              376.44
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.401183,
+            "bbox_xyxy": [
+              988.64,
+              37.79,
+              1023.81,
+              371.07
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.400129,
+            "bbox_xyxy": [
+              617.81,
+              253.05,
+              673.02,
+              332.47
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.379104,
+            "bbox_xyxy": [
+              915.23,
+              104.69,
+              976.92,
+              139.22
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.317727,
+            "bbox_xyxy": [
+              506.81,
+              393.12,
+              667.27,
+              470.63
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.31087,
+            "bbox_xyxy": [
+              120.73,
+              0.0,
+              166.68,
+              74.79
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.290104,
+            "bbox_xyxy": [
+              848.94,
+              101.19,
+              905.19,
+              136.4
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.280043,
+            "bbox_xyxy": [
+              341.86,
+              98.83,
+              471.13,
+              166.14
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.279134,
+            "bbox_xyxy": [
+              861.94,
+              0.0,
+              906.78,
+              24.6
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.2731,
+            "bbox_xyxy": [
+              937.88,
+              68.27,
+              982.3,
+              77.2
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.272098,
+            "bbox_xyxy": [
+              300.34,
+              50.34,
+              367.67,
+              72.23
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.253464,
+            "bbox_xyxy": [
+              513.32,
+              279.72,
+              624.95,
+              335.59
+            ],
+            "decision_band": "suspect"
+          }
+        ],
+        "barrels": [
+          {
+            "frame_id": "drum_0",
+            "bbox_xyxy": [
+              0.16,
+              0.0,
+              155.8,
+              344.79
+            ],
+            "confidence": 0.937902,
+            "corrosion_observed": false,
+            "bulge_observed": false
+          },
+          {
+            "frame_id": "drum_1",
+            "bbox_xyxy": [
+              337.04,
+              0.0,
+              683.85,
+              614.05
+            ],
+            "confidence": 0.93475,
+            "corrosion_observed": true,
+            "bulge_observed": false
+          },
+          {
+            "frame_id": "drum_2",
+            "bbox_xyxy": [
+              847.65,
+              0.0,
+              994.24,
+              142.62
+            ],
+            "confidence": 0.647618,
+            "corrosion_observed": true,
+            "bulge_observed": false
+          },
+          {
+            "frame_id": "drum_3",
+            "bbox_xyxy": [
+              989.57,
+              0.0,
+              1023.93,
+              376.44
+            ],
+            "confidence": 0.435845,
+            "corrosion_observed": false,
+            "bulge_observed": false
+          },
+          {
+            "frame_id": "drum_4",
+            "bbox_xyxy": [
+              988.64,
+              37.79,
+              1023.81,
+              371.07
+            ],
+            "confidence": 0.401183,
+            "corrosion_observed": false,
+            "bulge_observed": false
+          },
+          {
+            "frame_id": "drum_5",
+            "bbox_xyxy": [
+              120.73,
+              0.0,
+              166.68,
+              74.79
+            ],
+            "confidence": 0.31087,
+            "corrosion_observed": false,
+            "bulge_observed": false
+          }
+        ],
+        "latency_ms": 54.59,
+        "model_speed_ms": {
+          "preprocess": 0.8855699999994471,
+          "inference": 33.60310700000024,
+          "postprocess": 17.093440000000015
+        },
+        "operating_mode": "fixed",
+        "confidence_override": null,
+        "applied_thresholds": {
+          "drum": 0.25,
+          "corrosion": 0.25,
+          "bulge": 0.25
+        }
+      },
+      "cosmos": {
+        "printed_id": "A03",
+        "visible_findings": [
+          "surface_corrosion_suspected"
+        ],
+        "next_action": "inspect_closer",
+        "reason": "suspected corrosion on the drum's surface, warranting closer inspection for defects or damage"
+      },
+      "raw_response": "{\"printed_id\": \"A03\", \"visible_findings\": [\"surface_corrosion_suspected\", \"surface_corrosion_suspected\", \"surface_corrosion_suspected\", \"surface_corrosion_suspected\"], \"next_action\": \"inspect_closer\", \"reason\": \"suspected corrosion on the drum's surface, warranting closer inspection for defects or damage\"}",
+      "cosmos_seconds": 8.178083166945726,
+      "finish_reason": "stop",
+      "review_status": "structured_preview_valid"
+    },
+    "B01_bulged_clean": {
+      "image": "sim/out/hall_barrel_v2/B01_bulged_clean/rgb_0000.png",
+      "yolo": {
+        "model": "YOLO26s",
+        "run_id": "yolo26s_20261107T225757Z_d625ef",
+        "best_sha256": "63dc5dfd9933aff58bc0cfc5a759de4b78ef9f25b6c7b74f3f818bceb72e6f04",
+        "received_at": "2026-11-07T23:55:31.318815+00:00",
+        "frame_timestamp": null,
+        "image": {
+          "width": 1024,
+          "height": 640
+        },
+        "detections": [
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.953463,
+            "bbox_xyxy": [
+              332.15,
+              36.01,
+              686.54,
+              617.11
+            ],
+            "decision_band": "confirm"
+          },
+          {
+            "class_id": 2,
+            "class_name": "bulge",
+            "confidence": 0.939469,
+            "bbox_xyxy": [
+              339.13,
+              55.46,
+              684.28,
+              613.36
+            ],
+            "decision_band": "confirm"
+          },
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.406657,
+            "bbox_xyxy": [
+              0.0,
+              0.0,
+              16.96,
+              640.0
+            ],
+            "decision_band": "suspect"
+          }
+        ],
+        "barrels": [
+          {
+            "frame_id": "drum_0",
+            "bbox_xyxy": [
+              332.15,
+              36.01,
+              686.54,
+              617.11
+            ],
+            "confidence": 0.953463,
+            "corrosion_observed": false,
+            "bulge_observed": true
+          },
+          {
+            "frame_id": "drum_1",
+            "bbox_xyxy": [
+              0.0,
+              0.0,
+              16.96,
+              640.0
+            ],
+            "confidence": 0.406657,
+            "corrosion_observed": false,
+            "bulge_observed": false
+          }
+        ],
+        "latency_ms": 8.13,
+        "model_speed_ms": {
+          "preprocess": 0.784939999999068,
+          "inference": 4.464622000000418,
+          "postprocess": 0.7618970000002889
+        },
+        "operating_mode": "fixed",
+        "confidence_override": null,
+        "applied_thresholds": {
+          "drum": 0.25,
+          "corrosion": 0.25,
+          "bulge": 0.25
+        }
+      },
+      "cosmos": {
+        "printed_id": "B01",
+        "visible_findings": [
+          "body_deformation_suspected"
+        ],
+        "next_action": "inspect_closer",
+        "reason": "suspected bulge in the drum; need closer inspection for confirmation"
+      },
+      "raw_response": "{\"printed_id\": \"B01\", \"visible_findings\": [\"body_deformation_suspected\", \"body_deformation_suspected\", \"body_deformation_suspected\"], \"next_action\": \"inspect_closer\", \"reason\": \"suspected bulge in the drum; need closer inspection for confirmation\"}",
+      "cosmos_seconds": 4.962755249929614,
+      "finish_reason": "stop",
+      "review_status": "structured_preview_valid"
+    },
+    "C02_bulged_rusted": {
+      "image": "sim/out/hall_barrel_v2/C02_bulged_rusted/rgb_0000.png",
+      "yolo": {
+        "model": "YOLO26s",
+        "run_id": "yolo26s_20261107T225757Z_d625ef",
+        "best_sha256": "63dc5dfd9933aff58bc0cfc5a759de4b78ef9f25b6c7b74f3f818bceb72e6f04",
+        "received_at": "2026-11-07T23:55:37.223666+00:00",
+        "frame_timestamp": null,
+        "image": {
+          "width": 1024,
+          "height": 640
+        },
+        "detections": [
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.939858,
+            "bbox_xyxy": [
+              0.18,
+              2.92,
+              181.66,
+              347.97
+            ],
+            "decision_band": "confirm"
+          },
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.937664,
+            "bbox_xyxy": [
+              342.14,
+              49.02,
+              684.39,
+              608.62
+            ],
+            "decision_band": "confirm"
+          },
+          {
+            "class_id": 2,
+            "class_name": "bulge",
+            "confidence": 0.93106,
+            "bbox_xyxy": [
+              341.11,
+              64.5,
+              684.39,
+              608.75
+            ],
+            "decision_band": "confirm"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.715074,
+            "bbox_xyxy": [
+              346.18,
+              258.44,
+              423.57,
+              358.26
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.614462,
+            "bbox_xyxy": [
+              358.88,
+              409.88,
+              523.13,
+              543.19
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.52233,
+            "bbox_xyxy": [
+              556.9,
+              100.1,
+              678.86,
+              196.87
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.505157,
+            "bbox_xyxy": [
+              505.41,
+              398.21,
+              671.8,
+              552.37
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.49443,
+            "bbox_xyxy": [
+              1005.73,
+              167.42,
+              1023.75,
+              380.83
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.487767,
+            "bbox_xyxy": [
+              404.96,
+              249.72,
+              416.67,
+              255.44
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.485703,
+            "bbox_xyxy": [
+              432.79,
+              135.8,
+              549.42,
+              254.2
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.485701,
+            "bbox_xyxy": [
+              501.42,
+              286.19,
+              618.23,
+              345.21
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.484444,
+            "bbox_xyxy": [
+              366.37,
+              506.76,
+              519.51,
+              606.79
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.480327,
+            "bbox_xyxy": [
+              577.18,
+              381.81,
+              591.96,
+              387.43
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.415082,
+            "bbox_xyxy": [
+              620.38,
+              389.64,
+              626.59,
+              399.47
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.36837,
+            "bbox_xyxy": [
+              556.14,
+              98.13,
+              680.28,
+              235.75
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 0,
+            "class_name": "drum",
+            "confidence": 0.346488,
+            "bbox_xyxy": [
+              1006.76,
+              49.19,
+              1024.0,
+              379.69
+            ],
+            "decision_band": "suspect"
+          },
+          {
+            "class_id": 1,
+            "class_name": "corrosion",
+            "confidence": 0.335045,
+            "bbox_xyxy": [
+              617.7,
+              260.37,
+              680.08,
+              342.65
+            ],
+            "decision_band": "suspect"
+          }
+        ],
+        "barrels": [
+          {
+            "frame_id": "drum_0",
+            "bbox_xyxy": [
+              0.18,
+              2.92,
+              181.66,
+              347.97
+            ],
+            "confidence": 0.939858,
+            "corrosion_observed": false,
+            "bulge_observed": false
+          },
+          {
+            "frame_id": "drum_1",
+            "bbox_xyxy": [
+              342.14,
+              49.02,
+              684.39,
+              608.62
+            ],
+            "confidence": 0.937664,
+            "corrosion_observed": true,
+            "bulge_observed": true
+          },
+          {
+            "frame_id": "drum_2",
+            "bbox_xyxy": [
+              1005.73,
+              167.42,
+              1023.75,
+              380.83
+            ],
+            "confidence": 0.49443,
+            "corrosion_observed": false,
+            "bulge_observed": false
+          },
+          {
+            "frame_id": "drum_3",
+            "bbox_xyxy": [
+              1006.76,
+              49.19,
+              1024.0,
+              379.69
+            ],
+            "confidence": 0.346488,
+            "corrosion_observed": false,
+            "bulge_observed": false
+          }
+        ],
+        "latency_ms": 7.68,
+        "model_speed_ms": {
+          "preprocess": 0.8096670000021788,
+          "inference": 4.828370999998555,
+          "postprocess": 0.7749459999999431
+        },
+        "operating_mode": "fixed",
+        "confidence_override": null,
+        "applied_thresholds": {
+          "drum": 0.25,
+          "corrosion": 0.25,
+          "bulge": 0.25
+        }
+      },
+      "cosmos": {
+        "printed_id": "C02",
+        "visible_findings": [
+          "surface_corrosion_suspected"
+        ],
+        "next_action": "inspect_closer",
+        "reason": "suspected corrosion on the drum's surface requiring closer inspection"
+      },
+      "raw_response": "{\"printed_id\": \"C02\", \"visible_findings\": [\"surface_corrosion_suspected\", \"surface_corrosion_suspected\", \"surface_corrosion_suspected\", \"surface_corrosion_suspected\"], \"next_action\": \"inspect_closer\", \"reason\": \"suspected corrosion on the drum's surface requiring closer inspection\"}",
+      "cosmos_seconds": 4.701436083065346,
+      "finish_reason": "stop",
+      "review_status": "structured_preview_valid"
+    }
+  }
+}

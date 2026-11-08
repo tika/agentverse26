@@ -8,6 +8,12 @@ and actual test results. Classes: drum, corrosion patch and bulge. Default confi
 See the [training and hosting handoff](docs/yolo26s_training_serving.md) to reproduce it.
 API credentials are issued privately by the endpoint owner and are not stored in Git.
 
+For the **all-28-drum inspection prototype**, estimated visited trail, map progress,
+two-angle evidence checks and live YOLO/Cosmos integration, use the
+**[full-store mission guide](docs/full_store_mission.md)**. It documents the
+stainless-detector limitation, labelled Cosmos visual fallback, temperature-plus-
+bulge screening, persistent checkpoints and video download commands.
+
 Build the Isaac Sim environment one step at a time, following **MVP v2**.
 The environment now includes the fixed **28-drum hall**, seeded corrosion,
 wet/dry releases, class + package labels, scalar sensors and Spot's body-mounted
@@ -24,14 +30,16 @@ local Isaac and Modal commands, editing, picture-ready settings and video captur
 - [Detector/camera API and training start gate](docs/training_handoff.md)
 - [Isolated rust/bulge appearance review and two-cue screening](docs/barrel_appearance_review.md)
 - [Technical barrel design handoff for the next developer](docs/barrel_design_handoff.md)
+- [Reviewed rust/bulge assets now used by the 28-drum hall, static captures and Cosmos preview](docs/hall_barrel_v2.md)
 - [Single-workspace 1,200-image dataset: standalone agent instructions](docs/dataset_generation_handoff.md)
 - [Completed 1,200-image dataset: paths, previews and verification](docs/barrels_v2_1200_release.md)
 
 Use Python 3.12+ locally. Review each step through exported screenshots/video,
 as selected by the user; this replaces the specification's interactive-viewer
 instructions. Steps 1–4 and the requested training-label/camera handoff are
-implemented; Step 5 shape faults and full-hall walking/agent integration remain.
-The dog/planner prototypes below are retained as separate team workstreams.
+implemented. Reviewed shape faults and live YOLO/Cosmos walking integration are
+also available; follow the full-store guide above for the coverage mission.
+The older dog/planner prototypes below are retained as separate workstreams.
 
 ```sh
 python3 tools/run_environment.py       # build/edit the environment, no pictures
