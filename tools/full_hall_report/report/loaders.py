@@ -10,6 +10,8 @@ Two input formats are supported. Add a loader here to support another; nothing e
 The run model only holds logged values. A field that was not logged is None, never a guess.
 """
 import json
+import os
+import re
 import struct
 from pathlib import Path
 
@@ -57,26 +59,67 @@ def load(run, fmt='auto'):
 
 
 # ---- framework contract ----------------------------------------------------------------------------
+FAULT_WORD = {'CORROSION': 'Rust', 'BULGE': 'Bulging'}
+COSMOS_VERB = {'accept': 'accept', 'closer look': 'closer look', 'mark suspect': 'mark suspect', 'suspect': 'mark suspect'}
+
+
+def plain_event(x):
+    """A logged decision as (source, action, plain text). Raw walk strings become plain sentences;
+    Cosmos text is kept verbatim (it is quoted in the report)."""
+    text, src = x.get('text', ''), x.get('source', '')
+    m = re.match(r'Cosmos: (accept|closer look|mark suspect|suspect) - (.*)', text, re.S)
+    if m:
+        return 'Cosmos Reason 2', COSMOS_VERB[m.group(1)], m.group(2)
+    m = re.match(r'\S+ (CORROSION|BULGE)(?:\+\w+)? -> DEFECT \(([\d.]+), (\d+)/(\d+) views\)', text)
+    if m:
+        return (src or 'CANIS rules', None, f'{FAULT_WORD[m.group(1)]} seen in {m.group(3)} of {m.group(4)} views '
+                f'(how sure: {float(m.group(2)) * 100:.0f}%). Action needed.')
+    m = re.match(r'\S+ normal \(fault (\d+)/(\d+), normal (\d+)/(\d+)\) -> OK', text)
+    if m:
+        return src or 'CANIS rules', None, f'No damage seen ({m.group(3)} of {m.group(4)} views looked normal). No problem found.'
+    return src, x.get('action'), text
+
+
+def planted_faults(mem):
+    """Faults planted on purpose: memory.json 'planted' {id: 'rust'}, or HOT_FORCE_FAULTS (same JSON as the run)."""
+    out = dict(mem.get('planted') or {})
+    raw = os.environ.get('HOT_FORCE_FAULTS')
+    if raw:
+        for k, v in json.loads(raw).items():
+            out.setdefault(k, ' and '.join(w for f, w in (('corrosion_severity', 'rust'), ('bulging_severity', 'a bulge'))
+                                           if (v or {}).get(f)))
+    return out
+
+
 def load_framework(run):
     mem = jload(run / 'memory.json')
     stills = mem.get('stills') or []
+    scored = jload(run / 'colour_accuracy.json')
+    rows = {r[0]: dict(category=r[1], rust=r[4], bulge=r[5], result=r[6]) for r in (scored or {}).get('rows', [])}
+    planted = planted_faults(mem)
     drums = []
     for d in sorted(mem['drums'], key=lambda d: d['drum_id']):
         views = []
         for i, vd in enumerate(d.get('view_detail') or []):
             cls, conf = max(vd.items(), key=lambda kv: kv[1]) if vd else (None, None)
             views.append(dict(image=None, cls=cls, conf=conf, box=None, size=None, t=None, label=f'view {i + 1}'))
-        for s in (x for x in stills if x.get('drum') == d['drum_id']):
+        own = sorted((x for x in stills if x.get('drum') == d['drum_id']),
+                     key=lambda x: (x.get('kind') != 'confirmed', -(x.get('t') or 0)))
+        for s in reversed(own):
             img = run / s['file']
             views.insert(0, dict(image=str(img) if img.exists() else None, cls=s.get('class'), conf=s.get('conf'),
                                  box=s.get('box') or d.get('best_box'), size=png_size(img), t=s.get('t'),
-                                 label=s.get('kind', 'evidence')))
+                                 label=s.get('caption') or 'robot camera view', overlay=s.get('box') is None))
+        fault_views = d.get('fault_views')
+        if fault_views is None and d['status'] == 'OK':
+            fault_views = 0
         drums.append(dict(
-            drum_id=d['drum_id'], x=d.get('x'), y=d.get('y'), category=d.get('category'), status=d['status'],
+            drum_id=d['drum_id'], x=d.get('x'), y=d.get('y'),
+            category=d.get('category') or rows.get(d['drum_id'], {}).get('category'), status=d['status'],
             reason=d.get('reason'), finding=d.get('finding') or 'none', confidence=d.get('confidence'),
-            views=d.get('views'), fault_views=d.get('fault_views'), view_list=views,
+            views=d.get('views'), fault_views=fault_views, view_list=views,
             dose_rate_at_drum_uSv_h=d.get('dose_rate_at_drum_uSv_h'), heat_rise_c=d.get('heat_rise_c'),
-            swab=d.get('swab'), air_c=None, rh=None, h2=None,
+            swab=d.get('swab'), air_c=None, rh=None, h2=None, test_note=planted.get(d['drum_id']),
             label=({'readable': d['label_readable'] != 'unreadable', 'reads': [], 'crop': None}
                    if d.get('label_readable') is not None else None)))
     tele = []
@@ -84,22 +127,50 @@ def load_framework(run):
         pose = t.get('pose') or t.get('truth') or [None, None]
         tele.append(dict(t=t['t'], x=pose[0], y=pose[1], gamma=t.get('dose_rate_uSv_h'), h2=t.get('hydrogen_ppm'),
                          air_c=t.get('temperature_c'), rh=t.get('relative_humidity_pct'), dose_uSv=t.get('dose_uSv')))
-    events = [dict(t=x['t'], drum=x.get('drum'), kind=x.get('kind', ''), text=x.get('text', ''),
-                   source=x.get('source', ''), latency_ms=x.get('latency_ms')) for x in jl(run / 'decisions.jsonl')]
-    gt = jload(run / 'ground_truth.json')
+    events = []
+    for x in jl(run / 'decisions.jsonl'):
+        src, act, text = plain_event(x)
+        events.append(dict(t=x['t'], drum=x.get('drum'), kind=x.get('kind', ''), text=text, source=src,
+                           action=act, latency_ms=x.get('latency_ms')))
     truth = None
-    if gt:
-        truth = {k: bool(v.get('faults')) if 'faults' in v else (v.get('rust', 0) > 0 or v.get('bulge', 0) > 0)
-                 for k, v in gt['drums'].items()}
+    if rows:
+        truth = {k: dict(faulty=v['result'] in ('caught', 'missed') or (v['result'] == 'unresolved' and (v['rust'] or v['bulge'])),
+                         rust=v['rust'], bulge=v['bulge']) for k, v in rows.items()}
+    else:
+        gt = jload(run / 'ground_truth.json')
+        if gt:
+            truth = {k: dict(faulty=bool(v['faults']) if 'faults' in v else (v.get('rust', 0) > 0 or v.get('bulge', 0) > 0),
+                             rust=v.get('rust'), bulge=v.get('bulge')) for k, v in gt['drums'].items()}
+    groups = []
+    for key, r in ((scored or {}).get('report') or {}).items():
+        colour, _, scope = key.partition(' | ')
+        groups.append(dict(group=colour, scope=scope, drums=r['drums'], correct=r['caught'] + r['correct clear'],
+                           accuracy=r['accuracy_all_drums'], ci=r.get('accuracy_all_95ci'),
+                           found=r['caught'], faulty=r['faulty_drums'], false=r['false alarm'], missed=r['missed']))
+    reviews = mem.get('cosmos_reviews') or []
+    lat = [r.get('latency_s') for r in reviews if r.get('latency_s') is not None]
+    sha = mem.get('detector_sha256')
+    tech = [('Detector', mem.get('detector')),
+            ('Detector SHA-256', ', '.join(sha) if isinstance(sha, list) else sha),
+            ('Decision rule', mem.get('rule')),
+            ('Detector calls', f"{mem.get('yolo_calls')} made, {mem.get('yolo_failures')} failed"
+             if mem.get('yolo_calls') is not None else None)]
+    if reviews:
+        tech.append(('Cosmos reviews', f'{len(reviews)} logged' + (f'; slowest reply {max(lat):.1f} s' if lat else '')))
+    if planted:
+        tech.append(('Planted faults', '; '.join(f'{k} {v}' for k, v in sorted(planted.items()))))
+    if scored and scored.get('seed') is not None:
+        tech.append(('Ground truth', f"simulation inventory seed {scored['seed']} (scored by wh_score_color.py)"))
+    tech += [tuple(x) for x in mem.get('report_tech') or []]
     return dict(
-        id=run.name if run.name != 'run' else run.parent.name, note=mem.get('_note'),
+        id=mem.get('run_id') or (run.name if run.name not in ('run', 'canis_wh_full_cosmos') else run.parent.name),
+        note=mem.get('_note'),
         started=mem.get('started_utc'), duration_s=mem.get('duration_s'),
         dose_uSv=mem.get('dose_uSv'), budget_uSv=mem.get('budget_uSv'),
         expected=mem.get('expected_drums', len(drums)), aisle_length_m=mem.get('aisle_length_m'),
-        drums=drums, tele=tele, events=events, truth=truth,
-        tech=[('Detector', mem.get('detector')), ('Decision rule', mem.get('rule')),
-              ('Detector calls', f"{mem.get('yolo_calls')} made, {mem.get('yolo_failures')} failed"
-               if mem.get('yolo_calls') is not None else None)])
+        aisle_start_x=mem.get('aisle_start_x'), lateral_pose=mem.get('lateral_pose', True),
+        drums=drums, tele=tele, events=events, truth=truth, groups=groups, planted=planted,
+        video=jload(run / 'video.json'), tech=tech)
 
 
 # ---- canis.v1 take ---------------------------------------------------------------------------------
@@ -201,7 +272,8 @@ def load_canis_v1(run):
         started=None, duration_s=rep.get('duration_s'),
         dose_uSv=max(doses) * 1000 if doses else None, budget_uSv=None,
         expected=len(targets) or len(drums), aisle_length_m=None,
-        drums=drums, tele=tele, events=events, truth=None,
+        drums=drums, tele=tele, events=events, truth=None, groups=[], planted={}, video=None,
+        aisle_start_x=None, lateral_pose=True,
         tech=[('Simulator', prov.get('simulation')),
               ('Repository base', prov.get('repository_base')),
               ('Detector', prov.get('detector')),

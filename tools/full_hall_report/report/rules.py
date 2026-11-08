@@ -25,6 +25,9 @@ LIMITS = [
     ('Hydrogen', 'no level set', 'No cited alarm level yet. Readings are printed; hydrogen changes no rating.'),
 ]
 
+NAME = 'C.A.N.I.S.'
+EXPANSION = 'Containment Analysis & Nuclear Intelligence System'
+
 # ---- plain words ----------------------------------------------------------------------------------
 STATUS = ('Confirmed defect', 'Suspect', "Couldn't inspect", 'OK')
 COLOUR_WORD = {'RED': 'Action needed', 'AMBER': 'Check again', 'GREEN': 'No problem found'}
@@ -146,8 +149,8 @@ def action_for(d):
 
 
 # ---- aisle geometry and zones ---------------------------------------------------------------------
-def aisles(drums, aisle_length_m=None):
-    """Per aisle letter: centre line y, half-width, and 2 m sections along x."""
+def aisles(drums, aisle_length_m=None, aisle_start_x=None):
+    """Per aisle letter: centre line y, half-width, and 2 m sections along x (from aisle_start_x if given)."""
     by = defaultdict(list)
     for d in drums:
         p = parse_id(d['drum_id'])
@@ -159,15 +162,15 @@ def aisles(drums, aisle_length_m=None):
         xs = [d['x'] for d in ds]
         centre = (min(ys) + max(ys)) / 2
         half = max((max(ys) - min(ys)) / 2, 1.0)
-        x0 = math.floor(min(xs) - 1.0)
+        x0 = aisle_start_x if aisle_start_x is not None else math.floor(min(xs) - 1.0)
         x1 = x0 + aisle_length_m if aisle_length_m else max(xs) + 1.0
         n = max(1, math.ceil((x1 - x0) / SECTION_M))
         out[a] = dict(name=a, centre=centre, half=half, x0=x0, n=n, drums=ds)
     return out
 
 
-def zones(tele, drums, colours, aisle_length_m=None):
-    geo = aisles(drums, aisle_length_m)
+def zones(tele, drums, colours, aisle_length_m=None, aisle_start_x=None):
+    geo = aisles(drums, aisle_length_m, aisle_start_x)
     seen = defaultdict(list)
     for t in tele:
         if t.get('x') is None:
@@ -187,7 +190,7 @@ def zones(tele, drums, colours, aisle_length_m=None):
             z = dict(aisle=a['name'], k=k, lo=lo, hi=hi, part=f'{k * SECTION_M:g}–{(k + 1) * SECTION_M:g} m',
                      drums=[d['drum_id'] for d in near], samples=len(ts), gmax=None, h2max=None, t_gmax=None)
             if not ts:
-                out.append(dict(z, zone='NOT CHECKED', reason='The robot logged no readings here.'))
+                out.append(dict(z, zone='NOT CHECKED', reason='The robot did not go here this time.'))
                 continue
             g = [t for t in ts if t.get('gamma') is not None]
             if g:
@@ -212,8 +215,10 @@ def zones(tele, drums, colours, aisle_length_m=None):
             elif ambers:
                 r = ('RESTRICTED', 'Unresolved drum here: ' + ', '.join(ambers) + '.')
             elif gm is None:
-                r = ('NOT CHECKED', 'The robot walked here but logged no gamma reading.')
+                r = ('NOT CHECKED', 'The robot walked here, but radiation was not measured.')
             else:
                 r = ('LOW GAMMA', f'Highest gamma {gm:.2f} µSv/h, below the restricted level.')
+            if r[0] == 'RESTRICTED' and gm is None:
+                r = (r[0], r[1] + ' Radiation was not measured, so this may need to be stricter.')
             out.append(dict(z, zone=r[0], reason=r[1]))
     return out
