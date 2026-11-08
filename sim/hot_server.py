@@ -9,6 +9,7 @@ import json
 import math
 import os
 from pathlib import Path
+import sys
 import time
 import traceback
 import hashlib
@@ -41,13 +42,29 @@ if __name__ == '__main__':
     from sensors import SensorWorld, load_config
 
     context = omni.usd.get_context()
-    context.get_stage().GetRootLayer().Export(str(SIM / 'scene_hot.usda'))
-    context.open_stage(str(SIM / 'scene_hot.usda'))
-    load_layout()
+    warehouse_mode = os.environ.get('HOT_WAREHOUSE') == '1'
+    warehouse_map = None
+    spawn = SPAWN
+    if warehouse_mode:
+        warehouse_dir = SIM / 'warehouse-v3'
+        sys.path.insert(0, str(warehouse_dir))
+        from drum_faults import generate_session
+
+        warehouse_map = json.loads((warehouse_dir / 'map.json').read_text())
+        spawn = tuple(warehouse_map['robot_start'][:2])
+        seed_text = os.environ.get('HOT_WAREHOUSE_SEED')
+        session = generate_session(HOT / 'warehouse-session' / 'warehouse.usda',
+                                   seed=int(seed_text) if seed_text else None)
+        if not context.open_stage(str(session)):
+            raise RuntimeError(f'Could not open {session}')
+    else:
+        context.get_stage().GetRootLayer().Export(str(SIM / 'scene_hot.usda'))
+        context.open_stage(str(SIM / 'scene_hot.usda'))
+        load_layout()
     stage = context.get_stage()
     UsdPhysics.Scene.Define(stage, '/World/PhysicsScene')
     SimulationManager.set_physics_sim_device('cpu')
-    spot = RobotPolicyRunner(get_spot_spec(default_spawn_position=(*SPAWN, 0.5)), prim_path='/World/WalkingSpot')
+    spot = RobotPolicyRunner(get_spot_spec(default_spawn_position=(*spawn, 0.5)), prim_path='/World/WalkingSpot')
     spot.spawn()
     dt = spot.physics_dt
     world = World(physics_dt=dt, rendering_dt=dt)
@@ -58,16 +75,35 @@ if __name__ == '__main__':
     onboard.prim.GetAttribute('verticalAperture').Set(HORIZONTAL_APERTURE*VIEW[1]/VIEW[0])
     onboard.prim.GetAttribute('focalLength').Set(FOCAL_LENGTH)
     onboard.prim.GetAttribute('clippingRange').Set(Gf.Vec2f(.05,40.))
+    # Presentation-only chase camera; the inspection camera stays rigid on the body.
+    chase = Camera('/World/HotChase', resolution=(640, 360))
+    chase.prim.GetAttribute('focalLength').Set(15.0)
     world.reset()
+    chase.initialize()
     onboard.initialize()
     onboard.add_distance_to_image_plane_to_frame()
     zero = np.zeros(3, dtype=np.float32)
     world.step(render=False)
     spot.restart_from_default_state(zero)
-    inventory = json.loads((SIM / 'drums.json').read_text())
-    sensor = SensorWorld(inventory, load_config())
+    inventory = warehouse_map['drums'] if warehouse_mode else json.loads((SIM / 'drums.json').read_text())
+    sensor = None if warehouse_mode else SensorWorld(inventory, load_config())
     font = ImageFont.load_default(size=16)
     state={'onboard_depth':True,'camera_mode':'rigid_front_only'}
+
+    def aim(camera, eye, target):
+        matrix = Gf.Matrix4d().SetLookAt(Gf.Vec3d(*map(float, eye)), Gf.Vec3d(*map(float, target)), Gf.Vec3d(0, 0, 1))
+        quat = matrix.GetInverse().ExtractRotationQuat()
+        camera.set_world_pose(position=np.array(eye, dtype=float),
+                              orientation=np.array([quat.GetReal(), *quat.GetImaginary()]), camera_axes='usd')
+
+    def place_chase(position, yaw):
+        heading = np.array([math.cos(yaw), math.sin(yaw), 0.0])
+        if warehouse_mode:
+            # Fixed interior overview for the first aisle route. A rear follow
+            # offset at the dock crosses the west wall when Spot faces east.
+            aim(chase, [1.65, 3.65, 2.2], position + [0, 0, -0.1])
+        else:
+            aim(chase, position - 2.4 * heading + [0, 0, 1.5], position + 1.2 * heading + [0, 0, 0.2])
 
     def pose():
         p, q = spot.articulation.get_world_poses()
@@ -108,6 +144,10 @@ if __name__ == '__main__':
         return drum['display_id'], math.dist(position[:2], (drum['x'], drum['y']))
 
     def default_hud(draw, t, position, reading):
+        if not reading:
+            draw.text((10, VIEW[1] + 6), f'Locomotion smoke | t={t:.1f}s | simulator pose',
+                      font=font, fill='white')
+            return
         drum_id, distance = nearest_drum(position)
         dew = reading.get('dew_point_c')
         lines = [f"t {t:5.1f}s   Spot ({position[0]:.1f}, {position[1]:.1f})   nearest drum {drum_id} @ {distance:.1f} m",
@@ -122,11 +162,11 @@ if __name__ == '__main__':
         packet=capture_front(round(t*12),t)
         canvas = Image.new('RGB', (VIEW[0], VIEW[1] + 50), '#111822')
         canvas.paste(Image.fromarray(packet['rgb']), (0, 0))
-        reading = sensor.sample(position, t)
+        reading = sensor.sample(position, t) if sensor is not None else {}
         (hud or default_hud)(ImageDraw.Draw(canvas), t, position, reading)
         return canvas, reading
 
-    def walk(route, name='walk', fps=12, max_s=40.0, speed=0.78, hud=None):
+    def walk(route, name='walk', fps=12, max_s=40.0, speed=0.78, hud=None, final_yaw=None):
         """Walk Spot from the spawn point through (x, y) waypoints; save frames under OUT/name/frames."""
         frames = OUT / name / 'frames'
         frames.mkdir(parents=True, exist_ok=True)
@@ -135,26 +175,47 @@ if __name__ == '__main__':
         path = [np.array(p, dtype=float) for p in route]
         stride = max(1, round(1 / (fps * dt)))
         readings = []
+        settled_s = 0.0
+        ready = False
         for index in range(int(max_s * fps)):
             t = index * stride * dt
             position, yaw = pose()
+            place_chase(position, yaw)
             canvas, reading = snapshot(t, position, hud)
             canvas.save(frames / f'{index:05d}.jpg', quality=88)
-            readings.append({'time_s': t, 'position_m': position.tolist(), **reading})
             if path and np.linalg.norm(position[:2] - path[0]) < 0.26:
                 path.pop(0)
-            if not path:
+            phase = 'approach'
+            if path:
+                delta = path[0] - position[:2]
+                velocity = delta * min(1.4, speed / max(np.linalg.norm(delta), 0.01))
+                c, s = math.cos(yaw), math.sin(yaw)
+                command = np.array([c * velocity[0] + s * velocity[1],
+                                    -s * velocity[0] + c * velocity[1], 0], dtype=np.float32)
+            elif final_yaw is None:
+                ready = True
+            else:
+                error = math.remainder(final_yaw - yaw, math.tau)
+                if abs(error) > math.radians(8):
+                    phase = 'turn_to_target'
+                    settled_s = 0.0
+                    command = np.array([0, 0, np.clip(1.5 * error, -0.6, 0.6)], dtype=np.float32)
+                else:
+                    phase = 'hold_for_capture'
+                    command = zero
+                    settled_s += stride * dt
+                    ready = settled_s >= 0.75
+            readings.append({'time_s': t, 'position_m': position.tolist(),
+                             'yaw_rad': yaw, 'phase': phase, **reading})
+            if ready:
                 break
-            delta = path[0] - position[:2]
-            velocity = delta * min(1.4, speed / max(np.linalg.norm(delta), 0.01))
-            c, s = math.cos(yaw), math.sin(yaw)
-            command = np.array([c * velocity[0] + s * velocity[1], -s * velocity[0] + c * velocity[1], 0],
-                               dtype=np.float32)
             for _ in range(stride):
                 spot.step(dt, command)
                 world.step(render=False)
         (OUT / name / 'readings.jsonl').write_text(''.join(json.dumps(r) + '\n' for r in readings))
-        summary = {'frames': index + 1, 'reached': not path, 'final_xy': pose()[0][:2].tolist()}
+        final_position, actual_yaw = pose()
+        summary = {'frames': index + 1, 'reached': not path, 'ready_for_capture': ready,
+                   'final_xy': final_position[:2].tolist(), 'final_yaw_rad': actual_yaw}
         print('[hot] walk', name, summary, flush=True)
         return summary
 
@@ -163,12 +224,22 @@ if __name__ == '__main__':
             world.render()
         Image.fromarray(capture_front(0,0)['rgb']).save(OUT/f'{name}.png')
 
+    def still(eye, target, name='still', focal=24):
+        """Render one frame from an arbitrary viewpoint with the chase camera."""
+        chase.prim.GetAttribute('focalLength').Set(float(focal))
+        aim(chase, eye, target)
+        for _ in range(6):
+            world.render()
+        Image.fromarray(pixels(chase)).save(OUT / f'{name}.png')
+        chase.prim.GetAttribute('focalLength').Set(15.0)
+
     for _ in range(40):
         world.render()
         fixed_exposure()
     namespace = {'app': app, 'stage': stage, 'world': world, 'spot': spot, 'sensor': sensor,
                  'inventory': inventory, 'walk': walk, 'front_still': front_still, 'pose': pose, 'np': np,
-                 'onboard': onboard, 'capture_front':capture_front, 'state': state}
+                 'still': still, 'chase': chase, 'onboard': onboard, 'capture_front':capture_front, 'state': state,
+                 'warehouse_map': warehouse_map}
     (HOT / 'req').mkdir(parents=True, exist_ok=True)
     (HOT / 'out').mkdir(parents=True, exist_ok=True)
     print(f'HOT_READY {time.perf_counter() - started:.1f}s', flush=True)

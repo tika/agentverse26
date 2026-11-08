@@ -1,7 +1,7 @@
 # Using Cosmos Reason 2 8B
 
 The team's Cosmos model is `nvidia/Cosmos-Reason2-8B`, served by vLLM on Modal
-(`tools/cosmos_vllm.py`). It replaced the 2B model. The API is OpenAI-compatible,
+(`tools/cosmos_vllm.py`). The shared endpoint uses 8B. The repository serving recipe defaults to 2B for existing deployments. The API is OpenAI-compatible,
 so any OpenAI client or plain HTTP works. It accepts text and up to 2 images per
 request (no video).
 
@@ -159,9 +159,9 @@ reply = client.chat.completions.create(
 ## Owner operations (Levi)
 
 ```sh
-modal deploy tools/cosmos_vllm.py                      # redeploy after changes
+CANIS_COSMOS_CHECKPOINT=nvidia/Cosmos-Reason2-8B modal deploy tools/cosmos_vllm.py
 modal app stop agentverse-cosmos-vllm                  # take it offline
-modal secret create cosmos-vllm VLLM_API_KEY=<new> --force && modal deploy tools/cosmos_vllm.py   # rotate the key
+# After rotating the Modal secret, rerun the 8B deploy command above.
 ```
 
 After rotating the key, send teammates the new key. Their `.runtime/cosmos.env`

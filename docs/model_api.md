@@ -1,4 +1,6 @@
-# Trained drum model API
+# Archived three-class drum model API
+
+> **Current models:** use the [latest experimental YOLO26s handoff](../detector/v2/LATEST_MODEL.md) and [four-condition API contract](../detector/v2/API_USAGE.md). The 2,500-image model is separate from the retained 1,500-image default. Everything below documents the older three-class patch detector; its URL, IDs, area/patch metrics and training results are historical.
 
 The deployed YOLO26s endpoint is:
 

@@ -1,382 +1,224 @@
 # CANIS
 
-**A Spot inspection agent for simulated nuclear waste stores.** Built for the AgentVerse 2026 robotics track.
+**Autonomous, agentic robotic inspection for nuclear waste stores.** Built for the AgentVerse 2026 robotics track with NVIDIA Isaac Sim, YOLO26s, Cosmos Reason 2 and Modal.
 
-![Spot inspecting drums in Isaac Sim during the recorded YOLO and Cosmos mission](docs/previews/canis-banner.jpg)
+## The problem
 
-A routine inspection can turn into a judgement call when a drum runs hot or a sensor reading is ambiguous. CANIS uses Spot to collect a second reading, continue the round, or retreat and report the evidence to an operator.
+Robotic dogs such as Boston Dynamics Spot already inspect nuclear facilities, including [Sellafield](https://www.gov.uk/government/case-studies/how-are-robot-dogs-helping-clean-up-sellafield), collecting images, radiation measurements and environmental data. Their inspection workflows still face practical problems:
 
-## How the inspection works
+- **Predetermined routes and checks.** Standard [Autowalk missions](https://dev.bostondynamics.com/docs/concepts/autonomy/autowalk_service.html) visit predefined stops and perform assigned actions. Changing the next task after an unexpected finding requires additional decision logic.
+- **Incomplete visual coverage.** Rack posts, poor lighting and upper-tier placement can obscure rust or bulging. An unclear image needs another viewpoint before the drum can be considered inspected.
+- **Alarms require follow-up decisions.** A hot surface, a bulge and rising radiation need different responses. Whether to recheck the drum, inspect its neighbours, keep a safe distance or alert an operator must still be configured or decided.
+- **Human follow-up adds time and exposure.** Uncertain findings require review and can trigger repeat inspections. Where workers must enter hazardous areas, those visits also involve protective equipment and radiation controls.
 
-1. **Sense.** Spot walks the aisle in Isaac Sim. Body-mounted RGB-D supplies the camera view, YOLO26s flags visible corrosion and bulges, and the simulator supplies thermal, gamma dose and gas readings.
-2. **Associate evidence.** Camera depth and estimated pose tie observations to the store map. Plate reads verify drum identity. Inspection memory tracks what has been checked and what is still missing.
-3. **Choose and execute.** Cosmos Reason 2 chooses from permitted follow-ups. The controller handles walking, and a separate dose rule can stop motion.
-4. **Report.** Each run saves the readings, chosen actions, reasons, unfinished checks and telemetry. The operator can trace a decision back to the evidence available at the time.
+**Containment failures have substantial financial consequences.** In 2014, a [compromised waste drum caused a radioactive release at WIPP](https://www.epa.gov/radiation/2014-radiological-event-wipp). During recovery from that release and a separate truck fire, GAO reported **about US$64 million in additional restart costs and nearly nine months of delay** beyond the initial estimates. [GAO's 2016 recovery assessment](https://www.gao.gov/products/gao-16-608).
 
-## What we demonstrated
+## CANIS: from an observation to a decision
 
-The recorded integrated run covered an **eight-drum job in a 28-drum hall**. It logged **64 successful YOLO requests** and **four live Cosmos decisions**, including a simulated swab and an alert followed by retreat. The dense warehouse workstream has a separate 360-drum scene. [Recording and logs](docs/mission_recording_20261108.md) · [Evaluation](eval/EVALUATION.md)
+CANIS is an **autonomous, agentic inspection system for robotic dogs**, demonstrated with Boston Dynamics Spot in NVIDIA Isaac Sim. It combines visual findings, sensor readings and inspection memory to decide what to investigate next. The agent can revisit a suspect drum, move for a clearer view, reread a plate, collect another measurement, request a virtual swab, or retreat and alert an operator.
 
-The detector was trained and evaluated on synthetic imagery. Thermal, gas, radiation and swab readings in the demo are simulated.
+The mission goal is to collect the required evidence for every assigned drum and report what remains unresolved. A separate safety layer constrains the choices available to the reasoning model and can stop motion independently.
 
-## Start here
+![CANIS detecting a bulging drum with elevated surface temperature in warehouse-v3](docs/previews/canis-banner.jpg)
 
-- [Run Spot and the detector on Modal](docs/yolo_cosmos_integration.md)
-- [Architecture and evidence flow](docs/agentic_architecture.md)
-- [Inspection criteria and sources](docs/inspection_source_register.md)
+*Frame from the latest six-drum recording: YOLO26s detects a bulging drum with a 38.4°C surface reading (19.0°C air), flagged as suspected pressurisation. The run uses Cosmos Reason 2–8B and a rigid camera mounted 15° upward.*
+
+| What CANIS observes | How it responds |
+|---|---|
+| Rust or a bulging barrel in the front camera | Associate the finding with a drum; inspect again if evidence is uncertain |
+| An unreadable plate or a possible inventory mismatch | Reposition the robot and request another plate read |
+| Bulging together with elevated surface temperature | Flag suspected pressurisation for review; retain the supporting readings |
+| Rising radiation or corroborating heat, gas and hiss findings | Apply the configured motion limits or select an alert and retreat |
+| Missing inspection evidence | Keep the drum pending, retry within a budget, or explicitly defer it |
+
+The recording overlay shows the robot's camera, detections, sensor values, visited trail, inspection progress and actual model decisions. Each run also produces a structured report linking findings to the evidence collected.
+
+[Recorded mission and artifacts](docs/mission_recording_20261108.md) · [Front-camera recording workflow](docs/front_camera_recording.md) · [Environment previews and walkthrough](docs/previews/README.md)
+
+## Latest detector for teammates
+
+The latest warehouse-v3 recordings use the separately hosted **expanded YOLO26s**, fine-tuned using a **2,500-image synthetic dataset**: **2,000 training / 235 validation / 265 test images**, with 1,500 yellow LLW and 1,000 metallic/blue-teal ILW primary targets overall. Start with [the latest-model handoff](detector/v2/LATEST_MODEL.md) for the exact endpoint, private credential setup, checkpoint hash and worker configuration. **Select its URL explicitly:** the previous 1,500-image model remains deployed and is still the default in the client and `selected_model.json`. The expanded model is experimental and does not improve every test subset.
+
+## How we used Modal
+
+Modal provides the GPU infrastructure for the simulation, synthetic-data pipeline, model training and deployed inference services. Development runs from a local checkout; the GPU workloads and persistent artifacts live in Modal workspaces.
+
+| Workload | What runs on Modal | Why it matters |
+|---|---|---|
+| **Headless simulation** | The official Isaac Sim 6.2 container, an RTX-capable GPU, the warehouse scene and Spot's pretrained walking policy | Runs physics and sensor rendering without a local NVIDIA workstation or interactive desktop |
+| **Fast iteration and recording** | A warm Isaac worker receives scripts through a Modal Queue; a Dict tracks requests and results | Reuses the loaded simulator across iterations and returns screenshots, sensor logs and encoded MP4s |
+| **Synthetic dataset curation** | Independent GPU workers generate seeded scenes, render camera views and export semantic ground truth as YOLO boxes | Produces labeled examples with randomized faults, printed IDs, viewpoints and lighting |
+| **Training and fine-tuning** | Separate PyTorch/Ultralytics containers fine-tune pretrained YOLO26 models | Keeps training dependencies separate from Isaac's bundled Python and compares models on the same held-out data |
+| **Detector hosting** | YOLO26s behind an authenticated FastAPI service on an RTX PRO 6000 | Gives the robot and teammates a shared image-to-condition API; scales to zero when idle |
+| **NVIDIA model serving** | Cosmos Reason 2 behind vLLM's OpenAI-compatible `/v1/chat/completions` API | Serves image-and-state reasoning and plate-reading requests independently of the simulator |
+| **Persistence and access** | Modal Volumes for datasets, checkpoints, caches and run artifacts; Secrets for service credentials | Preserves work between jobs and keeps credentials out of Git and recordings |
+
+### From rendered scenes to a trained detector
+
+The latest **YOLO26s** uses **2,500 procedurally generated Isaac Sim images**. We retained the original 1,500 mixed-material images and added **750 yellow LLW + 250 blue-teal ILW images**, producing the current dataset:
+
+| Dataset property | Latest expanded release |
+|---|---|
+| Images | **2,500** warehouse views, rendered at **384 × 384** |
+| Primary-target materials | **1,500 yellow LLW + 1,000 metallic/blue-teal ILW** |
+| Split | **2,000 training / 235 validation / 265 test** |
+| Condition classes | `normal`, `rust`, `bulge`, `rust_and_bulge` |
+| Labels | Whole-barrel bounding boxes in YOLO format: `class x_center y_center width height`, with normalized coordinates |
+| Dataset version | `canis_colors_20261108T053740Z` |
+
+Images include the target drum and visible surrounding drums, with one condition label per labeled barrel. Printed IDs, rust patterns, bulge shape, viewpoints and lighting are randomized independently of the condition. Requested viewing angles span approximately **−60° to +60°**. Training examples cover **tiers 1–2**; tier-3 fault accuracy has not been established.
+
+Independent **RTX PRO 6000 render jobs** reuse a warm Isaac process across scene seeds. The original generation submitted ten jobs; the expansion recipe uses five yellow and five ILW jobs. Scene seeds are kept disjoint across training, validation and test, and the original split assignments are preserved. The combined training list and training sampler shuffle yellow and ILW examples together.
+
+The current small model continued from the previous YOLO26s checkpoint for **20 epochs**, with learning rate **0.0001**, batch size **64**, AdamW and **one RTX PRO 6000**. Training took **68.8 seconds**, or **76.6 seconds including evaluation**, excluding dataset generation and GPU startup. Validation selected the expanded candidate; test images were held out for final evaluation.
+
+| Latest held-out synthetic test metric | Expanded YOLO26s |
+|---|---:|
+| Primary-barrel condition accuracy | **233/265 (87.9%)** |
+| Yellow LLW primary-barrel accuracy | **163/165 (98.8%)** |
+| Metallic/blue-teal ILW primary-barrel accuracy | **70/100 (70.0%)** |
+| Detection mAP50 across all labeled barrels | **82.9%** |
+| Detection mAP50–95 across all labeled barrels | **78.3%** |
+
+Primary-barrel accuracy scores the designated target in each frame; mAP includes all labeled barrels. These are synthetic test results. On the same 265 test frames, the previous model also scored 87.9% overall; the expanded model improved the yellow subsets and regressed on the original ILW subset. The earlier nano/small comparison and full per-group results remain in [the versioned evaluation](detector/v2/RUN_RESULTS.md).
+
+The dataset, best weights, training logs and test artifacts persist in Modal Volumes. The expanded model is served at its own authenticated endpoint, while the previous model remains available as the repository default. [Exact model, endpoint and artifact paths](detector/v2/LATEST_MODEL.md).
+
+[Generate the expanded dataset and fine-tune](detector/v2/COLOR_RETRAIN.md) · [Call the latest YOLO26s API](detector/v2/API_USAGE.md) · [Shared Cosmos Reason 2 8B endpoint](docs/cosmos_8b_api.md) · [Cosmos vLLM deployment](tools/cosmos_vllm.py)
+
+## Technical architecture
+
+The **Python agent coordinates the models**. YOLO supplies visual observations; Cosmos selects a permitted task; the navigation controller and learned walking policy execute it. The models communicate through the agent's structured state and authenticated HTTPS services.
+
+```mermaid
+flowchart TD
+    subgraph Modal["Modal GPU services and persistent storage"]
+        subgraph Simulator["Headless Isaac Sim worker"]
+            World["Warehouse, drum assets and Spot physics"]
+            Sensors["Fixed front RGB-D, LiDAR, IMU and encoders<br/>Thermal, gamma, gas and other sensor models"]
+            Agent["Python agent<br/>Map association, inspection memory and offered tasks"]
+            Guard["Action validation and independent dose checks"]
+            Control["Route controller and pretrained Spot walking policy"]
+            Output["Camera overlay, map, decision trace and report"]
+            World --> Sensors --> Agent
+            Agent --> Guard --> Control --> World
+            Agent --> Output
+        end
+        YOLO["YOLO26s<br/>FastAPI detector service"]
+        Cosmos["Cosmos Reason 2<br/>vLLM OpenAI-compatible service"]
+        Storage[("Modal Volumes<br/>Datasets, checkpoints and run artifacts")]
+        Agent -->|"Front-camera RGB, about 2 Hz"| YOLO
+        YOLO -->|"Boxes, conditions, confidence and provenance"| Agent
+        Agent -->|"RGB or crop, sensor state and allowed actions"| Cosmos
+        Cosmos -->|"Action ID and reason, or plate reading"| Agent
+        Output --> Storage
+    end
+```
+
+### 1. Build the world and acquire observations
+
+USD scene assets describe the hall, drum geometry, printed plates and authored faults. Isaac Sim provides Spot's articulated body, contact physics, rendered RGB/depth, RTX LiDAR, IMU and joint-state sensing. Additional Python sensor models supply thermal, gamma dose, accumulated dose, gas, humidity, microphone and virtual-swab observations.
+
+The **front RGB-D camera is rigidly mounted to Spot's physical body**. It follows the robot's translation, gait, height and orientation. YOLO receives that camera's RGB; Cosmos receives the same view or a declared digital crop for plate reading. The small third-person recording view is for presentation. Thermal imagery is registered to the front view.
+
+Sensor fixtures derive readings from the simulated world. Authored fault labels are used for dataset generation and evaluation, not supplied to the planner as inspection findings.
+
+[Environment handoff](docs/environment_handoff.md) · [Camera mechanics](docs/front_camera_recording.md) · [Sensor models and criteria](docs/sensors_and_criteria.md)
+
+### 2. Detect, locate and remember
+
+The selected YOLO26s model returns one box per detected barrel with a condition and confidence. It does not predict individual rust-patch counts, a corrosion-area percentage, temperature or gas pressure.
+
+The agent back-projects box-interior depth samples using camera calibration and the estimated robot pose, then associates the result with a drum in the known store map. LiDAR scan matching corrects the pose estimated from leg odometry and the IMU. A plate read is a separate identity check against inventory.
+
+A per-drum ledger retains visual observations, identity reads, thermal readings, optional swab results, missing checks and derived condition status. The coverage workflow requires two sufficiently distinct visual viewpoints; repeated frames from one stationary pose do not count as another angle. The map displays the estimated visited trail, current route and pending, complete or deferred inspections.
+
+[Detector contract](detector/v2/API_USAGE.md) · [Map, ledger and coverage implementation](docs/full_store_mission.md)
+
+### 3. Reason, constrain and act
+
+On an eligible planning event, the agent sends Cosmos the front image, a JSON snapshot of sensor readings and findings, inspection progress and the currently offered actions. Cosmos returns an `action_id` and a short reason. Python validates the choice, updates the task state and uses a labeled rules fallback if the response is invalid or the service fails.
+
+The route controller converts the chosen task into waypoints and body-relative velocity commands. Isaac's pretrained Spot locomotion policy converts those commands into joint targets. Cosmos chooses inspection tasks; it does not output individual footsteps.
+
+Dose checks can veto motion independently of model inference. Visible bulging plus surface temperature at least **5°C above ambient** is a configurable **suspected-pressurisation screen**. It does not establish internal gas pressure; gas and acoustic observations remain separate evidence.
+
+| Component | Update pattern |
+|---|---|
+| Physics and locomotion | Physics substeps and the loaded walking policy's control rate |
+| Camera, sensor features, memory and overlay | Approximately 12 agent cycles per simulated second in the recorded workflow |
+| YOLO detection | Approximately 2 requests per simulated second; latest result reused between requests |
+| Cosmos planning | Event-driven: new findings, eligible task transitions and follow-up decisions |
+| Plate reading | When a plate is visible and eligible for an initial read or requested reread |
+| Report | Evidence accumulates during the run; final structured report is assembled when it ends |
+
+Inference calls are synchronous in this prototype, so simulation time pauses while waiting for a model response. Video playback rate is not a claim of real-time execution speed.
+
+[Detailed evidence flow and timing](docs/agentic_architecture.md) · [Inspection criteria and source rationale](docs/inspection_source_register.md)
+
+### 4. Produce an evidence-backed handoff
+
+Python assembles `report.json` and `report.md` from inspection memory, sensor observations and status rules. The bundle also contains decisions, telemetry, model-request provenance, timings and the recorded MP4. Cosmos's generated reasons are retained alongside the observations that were available to it.
+
+The report lists inspected, pending and deferred drums, unresolved findings and operator follow-up. **Coverage and condition are separate:** collecting all required observations does not imply that a drum is fault-free. The recording overlay is composited from the same run data; it is not a separate dashboard service.
+
+## Post-CANIS report
+
+After a run, the logs can be turned into a report for store managers and safety staff. It says which drums need action, where people can safely go and what evidence supports each call. The same process works for any run or detector that logs the same fields.
+
+1. **Collect the run's logs:** drum memory, decisions, telemetry and evidence photos.
+2. **Rate each drum** with fixed rules: *Action needed*, *Check again* or *No problem found*.
+3. **Rate each 2 m of the aisle:** *Safe*, *Restricted*, *Keep out* or *Not checked*. A section is only *Safe* if radiation was measured there.
+4. **Assemble the report:** a summary, the aisle plan, every drum, a photo and next step for each flagged drum, what was not checked, and accuracy against the simulation's seeded faults.
+5. **Check it before sharing,** including that each photo really shows the drum it is filed under.
+
+Anything the run did not log is printed as `not measured`. Fixed rules set every rating; a language model can only add a labelled explanation for a drum that needs action.
+
+[Report framework](docs/report_framework/README.md) · [Worked example with invented data](docs/report_framework/example/expected_report.md)
+
+## What is demonstrated today
+
+| Workstream | Evidence and current scope |
+|---|---|
+| **Integrated mission** | A recorded eight-drum job in the 28-drum hall: 64 successful YOLO requests and four live Cosmos decisions, including virtual swabbing and retreat/alert. This recording used the earlier detector. [Run and artifacts](docs/mission_recording_20261108.md) |
+| **Full-store coverage** | Routing, a visited trail, a ledger and checkpoints for all 28 drums. The documented partial run reached 11/28 observation sets before it was cut; full completion is not validated. [Coverage status](docs/full_store_mission.md) |
+| **Current perception model** | The expanded 2,500-image YOLO26s is served separately and used in recent rigid-camera tests; the previous 1,500-image model remains the default and available. These tests are separate from the earlier Cosmos mission. [Latest model and exact version](detector/v2/LATEST_MODEL.md) |
+| **Warehouse development** | A separate dense stacked warehouse workstream extends the environment beyond the recorded 28-drum baseline. [Scene and run guidance](sim/README.md) |
+
+CANIS is a simulation prototype. Domain sensor channels are simulated, thresholds are demonstration policy, and the new detector's reported accuracy is on synthetic images. The statistical policy comparison in [the evaluation](eval/EVALUATION.md) is a separate Python simulation, not a measured improvement from paired physical-robot or Isaac missions.
+
+## Run it and explore the implementation
+
+Start with the workflow you need:
+
+| Goal | Entry point |
+|---|---|
+| Set up a team checkout and Modal workspace | [Team quickstart](docs/team_quickstart.md) |
+| Run the headless simulator and live model integration | [Integration guide](docs/yolo_cosmos_integration.md) |
+| Reproduce the fixed front-camera recording | [Recording guide](docs/front_camera_recording.md) |
+| Build the environment or export screenshots/video | [Environment handoff](docs/environment_handoff.md) |
+| Use the selected detector from another application | [YOLO26s API usage](detector/v2/API_USAGE.md) |
+| Regenerate data, train or redeploy the detector | [Dataset and training pipeline](detector/v2/README.md) |
+| Serve Cosmos on Modal | [vLLM deployment recipe](tools/cosmos_vllm.py) |
+| Launch the 420-drum warehouse-v3 with fresh corrosion and bulging | [Warehouse-v3 defects](sim/warehouse-v3/DEFECTS.md) |
+| Run the CANIS warehouse aisle walk (LLW + ILW, live YOLO26s) | [`scripts/hot/full_hall/wh_cond_walk.py`](scripts/hot/full_hall/wh_cond_walk.py) via [`tools/full_hall_report/hot_hall_canis.py`](tools/full_hall_report/hot_hall_canis.py) |
+| Explore earlier prototypes and detailed commands | [Earlier development workflows](docs/legacy_workflows.md) |
+
+The integration guides retain commands for their recorded versions. Use the selected detector's current API guide for its endpoint, credentials and four-condition response contract.
+
+```text
+sim/                        USD environment, sensors, camera and coverage logic
+sim/warehouse-v3/           420-drum LLW/ILW warehouse, seeded faults and physical sensors
+scripts/hot/                Perception, agent tasks and mission scripts
+tools/hot_hall.py           Warm Modal simulator supervisor
+tools/cosmos_vllm.py        Cosmos Reason 2 serving recipe
+detector/v2/                Dataset generation, training, serving and API client
+docs/                       Setup, architecture, sources, recordings and handoffs
+eval/                       Separate policy-comparison simulation
+```
+
+Large datasets, checkpoints and recordings stay in Modal Volumes or ignored output folders. API credentials are shared privately and never committed.
 
 ## License
 
-The project’s original code is available under the [MIT License](LICENSE). Third-party simulator software, models, assets and dependencies are subject to their respective licenses.
-
-## Deployed YOLO26s API
-
-The trained detector is live. Start with the **[model API usage guide](docs/model_api.md)**
-for the endpoint URL, teammate credentials, Python/curl examples, response format
-and actual test results. Classes: drum, corrosion patch and bulge. Default confidence: 0.25.
-See the [training and hosting handoff](docs/yolo26s_training_serving.md) to reproduce it.
-API credentials are issued privately by the endpoint owner and are not stored in Git.
-
-For the **all-28-drum inspection prototype**, estimated visited trail, map progress,
-two-angle evidence checks and live YOLO/Cosmos integration, use the
-**[full-store mission guide](docs/full_store_mission.md)**. It documents the
-stainless-detector limitation, labelled Cosmos visual fallback, temperature-plus-
-bulge screening, persistent checkpoints and video download commands.
-
-Build the Isaac Sim environment one step at a time, following **MVP v2**.
-The environment now includes the fixed **28-drum hall**, seeded corrosion,
-wet/dry releases, class + package labels, scalar sensors and Spot's body-mounted
-RGB/depth camera. Repeated-seed rebuilds and actual Replicator box exports passed.
-
-Start with [the complete environment handoff](docs/environment_handoff.md) for
-local Isaac and Modal commands, editing, picture-ready settings and video capture.
-
-- [Team quickstart and copy-paste agent prompt](docs/team_quickstart.md)
-- [Run commands, installed APIs and validation](sim/README.md)
-- [Environment build specification](docs/environment_mvp.md)
-- [Sensors, inspection criteria, safety rules and limitations](docs/sensors_and_criteria.md)
-- [Inspection source register and threshold rationale](docs/inspection_source_register.md)
-- [Cosmos Reason 2 8B API: how to call the shared endpoint](docs/cosmos_8b_api.md)
-- [Detector/camera API and training start gate](docs/training_handoff.md)
-- [Isolated rust/bulge appearance review and two-cue screening](docs/barrel_appearance_review.md)
-- [Technical barrel design handoff for the next developer](docs/barrel_design_handoff.md)
-- [Reviewed rust/bulge assets now used by the 28-drum hall, static captures and Cosmos preview](docs/hall_barrel_v2.md)
-- [Single-workspace 1,200-image dataset: standalone agent instructions](docs/dataset_generation_handoff.md)
-- [Completed 1,200-image dataset: paths, previews and verification](docs/barrels_v2_1200_release.md)
-
-Use Python 3.12+ locally. Review each step through exported screenshots/video,
-as selected by the user; this replaces the specification's interactive-viewer
-instructions. Steps 1–4 and the requested training-label/camera handoff are
-implemented. Reviewed shape faults and live YOLO/Cosmos walking integration are
-also available; follow the full-store guide above for the coverage mission.
-The older dog/planner prototypes below are retained as separate workstreams.
-
-```sh
-python3 tools/run_environment.py       # build/edit the environment, no pictures
-python3 tools/run_training_check.py    # RGB/depth, boxes and YOLO label proof
-python3 tools/run_presentation.py      # final stills + MP4 flythrough
-python3 -m unittest discover -s sim/tests -v
-```
-
-All new project work belongs in this repository. Rendered outputs are stored
-locally under `sim/out/` and ignored by Git. No credentials belong in the repo.
-The small procedural texture bank and `sim/hall.usda` are tracked so the hall
-can be opened with its relative texture references after cloning.
-
-## Spot prototype on Modal
-
-Runs NVIDIA Isaac Sim 6.2.0 headless on a Modal L40S GPU, using the official `nvcr.io/nvidia/isaac-sim` image.
-
-```sh
-modal run isaac_sim_modal.py                              # smoke test -> out/smoke.png
-modal run isaac_sim_modal.py --script path/to/sim.py      # run your own standalone script
-modal run isaac_sim_modal.py --script sim.py --args "--steps 500"
-modal shell isaac_sim_modal.py::shell                     # poke around inside the container
-```
-
-- Scripts run under Isaac Sim's bundled Python (`/isaac-sim/python.sh`) and start with `from isaacsim import SimulationApp`. See `scripts/smoke_test.py`.
-- Files a script writes to `$OUTPUT_DIR` are copied back to `./out/`.
-- Shader, kernel and extension caches persist in the `isaac-sim-cache` Modal Volume, to help reduce startup time. Each new Isaac process still initializes the renderer.
-- GPU: Isaac Sim needs RT cores. Use L40S (the default), L4 or A10G, not A100 or H100. Switch with `ISAAC_GPU=L4 modal run isaac_sim_modal.py`.
-- Running this accepts the NVIDIA Isaac Sim EULA (`ACCEPT_EULA=Y`).
-
-## GUI in the browser (noVNC)
-
-`isaac_novnc.py` runs the full Isaac Sim GUI on a virtual display (Xvfb → x11vnc → noVNC) behind a Modal HTTPS tunnel.
-
-```sh
-modal secret create isaac-vnc VNC_PASSWORD=<something>   # the tunnel URL is public
-modal run isaac_novnc.py::check                          # needs NVIDIA graphics libs + Vulkan; stop if it fails
-modal run isaac_novnc.py                                 # open the printed vnc.html link
-```
-
-- Code lives in `./sim`. Push with `modal volume put isaac-work ./sim /sim --force`, then type `sync` in the remote xterm to see the changes.
-- `rec` in the xterm records the desktop to `/work/recordings` until Ctrl-C. Download with `modal volume get isaac-work /recordings .`.
-- L40S, 8 CPUs, 32 GB RAM, 6-hour timeout. The GPU bills the whole time the desktop is up. Ctrl-C locally shuts it down.
-
-## Spot inspection planner prototype
-
-Run a synthetic patrol, spill detection and radiation stop:
-
-```sh
-python3 sim/spot_agent.py --demo
-```
-
-For recorded observations, pass a JSON limits file and a JSONL snapshots file.
-Each configured sensor is required. This example uses synthetic values and units:
-
-```json
-{
-  "radiation": {"unit": "sim_rad", "stop_at": 10, "max_age_s": 1},
-  "thermal": {"unit": "sim_heat", "stop_at": 8, "max_age_s": 1}
-}
-```
-
-One snapshot per line, with an image path relative to the working directory:
-
-```json
-{"rgb_path":"frame.jpg","readings":{"radiation":{"value":2,"unit":"sim_rad","age_s":0.1},"thermal":{"value":3,"unit":"sim_heat","age_s":0.1}},"findings":[{"id":"spill_1","label":"possible spill"}],"goals":[{"id":"view_drum_from_aisle","route_clear":true,"finding_id":"spill_1"}]}
-```
-
-```sh
-python3 sim/spot_agent.py --limits limits.json --observations snapshots.jsonl
-python3 sim/spot_agent.py --limits limits.json --observations snapshots.jsonl \
-  --model /path/to/local/cosmos-reason2-2b
-```
-
-The first command uses the rules-based baseline. The second uses a staged Cosmos
-Reason 2 checkpoint on CUDA with PyTorch, Transformers 4.57.3, Accelerate and
-Pillow. Add `--adapter /path/to/adapter` with PEFT installed to compare a LoRA
-checkpoint. The planner loads model artifacts from disk and emits JSON decisions
-on stdout. This replay has no Isaac motion side effects.
-
-In the live integration, the simulator should calculate sample ages from its
-sensor timestamps and build candidate goals from the current map and depth
-clearance. Run the safety check independently of model inference and recheck
-the selected route and fresh readings before issuing motion. The limits schema
-currently supports per-sensor upper limits. Rules involving accumulated
-exposure, trends, or dwell time require separate logic.
-
-## Headless Spot sensor collection
-
-```sh
-modal run isaac_sim_modal.py --script scripts/spot_rollout.py
-modal run isaac_sim_modal.py --script scripts/spot_rollout.py --args "--seconds 5 --speed 1.2 --hz 4 --seed 8"
-```
-
-Each run saves a separate directory under `out/spot/` containing:
-
-- `samples.jsonl` with a simulation timestamp, pose, sensor readings and their units, and the commanded velocity.
-- `rgb/` and `depth/` with the corresponding forward camera PNG and NumPy optical-axis depth in metres. File paths in the manifest are relative to its directory. Non-finite depth denotes missing range.
-- `scene_truth.json` with the seed, drum conditions and source strengths, and camera calibration. Keep drum truth separate from model inputs.
-
-The collector uses the bundled Spot walking policy with a scripted forward command. Radiation is a noisy inverse-square sum, and thermal is a noisy distance-based scalar proxy. Both use simulation units. The rollout verifies upright displacement and saves a sample only when both camera channels are available and the camera timestamp has caught up to the sampled physics step.
-
-For Cosmos QLoRA, turn selected samples into examples with an RGB frame, recent numeric sensor history, depth-derived clearance, findings, and available goals as inputs. Add a reviewed target goal or hold and a short evidence-based reason. Keep locomotion commands for debugging and add decision labels independently. Include clean drums, ambiguous visual findings, clear leaks, blocked routes, rising readings, and cases with no safe goal. Split by scene layout and seed so nearby frames from the same rollout stay together. YOLO needs image-aligned object boxes or masks as a separate labeling step.
-
-## Spot development workflow
-
-Headless Isaac on Modal is the verified path. The noVNC endpoint has served the
-desktop, but Isaac reported uninitialized render backbuffers under Xvfb. Treat
-`sim/spot_live.py` as an experimental Script Editor entry point until the
-viewport is verified.
-
-- **Planner and safety changes.** Replay recorded observations with
-  `sim/spot_agent.py`. Use the rules baseline for fast iteration and load a
-  local Cosmos checkpoint when comparing model behavior. Add candidate goals
-  and findings to raw rollout samples before replaying them.
-- **Scene and robot changes.** Use one shared scene definition for capture and
-  previews. Keep the static hall and robot asset as USD references, and make
-  drum state, spawn pose, and sensor settings editable scenario data. The current
-  scripts each build their own scene. The next integration should consolidate
-  that setup and let one warm headless process apply scenario changes between
-  episodes. Use an explicit apply-and-reset command on Modal.
-- **Capture.** Record the camera streams and sensor manifest headlessly.
-  Use the camera render products for previews and measure cold startup,
-  warm reset, physics, and rendering separately. Test
-  `disable_viewport_updates=True` with the sensor cameras before adopting it.
-- **Outputs.** Use unique run directories and write results to a Modal Volume
-  before closing Kit so a disconnected client can retrieve them. The current
-  headless runner returns its archive after the simulator exits.
-
-For interactive editing on a working Isaac desktop, use **Window → Script
-Editor** and load `/work/sim/spot_live.py` into an empty stage. Run it once,
-then **Play**, **Stop**, edit, and **Play** again. On Modal, publish edits with
-`modal volume put isaac-work sim/spot_live.py /sim/spot_live.py --force`
-and run `sync` in the remote xterm before reading the file. Before replacing
-the stage, stop playback and run `live_spot.close()` in the Script Editor.
-
-See [Isaac development methods](https://docs.isaacsim.omniverse.nvidia.com/6.2.0/introduction/workflows.html),
-[Isaac performance guidance](https://docs.isaacsim.omniverse.nvidia.com/6.2.0/reference_material/sim_performance_optimization_handbook.html),
-and [Modal Volume reload semantics](https://modal.com/docs/guide/volumes).
-
-### Hot hall worker for development
-
-One Modal GPU keeps the full hall and walking Spot loaded. Each request script
-runs on the live stage, and a walk video comes back in about a minute. A cold
-start takes 3–5 minutes.
-
-```sh
-alias hot='uv run -q --python 3.13 --with modal python tools/hot_hall.py'
-hot up                                  # ~2 min to HOT_READY; stops itself after 4 h
-hot run scripts/hot/walk_aisle.py       # opens out/hot/<id>/*.mp4
-hot down
-```
-
-Request scripts get `walk(route, name)`, `still(eye, target, name)`,
-`stage`, `spot`, `sensor`, `inventory`, `OUT` and a persistent `state` dict.
-See `sim/hot_server.py`. Definitions persist between requests. Restart the
-worker after editing `sim/*.py`.
-
-The demo job is a Cosmos-driven inspection round that ends in a report. It
-needs the `cosmos-vllm` secret and `modal deploy tools/cosmos_vllm.py` (Cosmos Reason 2 8B; see
-[how to use the 8B endpoint](docs/cosmos_8b_api.md)):
-
-```sh
-hot run scripts/hot/sensing.py scripts/hot/scenario_lib.py scripts/hot/agent.py scripts/hot/agent_ilw_round.py
-```
-
-See [how the system fits together](docs/system_architecture.md).
-
-### Warm walking-video worker
-
-```sh
-modal run --detach isaac_sim_modal.py::warm
-```
-
-The worker loads Spot and a fixed side camera, records one five-second pass,
-then waits with the scene and renderer loaded. Find the worker's container with
-`modal container list`. Request another take with
-`modal container exec --pty CONTAINER_ID -- touch /tmp/spot-record`.
-The path is a straight aisle at a 1 m/s forward command. This is a walking preview.
-
-Each take has a unique directory on the `isaac-spot-takes` Volume. After the
-`complete` marker appears, download the frames and assemble the video:
-
-```sh
-modal volume ls isaac-spot-takes /
-modal volume get isaac-spot-takes /take-ID out/take-ID
-ffmpeg -framerate 24 -i out/take-ID/%05d.png -pix_fmt yuv420p -movflags +faststart out/spot-walk.mp4
-```
-
-Stop the worker with `modal app stop APP_ID` when finished. The GPU stays
-allocated between takes and Modal caps the worker invocation at 24 hours.
-
-### Spill perception and detour
-
-```sh
-modal run --detach isaac_sim_modal.py --script scripts/spot_spill.py
-ffmpeg -framerate 8 -i out/spot-spill/spill/%05d.jpg -pix_fmt yuv420p -movflags +faststart out/spot-spill.mp4
-```
-
-The dry and spill cases share the hall, Spot, and camera setup in one Isaac
-process. The spill appears mid-run. A pixel detector looks for a fluorescent
-magenta tracer and projects its mask centroid onto the floor. The rules baseline
-blocks the direct aisle and selects the north cross-aisle when the estimated
-spill is in the direct aisle. The detector receives RGB and camera geometry.
-Depth is displayed separately. The scene's actual spill position is used to
-score sampled base clearance.
-
-Each case exports annotated frames, `events.jsonl`, and `score.json`.
-The tracer and fixed alternate route make this a controlled perception test.
-The demo uses a rules planner and a scripted scene event.
-
-### Benchmark and Cosmos decision training
-
-Use a separate output directory for each profile so the runs remain comparable.
-
-```sh
-modal run isaac_sim_modal.py --script scripts/spot_spill.py --output out/bench-default
-modal run isaac_sim_modal.py --script scripts/spot_spill.py --args=--fast --output out/bench-fast
-```
-
-See [the timing baseline and detector handoff](docs/spot_development.md).
-Validate exported decision captures locally before starting a GPU job:
-
-```sh
-python3 tools/train_spot_lora.py out/bench-default/spot-spill
-modal run tools/train_spot_lora.py --data out/bench-default/spot-spill --steps 1
-```
-
-The one-step GPU check needs approved access to Cosmos Reason 2 and an HF_TOKEN
-in the Modal secret named `huggingface`. The adapter and timing report are
-written to the `spot-cosmos-training` Volume. Use separate layouts and decision
-labels for an evaluation run.
-
-### Spot radiation walk
-
-```sh
-modal run isaac_sim_modal.py --script scripts/spot_spill.py --args=--radiation --output out/radiation-demo
-ffmpeg -framerate 8 -i out/radiation-demo/spot-radiation/radiation/%05d.jpg \
-  -c:v libx264 -pix_fmt yuv420p -movflags +faststart out/spot-radiation.mp4
-```
-
-This mode uses the full hall inventory. Each drum has simulator-side USD
-attributes for source strength at one metre and source height. The scenario
-raises one source to make the transition visible during a short walk. The
-body-mounted gamma detector samples the existing dose and environment
-backend. The controller uses measured dose only to veto the forward path
-and back off toward a previously sampled location. The overlay shows the
-dose-rate history and configured thresholds in simulation units, with air
-temperature and humidity alongside. The event log records dose, position,
-accumulated exposure and the veto. This is a simulated gamma survey, and
-the overlay reports dose at the sampled position.
-
-### Read a drum plate with Cosmos
-
-The four drum rows are A to D. Plates use slots 01 to 07 in order of
-increasing hall X. `sim/drums.json` maps the printed `display_id` to the
-stable internal ID used by existing scene layouts and training labels.
-
-On a CUDA machine with a local Cosmos Reason 2 checkpoint, pass a camera
-image with one clearly visible plate. Use `--box` to isolate a drum or plate
-from a larger frame. Coordinates refer to the original image in pixels.
-
-```sh
-python tools/read_drum_plate.py frame.png --model /path/to/cosmos-reason2-2b \
-  --box LEFT TOP RIGHT BOTTOM
-```
-
-Cosmos reads the crop and returns a printed ID or `null` for an unreadable
-or ambiguous plate. The reader receives image pixels without simulator
-inventory. Use the returned ID to associate evidence with an inventory
-record after the read. The reader is separate from the current walking demo.
-
-See [how to integrate the proposed sensor payloads](docs/spot_development.md#adding-sensor-payloads).
-
-To render the printed IDs on drums in the full hall (needs Python 3.12+ locally):
-
-```sh
-uv run --python 3.13 --with modal python tools/run_plates.py
-```
-
-Close-ups of A01, B02, C05, D06 and a row C aisle view are saved under
-`sim/out/plates/`. Use `tools/run_hall.py` jobs for texture-accurate stills:
-renders from `isaac_sim_modal.py` currently draw one texture on every surface.
-
-### Synthetic payloads for sensor development
-
-The radiation walk already records simulated gamma, cumulative dose, air
-temperature and humidity. `SensorWorld.sample` also supplies dew point.
-Compare a surface-temperature observation with dew point to flag possible
-condensation. A humidity reading taken in an aisle describes that sampling
-location. Add separate scenario sampling positions for dense stacks.
-
-- For gas tests, pass a `gas_vents` list in the scenario config. Each entry
-  takes `position_m` and optional `hydrogen_ppm` and `methane_ppm` fixture
-  strengths at that position. These are independent spatial test fields.
-  Gas keys are omitted when the scenario lacks a gas sensor configuration.
-- For floor sampling, use the existing virtual swab. The scenario can assign
-  optional pH, conductivity in µS/cm and chloride loading in mg/m² via
-  `set_surface_chemistry`. These are simulated sample results. Probe hardware,
-  wet-patch classification and collection efficiency are separate work.
-- `sim/inspection_payloads.py` has a thermal image helper that maps a
-  registered visible-instance buffer to surface temperatures, and a mono
-  microphone fixture that produces hiss or impulse waveforms. Wire these
-  into a camera and audio stream before using them for live decisions.
-- Use the RGB plate reader for ID. Match its result against the inventory
-  after reading the image. The live walking loop still needs that connection.
-
-No new alarm setpoints are defined by these fixtures. See the
-[inspection source register](docs/inspection_source_register.md) for the
-limits of the WIPP and Idaho comparisons.
+The project's original code is available under the [MIT License](LICENSE). Third-party simulator software, models, assets and dependencies are subject to their respective licenses.

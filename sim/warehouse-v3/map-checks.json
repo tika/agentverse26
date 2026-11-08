@@ -1,0 +1,28 @@
+{
+  "floor_area_m2": [
+    240,
+    679.2
+  ],
+  "v2_drums": {
+    "LLW": 304,
+    "ILW": 56
+  },
+  "v3_drums": {
+    "LLW": 336,
+    "ILW": 84
+  },
+  "racks": 56,
+  "three_high_columns": 140,
+  "route_edges": 35,
+  "route_clearance_m": 0.53,
+  "route_check_radius_m": 0.4,
+  "maximum_bank_depth_drum_rows": 2,
+  "aisle_facing_drums": 420,
+  "through_aisle_widths_m": [
+    3.32,
+    3.32,
+    3.32,
+    3.32,
+    3.32
+  ]
+}

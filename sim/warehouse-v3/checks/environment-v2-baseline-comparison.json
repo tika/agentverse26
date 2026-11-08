@@ -1,0 +1,9 @@
+{
+  "baseline_match": {
+    "paths_world_poses_metadata_and_body_geometry": 420,
+    "map_except_nominal_ridge": true,
+    "floor_mesh_pose_and_collision": true
+  },
+  "roof_off_visibility": true,
+  "roof_on_sha256": "9e7fe3bdaeaff44c2b04a1247395b2e9b63fe6df2b8ed2d9e3bba7578158e827"
+}

@@ -1,0 +1,1711 @@
+{
+  "runs": [
+    {
+      "seed": 42,
+      "categories": {
+        "LLW": {
+          "drums": 336,
+          "median_decay_heat_w": 1.2227644969752178e-06,
+          "median_reference_gamma_usv_h": 0.08201275621734522,
+          "median_headspace_l": 28.26077062977747,
+          "restricted_pressure_kpa": 1.5970700801672253,
+          "vented_pressure_kpa": 0.021230366011308035,
+          "gas_pulse_near_ppm": 12.186515548828387,
+          "gas_pulse_far_ppm": 1.213912900755201e-15,
+          "gas_inlet_trace": [
+            {
+              "time_s": 0,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 2,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 8,
+              "hydrogen_ppm": 11.771217072508103,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 40,
+              "hydrogen_ppm": 12.531590707423756,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 90,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            }
+          ],
+          "aisle_gas_probe": {
+            "inlet_xyz_m": [
+              8.459,
+              3.8483,
+              1.0
+            ],
+            "rack_clearance_m": 0.6783,
+            "hydrogen_ppm": 3.679029772700512,
+            "status": "detected"
+          },
+          "warm_vs_ordinary_apparent_c": [
+            24.004688262939453,
+            18.9735050201416
+          ],
+          "clean_swab": {
+            "status": "complete",
+            "time_s": 10,
+            "contact_xyz": [
+              1.0,
+              1.0,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": null,
+            "alpha_status": "below_detection",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": null,
+            "beta_gamma_status": "below_detection",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          },
+          "transfer_swab": {
+            "status": "complete",
+            "time_s": 30,
+            "contact_xyz": [
+              3.409,
+              26.488000000000003,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": 0.6327272727272726,
+            "alpha_status": "detected",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": 3.978181818181817,
+            "beta_gamma_status": "detected",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          }
+        },
+        "ILW": {
+          "drums": 84,
+          "median_decay_heat_w": 0.003065992027834484,
+          "median_reference_gamma_usv_h": 0.19644282890655773,
+          "median_headspace_l": 42.550445355997255,
+          "restricted_pressure_kpa": 10.482993258666172,
+          "vented_pressure_kpa": 0.013106531485799341,
+          "gas_pulse_near_ppm": 12.228811027317144,
+          "gas_pulse_far_ppm": 6.240864982868007e-05,
+          "gas_inlet_trace": [
+            {
+              "time_s": 0,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 2,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 8,
+              "hydrogen_ppm": 11.811920788604194,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 40,
+              "hydrogen_ppm": 12.574924133563512,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 90,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            }
+          ],
+          "aisle_gas_probe": {
+            "inlet_xyz_m": [
+              20.15,
+              15.37,
+              1.0
+            ],
+            "rack_clearance_m": 0.441021541424,
+            "hydrogen_ppm": null,
+            "status": "below_detection"
+          },
+          "warm_vs_ordinary_apparent_c": [
+            22.267038345336914,
+            20.795364379882812
+          ],
+          "clean_swab": {
+            "status": "complete",
+            "time_s": 10,
+            "contact_xyz": [
+              1.0,
+              1.0,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": null,
+            "alpha_status": "below_detection",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": null,
+            "beta_gamma_status": "below_detection",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          },
+          "transfer_swab": {
+            "status": "complete",
+            "time_s": 30,
+            "contact_xyz": [
+              20.9,
+              12.3,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": 0.5818181818181817,
+            "alpha_status": "detected",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": 5.0254545454545445,
+            "beta_gamma_status": "detected",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          }
+        }
+      },
+      "route_gamma_usv_h": {
+        "min": 0.3958333333333333,
+        "median": 1.2083333333333333,
+        "max": 1.9583333333333333
+      },
+      "route_trace": [
+        {
+          "pose_xyz_m": [
+            1.5,
+            1.3,
+            0.6
+          ],
+          "time_s": 0,
+          "dose_timestamp_s": 0,
+          "dose_rate_uSv_h": 1.4375,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 0.0,
+          "temperature_c": 19.00206724830166,
+          "relative_humidity_pct": 61.572771677619784,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            4.83,
+            0.6
+          ],
+          "time_s": 2,
+          "dose_timestamp_s": 2,
+          "dose_rate_uSv_h": 1.1666666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 7.233796296296297e-07,
+          "temperature_c": 19.077853688171018,
+          "relative_humidity_pct": 61.832046599165004,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            9.49,
+            0.6
+          ],
+          "time_s": 4,
+          "dose_timestamp_s": 4,
+          "dose_rate_uSv_h": 1.25,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.3946759259259262e-06,
+          "temperature_c": 18.88795997015745,
+          "relative_humidity_pct": 61.63177372056043,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            14.15,
+            0.6
+          ],
+          "time_s": 6,
+          "dose_timestamp_s": 6,
+          "dose_rate_uSv_h": 1.2916666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 2.1006944444444448e-06,
+          "temperature_c": 19.15180996797769,
+          "relative_humidity_pct": 62.93719129994622,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            18.81,
+            0.6
+          ],
+          "time_s": 8,
+          "dose_timestamp_s": 8,
+          "dose_rate_uSv_h": 1.3333333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 2.8298611111111115e-06,
+          "temperature_c": 18.951877691771173,
+          "relative_humidity_pct": 61.76701013827081,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            23.47,
+            0.6
+          ],
+          "time_s": 10,
+          "dose_timestamp_s": 10,
+          "dose_rate_uSv_h": 1.2083333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 3.53587962962963e-06,
+          "temperature_c": 18.911991026676766,
+          "relative_humidity_pct": 62.29941959624899,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            27.0,
+            0.6
+          ],
+          "time_s": 12,
+          "dose_timestamp_s": 12,
+          "dose_rate_uSv_h": 0.75,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 4.079861111111112e-06,
+          "temperature_c": 18.987854670987495,
+          "relative_humidity_pct": 63.559044333196944,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            1.3,
+            0.6
+          ],
+          "time_s": 14,
+          "dose_timestamp_s": 14,
+          "dose_rate_uSv_h": 1.0208333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 4.57175925925926e-06,
+          "temperature_c": 19.697728650211378,
+          "relative_humidity_pct": 63.548885250882094,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            4.83,
+            0.6
+          ],
+          "time_s": 16,
+          "dose_timestamp_s": 16,
+          "dose_rate_uSv_h": 1.3958333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 5.243055555555557e-06,
+          "temperature_c": 19.602441777750954,
+          "relative_humidity_pct": 64.92475755176056,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            9.49,
+            0.6
+          ],
+          "time_s": 18,
+          "dose_timestamp_s": 18,
+          "dose_rate_uSv_h": 1.4583333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 6.035879629629631e-06,
+          "temperature_c": 19.481583721707448,
+          "relative_humidity_pct": 64.10476526012371,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            14.15,
+            0.6
+          ],
+          "time_s": 20,
+          "dose_timestamp_s": 20,
+          "dose_rate_uSv_h": 1.6875,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 6.909722222222223e-06,
+          "temperature_c": 19.578279338137104,
+          "relative_humidity_pct": 63.781512331570624,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            18.81,
+            0.6
+          ],
+          "time_s": 22,
+          "dose_timestamp_s": 22,
+          "dose_rate_uSv_h": 1.9583333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 7.922453703703704e-06,
+          "temperature_c": 19.66221725087557,
+          "relative_humidity_pct": 63.78757682905636,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            23.47,
+            0.6
+          ],
+          "time_s": 24,
+          "dose_timestamp_s": 24,
+          "dose_rate_uSv_h": 1.5208333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 8.88888888888889e-06,
+          "temperature_c": 19.552306120150448,
+          "relative_humidity_pct": 63.407780042210035,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            27.0,
+            0.6
+          ],
+          "time_s": 26,
+          "dose_timestamp_s": 26,
+          "dose_rate_uSv_h": 1.2083333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 9.646990740740741e-06,
+          "temperature_c": 19.583655622237778,
+          "relative_humidity_pct": 64.14983232502641,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            1.3,
+            0.6
+          ],
+          "time_s": 28,
+          "dose_timestamp_s": 28,
+          "dose_rate_uSv_h": 0.3958333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.0092592592592594e-05,
+          "temperature_c": 19.897269221007672,
+          "relative_humidity_pct": 66.20518648856857,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            4.83,
+            0.6
+          ],
+          "time_s": 30,
+          "dose_timestamp_s": 30,
+          "dose_rate_uSv_h": 0.875,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.0445601851851853e-05,
+          "temperature_c": 20.05631791950195,
+          "relative_humidity_pct": 65.61554845793833,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            9.49,
+            0.6
+          ],
+          "time_s": 32,
+          "dose_timestamp_s": 32,
+          "dose_rate_uSv_h": 0.9583333333333334,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.0954861111111113e-05,
+          "temperature_c": 19.99367531920435,
+          "relative_humidity_pct": 64.63303650968652,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            14.15,
+            0.6
+          ],
+          "time_s": 34,
+          "dose_timestamp_s": 34,
+          "dose_rate_uSv_h": 1.1875,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.1550925925925928e-05,
+          "temperature_c": 19.99923461980086,
+          "relative_humidity_pct": 66.73192421939297,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            18.81,
+            0.6
+          ],
+          "time_s": 36,
+          "dose_timestamp_s": 36,
+          "dose_rate_uSv_h": 1.3541666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.2256944444444447e-05,
+          "temperature_c": 20.057964915148798,
+          "relative_humidity_pct": 66.98513449112268,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            23.47,
+            0.6
+          ],
+          "time_s": 38,
+          "dose_timestamp_s": 38,
+          "dose_rate_uSv_h": 1.125,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.2945601851851854e-05,
+          "temperature_c": 20.099442263687155,
+          "relative_humidity_pct": 65.62546554638891,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            27.0,
+            0.6
+          ],
+          "time_s": 40,
+          "dose_timestamp_s": 40,
+          "dose_rate_uSv_h": 0.7083333333333334,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.3454861111111114e-05,
+          "temperature_c": 20.1428115602557,
+          "relative_humidity_pct": 66.21199432997925,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1,
+            6,
+            0.6
+          ],
+          "time_s": 42,
+          "dose_timestamp_s": 42,
+          "dose_rate_uSv_h": 1.0,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.3929398148148152e-05,
+          "temperature_c": 18.875044339704978,
+          "relative_humidity_pct": 61.67967941712378,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            6,
+            0.6
+          ],
+          "time_s": 44,
+          "dose_timestamp_s": 44,
+          "dose_rate_uSv_h": 1.0625,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.4502314814814818e-05,
+          "temperature_c": 19.15669633830152,
+          "relative_humidity_pct": 62.696904088249454,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        }
+      ]
+    },
+    {
+      "seed": 2026,
+      "categories": {
+        "LLW": {
+          "drums": 336,
+          "median_decay_heat_w": 1.3096476598661898e-06,
+          "median_reference_gamma_usv_h": 0.10242681389949707,
+          "median_headspace_l": 29.284041003227216,
+          "restricted_pressure_kpa": 4.204518099832291,
+          "vented_pressure_kpa": 0.004539628227486309,
+          "gas_pulse_near_ppm": 12.185803095205399,
+          "gas_pulse_far_ppm": 1.12172230699905,
+          "gas_inlet_trace": [
+            {
+              "time_s": 0,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 2,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 8,
+              "hydrogen_ppm": 12.24422951824164,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 40,
+              "hydrogen_ppm": 9.556079334570658,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 90,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            }
+          ],
+          "aisle_gas_probe": {
+            "inlet_xyz_m": [
+              9.290999999999999,
+              27.1483,
+              1.0
+            ],
+            "rack_clearance_m": 0.6782999999999982,
+            "hydrogen_ppm": 3.1037704260605716,
+            "status": "detected"
+          },
+          "warm_vs_ordinary_apparent_c": [
+            23.384109497070312,
+            18.98649024963379
+          ],
+          "clean_swab": {
+            "status": "complete",
+            "time_s": 10,
+            "contact_xyz": [
+              1.0,
+              1.0,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": null,
+            "alpha_status": "below_detection",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": null,
+            "beta_gamma_status": "below_detection",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          },
+          "transfer_swab": {
+            "status": "complete",
+            "time_s": 30,
+            "contact_xyz": [
+              7.759,
+              20.451999999999998,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": 0.4581818181818181,
+            "alpha_status": "detected",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": 6.77090909090909,
+            "beta_gamma_status": "detected",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          }
+        },
+        "ILW": {
+          "drums": 84,
+          "median_decay_heat_w": 0.002988813014580949,
+          "median_reference_gamma_usv_h": 0.22225195458726216,
+          "median_headspace_l": 40.32680078913613,
+          "restricted_pressure_kpa": 5.714798676646925,
+          "vented_pressure_kpa": 0.020747419358893467,
+          "gas_pulse_near_ppm": 12.229253635530217,
+          "gas_pulse_far_ppm": 7.772535665833623e-06,
+          "gas_inlet_trace": [
+            {
+              "time_s": 0,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 2,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 8,
+              "hydrogen_ppm": 12.2875424609471,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 40,
+              "hydrogen_ppm": 9.591403531123083,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 90,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            }
+          ],
+          "aisle_gas_probe": {
+            "inlet_xyz_m": [
+              21.599999999999998,
+              12.93,
+              1.0
+            ],
+            "rack_clearance_m": 0.4410215414239983,
+            "hydrogen_ppm": 2.22519369447442,
+            "status": "detected"
+          },
+          "warm_vs_ordinary_apparent_c": [
+            22.398649215698242,
+            21.37435531616211
+          ],
+          "clean_swab": {
+            "status": "complete",
+            "time_s": 10,
+            "contact_xyz": [
+              1.0,
+              1.0,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": null,
+            "alpha_status": "below_detection",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": null,
+            "beta_gamma_status": "below_detection",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          },
+          "transfer_swab": {
+            "status": "complete",
+            "time_s": 30,
+            "contact_xyz": [
+              19.45,
+              6.68,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": 0.669090909090909,
+            "alpha_status": "detected",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": 1.367272727272727,
+            "beta_gamma_status": "detected",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          }
+        }
+      },
+      "route_gamma_usv_h": {
+        "min": 0.2708333333333333,
+        "median": 1.2291666666666667,
+        "max": 2.0833333333333335
+      },
+      "route_trace": [
+        {
+          "pose_xyz_m": [
+            1.5,
+            1.3,
+            0.6
+          ],
+          "time_s": 0,
+          "dose_timestamp_s": 0,
+          "dose_rate_uSv_h": 1.2291666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 0.0,
+          "temperature_c": 19.17651123835393,
+          "relative_humidity_pct": 61.798548376340925,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            4.83,
+            0.6
+          ],
+          "time_s": 2,
+          "dose_timestamp_s": 2,
+          "dose_rate_uSv_h": 1.8541666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 8.564814814814815e-07,
+          "temperature_c": 18.92515087546899,
+          "relative_humidity_pct": 60.242284448609176,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            9.49,
+            0.6
+          ],
+          "time_s": 4,
+          "dose_timestamp_s": 4,
+          "dose_rate_uSv_h": 1.25,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.71875e-06,
+          "temperature_c": 18.944648126446182,
+          "relative_humidity_pct": 63.14619640048179,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            14.15,
+            0.6
+          ],
+          "time_s": 6,
+          "dose_timestamp_s": 6,
+          "dose_rate_uSv_h": 0.9166666666666666,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 2.320601851851852e-06,
+          "temperature_c": 19.10975263089682,
+          "relative_humidity_pct": 62.83329690698798,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            18.81,
+            0.6
+          ],
+          "time_s": 8,
+          "dose_timestamp_s": 8,
+          "dose_rate_uSv_h": 1.1666666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 2.8993055555555556e-06,
+          "temperature_c": 18.78240813399415,
+          "relative_humidity_pct": 61.5607234897637,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            23.47,
+            0.6
+          ],
+          "time_s": 10,
+          "dose_timestamp_s": 10,
+          "dose_rate_uSv_h": 1.4375,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 3.622685185185185e-06,
+          "temperature_c": 19.03576930430183,
+          "relative_humidity_pct": 61.121915397719334,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            27.0,
+            0.6
+          ],
+          "time_s": 12,
+          "dose_timestamp_s": 12,
+          "dose_rate_uSv_h": 1.3958333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 4.409722222222222e-06,
+          "temperature_c": 19.074173512958556,
+          "relative_humidity_pct": 61.65676613776275,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            1.3,
+            0.6
+          ],
+          "time_s": 14,
+          "dose_timestamp_s": 14,
+          "dose_rate_uSv_h": 1.0,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 5.075231481481482e-06,
+          "temperature_c": 19.47593655075455,
+          "relative_humidity_pct": 63.683505932990094,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            4.83,
+            0.6
+          ],
+          "time_s": 16,
+          "dose_timestamp_s": 16,
+          "dose_rate_uSv_h": 1.9166666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 5.885416666666667e-06,
+          "temperature_c": 19.709427981477695,
+          "relative_humidity_pct": 65.36611130927339,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            9.49,
+            0.6
+          ],
+          "time_s": 18,
+          "dose_timestamp_s": 18,
+          "dose_rate_uSv_h": 2.0833333333333335,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 6.996527777777778e-06,
+          "temperature_c": 19.57257540254914,
+          "relative_humidity_pct": 63.88959875891242,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            14.15,
+            0.6
+          ],
+          "time_s": 20,
+          "dose_timestamp_s": 20,
+          "dose_rate_uSv_h": 1.875,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 8.096064814814816e-06,
+          "temperature_c": 19.468743083966803,
+          "relative_humidity_pct": 64.57560928556288,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            18.81,
+            0.6
+          ],
+          "time_s": 22,
+          "dose_timestamp_s": 22,
+          "dose_rate_uSv_h": 1.5,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 9.033564814814817e-06,
+          "temperature_c": 19.367155868056443,
+          "relative_humidity_pct": 63.51130808822079,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            23.47,
+            0.6
+          ],
+          "time_s": 24,
+          "dose_timestamp_s": 24,
+          "dose_rate_uSv_h": 1.75,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 9.936342592592595e-06,
+          "temperature_c": 19.373774843641662,
+          "relative_humidity_pct": 64.31508838411544,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            27.0,
+            0.6
+          ],
+          "time_s": 26,
+          "dose_timestamp_s": 26,
+          "dose_rate_uSv_h": 0.8958333333333334,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.0671296296296299e-05,
+          "temperature_c": 19.228901217165394,
+          "relative_humidity_pct": 63.17106742225402,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            1.3,
+            0.6
+          ],
+          "time_s": 28,
+          "dose_timestamp_s": 28,
+          "dose_rate_uSv_h": 1.1041666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.1226851851851855e-05,
+          "temperature_c": 20.113357153157477,
+          "relative_humidity_pct": 65.41887709928464,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            4.83,
+            0.6
+          ],
+          "time_s": 30,
+          "dose_timestamp_s": 30,
+          "dose_rate_uSv_h": 1.3958333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.1921296296296299e-05,
+          "temperature_c": 19.908049297987663,
+          "relative_humidity_pct": 65.69900017908745,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            9.49,
+            0.6
+          ],
+          "time_s": 32,
+          "dose_timestamp_s": 32,
+          "dose_rate_uSv_h": 1.0208333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.2592592592592595e-05,
+          "temperature_c": 19.848512835899932,
+          "relative_humidity_pct": 65.75416734644176,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            14.15,
+            0.6
+          ],
+          "time_s": 34,
+          "dose_timestamp_s": 34,
+          "dose_rate_uSv_h": 0.8125,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.3101851851851855e-05,
+          "temperature_c": 20.053109235200598,
+          "relative_humidity_pct": 66.32982584581214,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            18.81,
+            0.6
+          ],
+          "time_s": 36,
+          "dose_timestamp_s": 36,
+          "dose_rate_uSv_h": 0.7083333333333334,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.3524305555555558e-05,
+          "temperature_c": 20.098122907887454,
+          "relative_humidity_pct": 66.24038072476979,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            23.47,
+            0.6
+          ],
+          "time_s": 38,
+          "dose_timestamp_s": 38,
+          "dose_rate_uSv_h": 0.5833333333333334,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.3883101851851855e-05,
+          "temperature_c": 19.955384515604383,
+          "relative_humidity_pct": 65.60087137701626,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            27.0,
+            0.6
+          ],
+          "time_s": 40,
+          "dose_timestamp_s": 40,
+          "dose_rate_uSv_h": 0.2708333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.4120370370370373e-05,
+          "temperature_c": 20.004127779055423,
+          "relative_humidity_pct": 66.20858521225622,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1,
+            6,
+            0.6
+          ],
+          "time_s": 42,
+          "dose_timestamp_s": 42,
+          "dose_rate_uSv_h": 1.0625,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.4490740740740744e-05,
+          "temperature_c": 18.878733457270524,
+          "relative_humidity_pct": 62.12504255738028,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            6,
+            0.6
+          ],
+          "time_s": 44,
+          "dose_timestamp_s": 44,
+          "dose_rate_uSv_h": 1.3541666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.516203703703704e-05,
+          "temperature_c": 18.989099878256685,
+          "relative_humidity_pct": 61.43740116442521,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        }
+      ]
+    },
+    {
+      "seed": 3858,
+      "categories": {
+        "LLW": {
+          "drums": 336,
+          "median_decay_heat_w": 1.3231438037373454e-06,
+          "median_reference_gamma_usv_h": 0.08844909537577696,
+          "median_headspace_l": 28.723821883532743,
+          "restricted_pressure_kpa": 0.7209751430727878,
+          "vented_pressure_kpa": 0.005323019923484017,
+          "gas_pulse_near_ppm": 12.185843233676097,
+          "gas_pulse_far_ppm": 5.74219592119308e-16,
+          "gas_inlet_trace": [
+            {
+              "time_s": 0,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 2,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 8,
+              "hydrogen_ppm": 10.248130555731507,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 40,
+              "hydrogen_ppm": 13.33252495057724,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 90,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            }
+          ],
+          "aisle_gas_probe": {
+            "inlet_xyz_m": [
+              8.459,
+              8.5083,
+              1.0
+            ],
+            "rack_clearance_m": 0.6783,
+            "hydrogen_ppm": 3.7364383890263646,
+            "status": "detected"
+          },
+          "warm_vs_ordinary_apparent_c": [
+            23.927818298339844,
+            18.76845932006836
+          ],
+          "clean_swab": {
+            "status": "complete",
+            "time_s": 10,
+            "contact_xyz": [
+              1.0,
+              1.0,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": null,
+            "alpha_status": "below_detection",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": null,
+            "beta_gamma_status": "below_detection",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          },
+          "transfer_swab": {
+            "status": "complete",
+            "time_s": 30,
+            "contact_xyz": [
+              7.141,
+              21.828000000000003,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": 0.9745454545454544,
+            "alpha_status": "detected",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": 7.323636363636362,
+            "beta_gamma_status": "detected",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          }
+        },
+        "ILW": {
+          "drums": 84,
+          "median_decay_heat_w": 0.00338141040229853,
+          "median_reference_gamma_usv_h": 0.2102378806149988,
+          "median_headspace_l": 44.83285397527828,
+          "restricted_pressure_kpa": 10.105354856531761,
+          "vented_pressure_kpa": 0.0347981123581003,
+          "gas_pulse_near_ppm": 12.23352318618802,
+          "gas_pulse_far_ppm": 1.3405503147219782e-05,
+          "gas_inlet_trace": [
+            {
+              "time_s": 0,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 2,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            },
+            {
+              "time_s": 8,
+              "hydrogen_ppm": 10.289080637199083,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 40,
+              "hydrogen_ppm": 13.384093270795361,
+              "hydrogen_status": "detected"
+            },
+            {
+              "time_s": 90,
+              "hydrogen_ppm": null,
+              "hydrogen_status": "below_detection"
+            }
+          ],
+          "aisle_gas_probe": {
+            "inlet_xyz_m": [
+              18.7,
+              15.37,
+              1.0
+            ],
+            "rack_clearance_m": 0.441021541424,
+            "hydrogen_ppm": null,
+            "status": "below_detection"
+          },
+          "warm_vs_ordinary_apparent_c": [
+            22.251909255981445,
+            20.837133407592773
+          ],
+          "clean_swab": {
+            "status": "complete",
+            "time_s": 10,
+            "contact_xyz": [
+              1.0,
+              1.0,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": null,
+            "alpha_status": "below_detection",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": null,
+            "beta_gamma_status": "below_detection",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          },
+          "transfer_swab": {
+            "status": "complete",
+            "time_s": 30,
+            "contact_xyz": [
+              20.9,
+              12.3,
+              0.0
+            ],
+            "area_cm2": 100,
+            "alpha_bq_cm2": 0.4872727272727272,
+            "alpha_status": "detected",
+            "alpha_detection_limit_bq_cm2": 0.03,
+            "beta_gamma_bq_cm2": 1.5199999999999998,
+            "beta_gamma_status": "detected",
+            "beta_gamma_detection_limit_bq_cm2": 0.15
+          }
+        }
+      },
+      "route_gamma_usv_h": {
+        "min": 0.7083333333333334,
+        "median": 1.0416666666666667,
+        "max": 1.9583333333333333
+      },
+      "route_trace": [
+        {
+          "pose_xyz_m": [
+            1.5,
+            1.3,
+            0.6
+          ],
+          "time_s": 0,
+          "dose_timestamp_s": 0,
+          "dose_rate_uSv_h": 1.0,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 0.0,
+          "temperature_c": 19.206231015815842,
+          "relative_humidity_pct": 63.27477415029532,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            4.83,
+            0.6
+          ],
+          "time_s": 2,
+          "dose_timestamp_s": 2,
+          "dose_rate_uSv_h": 1.0416666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 5.671296296296297e-07,
+          "temperature_c": 19.09880453403703,
+          "relative_humidity_pct": 62.65682574096173,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            9.49,
+            0.6
+          ],
+          "time_s": 4,
+          "dose_timestamp_s": 4,
+          "dose_rate_uSv_h": 1.0833333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.1574074074074076e-06,
+          "temperature_c": 19.100688775167647,
+          "relative_humidity_pct": 62.25845576321961,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            14.15,
+            0.6
+          ],
+          "time_s": 6,
+          "dose_timestamp_s": 6,
+          "dose_rate_uSv_h": 1.0416666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.7476851851851853e-06,
+          "temperature_c": 19.091358297440316,
+          "relative_humidity_pct": 62.47054612570753,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            18.81,
+            0.6
+          ],
+          "time_s": 8,
+          "dose_timestamp_s": 8,
+          "dose_rate_uSv_h": 1.1666666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 2.361111111111111e-06,
+          "temperature_c": 18.795922727396725,
+          "relative_humidity_pct": 61.67229930863566,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            23.47,
+            0.6
+          ],
+          "time_s": 10,
+          "dose_timestamp_s": 10,
+          "dose_rate_uSv_h": 1.125,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 2.997685185185185e-06,
+          "temperature_c": 18.959169109576184,
+          "relative_humidity_pct": 61.81802531252115,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            27.0,
+            0.6
+          ],
+          "time_s": 12,
+          "dose_timestamp_s": 12,
+          "dose_rate_uSv_h": 0.7083333333333334,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 3.5069444444444442e-06,
+          "temperature_c": 19.086576026154788,
+          "relative_humidity_pct": 62.171334434375815,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            1.3,
+            0.6
+          ],
+          "time_s": 14,
+          "dose_timestamp_s": 14,
+          "dose_rate_uSv_h": 0.8125,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 3.929398148148148e-06,
+          "temperature_c": 19.58879484374772,
+          "relative_humidity_pct": 63.20376614765875,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            4.83,
+            0.6
+          ],
+          "time_s": 16,
+          "dose_timestamp_s": 16,
+          "dose_rate_uSv_h": 1.3125,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 4.519675925925926e-06,
+          "temperature_c": 19.370550894732503,
+          "relative_humidity_pct": 63.08134105462572,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            9.49,
+            0.6
+          ],
+          "time_s": 18,
+          "dose_timestamp_s": 18,
+          "dose_rate_uSv_h": 1.3541666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 5.260416666666667e-06,
+          "temperature_c": 19.43424549912,
+          "relative_humidity_pct": 64.4297132897501,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            14.15,
+            0.6
+          ],
+          "time_s": 20,
+          "dose_timestamp_s": 20,
+          "dose_rate_uSv_h": 1.6041666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 6.082175925925926e-06,
+          "temperature_c": 19.503996685681834,
+          "relative_humidity_pct": 64.01782598307092,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            18.81,
+            0.6
+          ],
+          "time_s": 22,
+          "dose_timestamp_s": 22,
+          "dose_rate_uSv_h": 1.6041666666666667,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 6.97337962962963e-06,
+          "temperature_c": 19.51188499563392,
+          "relative_humidity_pct": 63.86656057103602,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            23.47,
+            0.6
+          ],
+          "time_s": 24,
+          "dose_timestamp_s": 24,
+          "dose_rate_uSv_h": 1.0833333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 7.719907407407407e-06,
+          "temperature_c": 19.378656960288374,
+          "relative_humidity_pct": 65.47060382693068,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            12.0,
+            27.0,
+            0.6
+          ],
+          "time_s": 26,
+          "dose_timestamp_s": 26,
+          "dose_rate_uSv_h": 0.75,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 8.229166666666667e-06,
+          "temperature_c": 19.514745432149457,
+          "relative_humidity_pct": 64.22495257646735,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            1.3,
+            0.6
+          ],
+          "time_s": 28,
+          "dose_timestamp_s": 28,
+          "dose_rate_uSv_h": 0.8333333333333334,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 8.668981481481482e-06,
+          "temperature_c": 19.747636763225128,
+          "relative_humidity_pct": 66.61928011096975,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            4.83,
+            0.6
+          ],
+          "time_s": 30,
+          "dose_timestamp_s": 30,
+          "dose_rate_uSv_h": 0.8333333333333334,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 9.131944444444445e-06,
+          "temperature_c": 19.94023411375115,
+          "relative_humidity_pct": 65.62492010554621,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            9.49,
+            0.6
+          ],
+          "time_s": 32,
+          "dose_timestamp_s": 32,
+          "dose_rate_uSv_h": 1.2708333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 9.716435185185187e-06,
+          "temperature_c": 19.899189740590355,
+          "relative_humidity_pct": 65.72154002622048,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            14.15,
+            0.6
+          ],
+          "time_s": 34,
+          "dose_timestamp_s": 34,
+          "dose_rate_uSv_h": 1.9583333333333333,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.0613425925925927e-05,
+          "temperature_c": 19.627627449392218,
+          "relative_humidity_pct": 65.84988600282124,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            18.81,
+            0.6
+          ],
+          "time_s": 36,
+          "dose_timestamp_s": 36,
+          "dose_rate_uSv_h": 0.7916666666666666,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.1377314814814816e-05,
+          "temperature_c": 20.129529999580626,
+          "relative_humidity_pct": 66.92784776773375,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            23.47,
+            0.6
+          ],
+          "time_s": 38,
+          "dose_timestamp_s": 38,
+          "dose_rate_uSv_h": 0.9375,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.1857638888888891e-05,
+          "temperature_c": 20.031340345696446,
+          "relative_humidity_pct": 67.83215529958017,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            22.5,
+            27.0,
+            0.6
+          ],
+          "time_s": 40,
+          "dose_timestamp_s": 40,
+          "dose_rate_uSv_h": 0.7291666666666666,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.2320601851851855e-05,
+          "temperature_c": 20.184113406111475,
+          "relative_humidity_pct": 66.66330420777783,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1,
+            6,
+            0.6
+          ],
+          "time_s": 42,
+          "dose_timestamp_s": 42,
+          "dose_rate_uSv_h": 1.0,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.2800925925925928e-05,
+          "temperature_c": 19.053471826716542,
+          "relative_humidity_pct": 61.26766421508759,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        },
+        {
+          "pose_xyz_m": [
+            1.5,
+            6,
+            0.6
+          ],
+          "time_s": 44,
+          "dose_timestamp_s": 44,
+          "dose_rate_uSv_h": 1.0,
+          "dose_integration_s": 2,
+          "mission_dose_mSv": 1.3356481481481484e-05,
+          "temperature_c": 19.202661095449056,
+          "relative_humidity_pct": 62.13543192534018,
+          "hydrogen_ppm": null,
+          "hydrogen_status": "below_detection",
+          "hydrogen_detection_limit_ppm": 2
+        }
+      ]
+    }
+  ]
+}

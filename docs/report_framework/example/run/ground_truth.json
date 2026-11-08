@@ -1,0 +1,29 @@
+{
+ "_note": "Invented data for the report framework example. Not from a robot run.",
+ "drums": {
+  "E-L-01-T1": {
+   "rust": 0.0,
+   "bulge": 0.0
+  },
+  "E-L-01-T2": {
+   "rust": 0.7,
+   "bulge": 0.0
+  },
+  "E-R-01-T1": {
+   "rust": 0.4,
+   "bulge": 0.0
+  },
+  "E-R-01-T3": {
+   "rust": 0.0,
+   "bulge": 0.0
+  },
+  "E-L-02-T1": {
+   "rust": 0.0,
+   "bulge": 0.8
+  },
+  "E-R-02-T1": {
+   "rust": 0.3,
+   "bulge": 0.0
+  }
+ }
+}

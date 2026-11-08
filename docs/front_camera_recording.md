@@ -1,5 +1,7 @@
 # Fixed front camera and short recording
 
+> For new detector experiments, explicitly select and verify the [latest expanded YOLO26s](../detector/v2/LATEST_MODEL.md). The recording reproduced below is a historical mission and does not automatically switch to new weights. The recent 15-degree upward-mount test was a separate stationary camera/model test; this guide's default calibration and Cosmos mission are unchanged.
+
 The primary sensor is `/World/WalkingSpot/body/FrontCamera`, a child of Spot's
 physical body. It inherits translation, roll, pitch, yaw and body height. No
 planner or plate reader changes its transform. The recording displays this RGB
@@ -11,6 +13,8 @@ crop, not an independently aimed or optically zoomed camera.
 follow the dog for presentation but never supplies detector, VLM, navigation or
 thermal evidence. The warehouse map is schematic, not another camera. The
 synthetic thermal image is aligned to the primary sensor.
+
+For the approved one- and two-drum tests with the fixed 15-degree upward mount and uncropped CANIS display, use [rigid_camera_demos.md](rigid_camera_demos.md). These tested scripts are separate from the historical mission below.
 
 ## Reproduce the seven-drum recording
 

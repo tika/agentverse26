@@ -1,0 +1,110 @@
+{
+  "model": "yolo26s",
+  "comparison_id": "compare_colors_20261108T053740Z_continued",
+  "dataset_id": "canis_colors_20261108T053740Z",
+  "dataset_images": 2500,
+  "yellow_targets": 1500,
+  "blue_teal_ilw_targets": 1000,
+  "split": {
+    "train": 2000,
+    "val": 235,
+    "test": 265
+  },
+  "best_sha256": "ba4c80bcb99f6152d8ee0a6523151c4640ad67d727431b9ec846235dcf895b6a",
+  "initial_checkpoint": "/models/condition_v2/compare_20261108T043410Z/yolo26s/best.pt",
+  "training_seconds": 68.78,
+  "total_seconds": 76.57,
+  "learning_rate": 0.0001,
+  "epochs": 20,
+  "sampler": {
+    "sampler": "RandomSampler",
+    "rect": false,
+    "shuffle": true,
+    "images": 2000
+  },
+  "selection": {
+    "selected_comparison": "compare_colors_20261108T053740Z_continued",
+    "criterion": "Macro-average LLW/ILW primary-target condition accuracy on validation, equal material weight.",
+    "initial_validation_score": 0.8301851851851851,
+    "continued_validation_score": 0.8414814814814815,
+    "test_not_used_for_checkpoint_selection": true,
+    "production_default_unchanged": true,
+    "latest_main_reviewed": "f5455ed",
+    "protected_scope": "Rigid camera, agent, warehouse, filming, HUD and console adapters are not modified."
+  },
+  "matched_test_results": {
+    "new_blue": {
+      "old": {
+        "images": 25,
+        "correct": 16,
+        "accuracy": 0.64,
+        "missed": 0
+      },
+      "new": {
+        "images": 25,
+        "correct": 17,
+        "accuracy": 0.68,
+        "missed": 0
+      },
+      "delta_percentage_points": 4.0
+    },
+    "legacy_yellow": {
+      "old": {
+        "images": 75,
+        "correct": 72,
+        "accuracy": 0.96,
+        "missed": 0
+      },
+      "new": {
+        "images": 75,
+        "correct": 73,
+        "accuracy": 0.9733333333333334,
+        "missed": 0
+      },
+      "delta_percentage_points": 1.333
+    },
+    "legacy_metallic": {
+      "old": {
+        "images": 75,
+        "correct": 56,
+        "accuracy": 0.7466666666666667,
+        "missed": 0
+      },
+      "new": {
+        "images": 75,
+        "correct": 53,
+        "accuracy": 0.7066666666666667,
+        "missed": 0
+      },
+      "delta_percentage_points": -4.0
+    },
+    "new_yellow": {
+      "old": {
+        "images": 90,
+        "correct": 89,
+        "accuracy": 0.9888888888888889,
+        "missed": 0
+      },
+      "new": {
+        "images": 90,
+        "correct": 90,
+        "accuracy": 1.0,
+        "missed": 0
+      },
+      "delta_percentage_points": 1.111
+    }
+  },
+  "endpoints": {
+    "previous": {
+      "url": "https://paramsachdeva07--canis-conditions-yolo26s-conditiondetector-web.us-east.modal.run",
+      "checkpoint_sha256": "96bdf7160d7c4f17bf2d36727da51ecbe65f320cfeaa51b543311147db9a031a"
+    },
+    "expanded": {
+      "url": "https://paramsachdeva07--canis-yolo26s-expanded-conditiondetector-web.us-east.modal.run",
+      "checkpoint_sha256": "ba4c80bcb99f6152d8ee0a6523151c4640ad67d727431b9ec846235dcf895b6a",
+      "comparison_id": "compare_colors_20261108T053740Z_continued",
+      "dataset_id": "canis_colors_20261108T053740Z"
+    },
+    "default_changed": false
+  }
+}
