@@ -1,0 +1,20 @@
+{
+  "spawn_xyz_m": [
+    1.0,
+    6.0,
+    0.0
+  ],
+  "drum_prims_and_poses": 420,
+  "inspection_lines_clear_of_other_drums": 420,
+  "body_print_materials": 420,
+  "three_high_columns": 140,
+  "maximum_bank_depth_drum_rows": 2,
+  "rack_deck_heights": 168,
+  "route_height_colliders": 102,
+  "minimum_route_clearance_m": 0.53,
+  "limiting_collider": "/World/Racks/C_L_P01/Collision",
+  "limiting_route_edge": [
+    "N0_6",
+    "N1_6"
+  ]
+}

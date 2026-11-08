@@ -1,5 +1,8 @@
 # Agentverse26 — nuclear-store robot inspection
 
+[Launch the 420-drum warehouse with fresh corrosion and bulging](sim/warehouse-v3/DEFECTS.md).
+
+
 ## Deployed YOLO26s API
 
 The trained detector is live. Start with the **[model API usage guide](docs/model_api.md)**
